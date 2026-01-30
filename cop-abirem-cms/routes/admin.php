@@ -8,6 +8,9 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\MinistryController;
+use App\Http\Controllers\Admin\VisitorController;
+use App\Http\Controllers\Admin\AttendanceController;
+use App\Http\Controllers\Admin\ServiceTypeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -125,5 +128,56 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
         Route::put('/{ministry}', [MinistryController::class, 'update'])->name('update');
         Route::delete('/{ministry}', [MinistryController::class, 'destroy'])->name('destroy');
         Route::match(['get', 'post', 'delete'], '/{ministry}/members', [MinistryController::class, 'members'])->name('members');
+    });
+
+    // ===========================================
+    // VISITOR MANAGEMENT
+    // ===========================================
+    Route::prefix('visitors')->name('visitors.')->group(function () {
+        Route::get('/', [VisitorController::class, 'index'])->name('index');
+        Route::get('/create', [VisitorController::class, 'create'])->name('create');
+        Route::post('/', [VisitorController::class, 'store'])->name('store');
+        Route::get('/{visitor}', [VisitorController::class, 'show'])->name('show');
+        Route::get('/{visitor}/edit', [VisitorController::class, 'edit'])->name('edit');
+        Route::put('/{visitor}', [VisitorController::class, 'update'])->name('update');
+        Route::delete('/{visitor}', [VisitorController::class, 'destroy'])->name('destroy');
+        Route::post('/{visitor}/followup', [VisitorController::class, 'addFollowUp'])->name('followup');
+        Route::post('/{visitor}/record-visit', [VisitorController::class, 'recordVisit'])->name('record-visit');
+        Route::get('/{visitor}/convert', [VisitorController::class, 'showConvertForm'])->name('convert.form');
+        Route::post('/{visitor}/convert', [VisitorController::class, 'convert'])->name('convert');
+    });
+
+    // ===========================================
+    // ATTENDANCE MANAGEMENT
+    // ===========================================
+    Route::prefix('attendance')->name('attendance.')->group(function () {
+        Route::get('/', [AttendanceController::class, 'index'])->name('index');
+        Route::get('/create', [AttendanceController::class, 'create'])->name('create');
+        Route::post('/', [AttendanceController::class, 'store'])->name('store');
+        Route::get('/{attendance}', [AttendanceController::class, 'show'])->name('show');
+        Route::get('/{attendance}/edit', [AttendanceController::class, 'edit'])->name('edit');
+        Route::put('/{attendance}', [AttendanceController::class, 'update'])->name('update');
+        Route::delete('/{attendance}', [AttendanceController::class, 'destroy'])->name('destroy');
+        Route::get('/{attendance}/mark', [AttendanceController::class, 'mark'])->name('mark');
+        Route::post('/{attendance}/mark-member', [AttendanceController::class, 'markMember'])->name('mark-member');
+        Route::post('/{attendance}/mark-visitor', [AttendanceController::class, 'markVisitor'])->name('mark-visitor');
+        Route::post('/{attendance}/unmark', [AttendanceController::class, 'unmark'])->name('unmark');
+        Route::post('/{attendance}/close', [AttendanceController::class, 'close'])->name('close');
+        Route::post('/{attendance}/reopen', [AttendanceController::class, 'reopen'])->name('reopen');
+        Route::get('/{attendance}/scanner', [AttendanceController::class, 'scanner'])->name('scanner');
+        Route::post('/{attendance}/process-scan', [AttendanceController::class, 'processScan'])->name('process-scan');
+    });
+
+    // ===========================================
+    // SERVICE TYPE MANAGEMENT
+    // ===========================================
+    Route::prefix('service-types')->name('service-types.')->group(function () {
+        Route::get('/', [ServiceTypeController::class, 'index'])->name('index');
+        Route::get('/create', [ServiceTypeController::class, 'create'])->name('create');
+        Route::post('/', [ServiceTypeController::class, 'store'])->name('store');
+        Route::get('/{serviceType}', [ServiceTypeController::class, 'show'])->name('show');
+        Route::get('/{serviceType}/edit', [ServiceTypeController::class, 'edit'])->name('edit');
+        Route::put('/{serviceType}', [ServiceTypeController::class, 'update'])->name('update');
+        Route::delete('/{serviceType}', [ServiceTypeController::class, 'destroy'])->name('destroy');
     });
 });

@@ -27,6 +27,10 @@ class AttendanceRecord extends Model
         'is_late' => 'boolean',
     ];
 
+    // ==========================================
+    // RELATIONSHIPS
+    // ==========================================
+
     public function session(): BelongsTo
     {
         return $this->belongsTo(AttendanceSession::class, 'session_id');
@@ -46,4 +50,64 @@ class AttendanceRecord extends Model
     {
         return $this->belongsTo(User::class, 'marked_by');
     }
+
+    // ==========================================
+    // ACCESSORS
+    // ==========================================
+
+    public function getAttendeeNameAttribute(): string
+    {
+        if ($this->member) {
+            return $this->member->full_name;
+        }
+        if ($this->visitor) {
+            return $this->visitor->full_name . ' (Visitor)';
+        }
+        return 'Unknown';
+    }
+
+    public function getAttendeeTypeAttribute(): string
+    {
+        return $this->member_id ? 'member' : 'visitor';
+    }
+
+    // ==========================================
+    // SCOPES
+    // ==========================================
+
+    public function scopeMembers($query)
+    {
+        return $query->whereNotNull('member_id');
+    }
+
+    public function scopeVisitors($query)
+    {
+        return $query->whereNotNull('visitor_id');
+    }
+
+    public function scopeLate($query)
+    {
+        return $query->where('is_late', true);
+    }
+
+    public function scopeOnTime($query)
+    {
+        return $query->where('is_late', false);
+    }
+
+    public function scopeByMethod($query, $method)
+    {
+        return $query->where('attendance_method', $method);
+    }
+
+    // ==========================================
+    // CONSTANTS
+    // ==========================================
+
+    public const METHODS = [
+        'manual' => 'Manual Entry',
+        'qr_code' => 'QR Code Scan',
+        'biometric' => 'Biometric',
+        'face_recognition' => 'Face Recognition',
+    ];
 }

@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class ServiceType extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -25,6 +26,10 @@ class ServiceType extends Model
         'is_active' => 'boolean',
     ];
 
+    // ==========================================
+    // BOOT
+    // ==========================================
+
     protected static function boot()
     {
         parent::boot();
@@ -34,15 +39,61 @@ class ServiceType extends Model
                 $model->slug = Str::slug($model->name);
             }
         });
+
+        static::updating(function ($model) {
+            if ($model->isDirty('name') && !$model->isDirty('slug')) {
+                $model->slug = Str::slug($model->name);
+            }
+        });
     }
+
+    // ==========================================
+    // RELATIONSHIPS
+    // ==========================================
 
     public function attendanceSessions(): HasMany
     {
         return $this->hasMany(AttendanceSession::class);
     }
 
+    // ==========================================
+    // SCOPES
+    // ==========================================
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
+
+    public function scopeByDay($query, $day)
+    {
+        return $query->where('day_of_week', $day);
+    }
+
+    // ==========================================
+    // ACCESSORS
+    // ==========================================
+
+    public function getScheduleAttribute(): string
+    {
+        $schedule = $this->day_of_week ?? 'As scheduled';
+        if ($this->default_start_time) {
+            $schedule .= ' at ' . $this->default_start_time->format('g:i A');
+        }
+        return $schedule;
+    }
+
+    // ==========================================
+    // CONSTANTS
+    // ==========================================
+
+    public const DAYS_OF_WEEK = [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+    ];
 }
