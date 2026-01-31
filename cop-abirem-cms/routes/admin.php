@@ -11,6 +11,10 @@ use App\Http\Controllers\Admin\MinistryController;
 use App\Http\Controllers\Admin\VisitorController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\ServiceTypeController;
+use App\Http\Controllers\Admin\TitheController;
+use App\Http\Controllers\Admin\OfferingController;
+use App\Http\Controllers\Admin\DonationController;
+use App\Http\Controllers\Admin\PledgeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -179,5 +183,65 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
         Route::get('/{serviceType}/edit', [ServiceTypeController::class, 'edit'])->name('edit');
         Route::put('/{serviceType}', [ServiceTypeController::class, 'update'])->name('update');
         Route::delete('/{serviceType}', [ServiceTypeController::class, 'destroy'])->name('destroy');
+    });
+
+    // ===========================================
+    // FINANCIAL MANAGEMENT - TITHES
+    // ===========================================
+    Route::prefix('tithes')->name('tithes.')->group(function () {
+        Route::get('/', [TitheController::class, 'index'])->name('index');
+        Route::get('/create', [TitheController::class, 'create'])->name('create');
+        Route::post('/', [TitheController::class, 'store'])->name('store');
+        Route::get('/monthly-report', [TitheController::class, 'monthlyReport'])->name('monthly-report');
+        Route::get('/member/{member}', [TitheController::class, 'memberHistory'])->name('member-history');
+        Route::get('/{tithe}', [TitheController::class, 'show'])->name('show');
+        Route::get('/{tithe}/edit', [TitheController::class, 'edit'])->name('edit');
+        Route::put('/{tithe}', [TitheController::class, 'update'])->name('update');
+        Route::delete('/{tithe}', [TitheController::class, 'destroy'])->name('destroy');
+        Route::get('/{tithe}/receipt', [TitheController::class, 'printReceipt'])->name('receipt');
+    });
+
+    // ===========================================
+    // FINANCIAL MANAGEMENT - OFFERINGS
+    // ===========================================
+    Route::prefix('offerings')->name('offerings.')->group(function () {
+        Route::get('/', [OfferingController::class, 'index'])->name('index');
+        Route::get('/create', [OfferingController::class, 'create'])->name('create');
+        Route::post('/', [OfferingController::class, 'store'])->name('store');
+        Route::get('/session/{session}', [OfferingController::class, 'sessionSummary'])->name('session-summary');
+        Route::get('/{offering}', [OfferingController::class, 'show'])->name('show');
+        Route::get('/{offering}/edit', [OfferingController::class, 'edit'])->name('edit');
+        Route::put('/{offering}', [OfferingController::class, 'update'])->name('update');
+        Route::delete('/{offering}', [OfferingController::class, 'destroy'])->name('destroy');
+    });
+
+    // ===========================================
+    // FINANCIAL MANAGEMENT - DONATIONS
+    // ===========================================
+    Route::prefix('donations')->name('donations.')->group(function () {
+        Route::get('/', [DonationController::class, 'index'])->name('index');
+        Route::get('/create', [DonationController::class, 'create'])->name('create');
+        Route::post('/', [DonationController::class, 'store'])->name('store');
+        Route::get('/{donation}', [DonationController::class, 'show'])->name('show');
+        Route::get('/{donation}/edit', [DonationController::class, 'edit'])->name('edit');
+        Route::put('/{donation}', [DonationController::class, 'update'])->name('update');
+        Route::delete('/{donation}', [DonationController::class, 'destroy'])->name('destroy');
+        Route::get('/{donation}/receipt', [DonationController::class, 'printReceipt'])->name('receipt');
+    });
+
+    // ===========================================
+    // FINANCIAL MANAGEMENT - PLEDGES
+    // ===========================================
+    Route::prefix('pledges')->name('pledges.')->group(function () {
+        Route::get('/', [PledgeController::class, 'index'])->name('index');
+        Route::get('/create', [PledgeController::class, 'create'])->name('create');
+        Route::post('/', [PledgeController::class, 'store'])->name('store');
+        Route::get('/overdue', [PledgeController::class, 'overdueReport'])->name('overdue');
+        Route::get('/{pledge}', [PledgeController::class, 'show'])->name('show');
+        Route::get('/{pledge}/edit', [PledgeController::class, 'edit'])->name('edit');
+        Route::put('/{pledge}', [PledgeController::class, 'update'])->name('update');
+        Route::delete('/{pledge}', [PledgeController::class, 'destroy'])->name('destroy');
+        Route::post('/{pledge}/payment', [PledgeController::class, 'recordPayment'])->name('record-payment');
+        Route::post('/{pledge}/cancel', [PledgeController::class, 'cancel'])->name('cancel');
     });
 });
