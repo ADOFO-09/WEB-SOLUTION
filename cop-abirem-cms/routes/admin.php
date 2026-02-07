@@ -15,6 +15,8 @@ use App\Http\Controllers\Admin\TitheController;
 use App\Http\Controllers\Admin\OfferingController;
 use App\Http\Controllers\Admin\DonationController;
 use App\Http\Controllers\Admin\PledgeController;
+use App\Http\Controllers\Admin\ExpenseController;
+use App\Http\Controllers\Admin\SmsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -243,5 +245,43 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
         Route::delete('/{pledge}', [PledgeController::class, 'destroy'])->name('destroy');
         Route::post('/{pledge}/payment', [PledgeController::class, 'recordPayment'])->name('record-payment');
         Route::post('/{pledge}/cancel', [PledgeController::class, 'cancel'])->name('cancel');
+    });
+
+    // ===========================================
+    // FINANCIAL MANAGEMENT - EXPENSES
+    // ===========================================
+    Route::prefix('expenses')->name('expenses.')->group(function () {
+        Route::get('/', [ExpenseController::class, 'index'])->name('index');
+        Route::get('/create', [ExpenseController::class, 'create'])->name('create');
+        Route::post('/', [ExpenseController::class, 'store'])->name('store');
+        Route::get('/budget-report', [ExpenseController::class, 'budgetReport'])->name('budget-report');
+        Route::get('/{expense}', [ExpenseController::class, 'show'])->name('show');
+        Route::get('/{expense}/edit', [ExpenseController::class, 'edit'])->name('edit');
+        Route::put('/{expense}', [ExpenseController::class, 'update'])->name('update');
+        Route::delete('/{expense}', [ExpenseController::class, 'destroy'])->name('destroy');
+        Route::post('/{expense}/approve', [ExpenseController::class, 'approve'])->name('approve');
+        Route::post('/{expense}/reject', [ExpenseController::class, 'reject'])->name('reject');
+        Route::post('/{expense}/mark-paid', [ExpenseController::class, 'markPaid'])->name('mark-paid');
+        Route::get('/{expense}/voucher', [ExpenseController::class, 'printVoucher'])->name('voucher');
+    });
+
+    // ===========================================
+    // SMS COMMUNICATION
+    // ===========================================
+    Route::prefix('sms')->name('sms.')->group(function () {
+        Route::get('/', [SmsController::class, 'index'])->name('index');
+        Route::get('/compose', [SmsController::class, 'compose'])->name('compose');
+        Route::post('/', [SmsController::class, 'store'])->name('store');
+        Route::get('/{smsMessage}', [SmsController::class, 'show'])->name('show');
+        Route::post('/{smsMessage}/send', [SmsController::class, 'send'])->name('send');
+        Route::delete('/{smsMessage}', [SmsController::class, 'destroy'])->name('destroy');
+
+        // Templates
+        Route::get('/templates/manage', [SmsController::class, 'templates'])->name('templates');
+        Route::get('/templates/create', [SmsController::class, 'createTemplate'])->name('templates.create');
+        Route::post('/templates', [SmsController::class, 'storeTemplate'])->name('templates.store');
+        Route::get('/templates/{smsTemplate}/edit', [SmsController::class, 'editTemplate'])->name('templates.edit');
+        Route::put('/templates/{smsTemplate}', [SmsController::class, 'updateTemplate'])->name('templates.update');
+        Route::delete('/templates/{smsTemplate}', [SmsController::class, 'destroyTemplate'])->name('templates.destroy');
     });
 });
