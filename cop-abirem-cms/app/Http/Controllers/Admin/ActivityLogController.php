@@ -6,9 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class ActivityLogController extends Controller
+class ActivityLogController extends Controller implements HasMiddleware
 {
+    /**
+     * Get the middleware that should be assigned to the controller.
+     */
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+            new Middleware('permission:settings.logs', only: ['index', 'export']),
+        ];
+    }
+
     /**
      * Display a listing of activity logs.
      */
@@ -23,69 +37,39 @@ class ActivityLogController extends Controller
 
         // Filter by action
         if ($request->filled('action')) {
-            $query->where('action', 'like', "%{$request->action}%");
-        }
-
-        // Filter by model type
-        if ($request->filled('model_type')) {
-            $query->where('model_type', 'like', "%{$request->model_type}%");
+            $query->where('action', $request->action);
         }
 
         // Filter by date range
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
-
         if ($request->filled('date_to')) {
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        // Search in values
+        // Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('action', 'like', "%{$search}%")
+                $q->where('description', 'like', "%{$search}%")
                   ->orWhere('model_type', 'like', "%{$search}%")
-                  ->orWhereRaw("JSON_SEARCH(old_values, 'all', ?) IS NOT NULL", ["%{$search}%"])
-                  ->orWhereRaw("JSON_SEARCH(new_values, 'all', ?) IS NOT NULL", ["%{$search}%"]);
+                  ->orWhere('ip_address', 'like', "%{$search}%");
             });
         }
 
-        $logs = $query->orderBy('created_at', 'desc')
-            ->paginate(25)
-            ->withQueryString();
+        $logs = $query->orderBy('created_at', 'desc')->paginate(25)->withQueryString();
 
-        $users = User::orderBy('name')->get(['id', 'name']);
-        
-        // Get unique actions
-        $actions = ActivityLog::distinct()->pluck('action')->sort()->values();
-        
-        // Get unique model types
-        $modelTypes = ActivityLog::whereNotNull('model_type')
-            ->distinct()
-            ->pluck('model_type')
-            ->map(fn($type) => class_basename($type))
-            ->unique()
-            ->sort()
-            ->values();
+        $users = User::select('id', 'name')->orderBy('name')->get();
+        $actions = ActivityLog::distinct()->pluck('action');
 
-        return view('admin.activity-logs.index', compact('logs', 'users', 'actions', 'modelTypes'));
-    }
-
-    /**
-     * Display the specified log entry.
-     */
-    public function show(ActivityLog $activityLog)
-    {
-        $activityLog->load('user');
-        
-        return view('admin.activity-logs.show', compact('activityLog'));
+        return view('admin.activity-logs.index', compact('logs', 'users', 'actions'));
     }
 
     /**
      * Export activity logs to CSV.
      */
-    public function export(Request $request)
+    public function export(Request $request): StreamedResponse
     {
         $query = ActivityLog::with('user');
 
@@ -93,44 +77,60 @@ class ActivityLogController extends Controller
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
         }
-
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
-
         if ($request->filled('date_to')) {
             $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                  ->orWhere('model_type', 'like', "%{$search}%")
+                  ->orWhere('ip_address', 'like', "%{$search}%");
+            });
         }
 
         $logs = $query->orderBy('created_at', 'desc')->get();
 
         $filename = 'activity-logs-' . now()->format('Y-m-d-His') . '.csv';
 
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-        ];
-
-        $callback = function () use ($logs) {
-            $file = fopen('php://output', 'w');
+        return response()->streamDownload(function () use ($logs) {
+            $handle = fopen('php://output', 'w');
             
             // Header row
-            fputcsv($file, ['Date/Time', 'User', 'Action', 'Model', 'Model ID', 'IP Address']);
+            fputcsv($handle, [
+                'Date/Time',
+                'User',
+                'Action',
+                'Description',
+                'Model Type',
+                'Model ID',
+                'IP Address',
+                'User Agent',
+            ]);
 
+            // Data rows
             foreach ($logs as $log) {
-                fputcsv($file, [
+                fputcsv($handle, [
                     $log->created_at->format('Y-m-d H:i:s'),
-                    $log->user?->name ?? 'System',
+                    $log->user->name ?? 'System',
                     $log->action,
-                    $log->model_type ? class_basename($log->model_type) : '-',
-                    $log->model_id ?? '-',
-                    $log->ip_address ?? '-',
+                    $log->description,
+                    $log->model_type,
+                    $log->model_id,
+                    $log->ip_address,
+                    $log->user_agent,
                 ]);
             }
 
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 }

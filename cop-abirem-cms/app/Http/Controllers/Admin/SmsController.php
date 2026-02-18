@@ -8,9 +8,9 @@ use App\Models\SmsTemplate;
 use App\Models\SmsRecipient;
 use App\Models\Member;
 use App\Models\Ministry;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Http\Request;
 
 class SmsController extends Controller implements HasMiddleware
 {
@@ -20,12 +20,10 @@ class SmsController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware(middleware: 'permission:sms.view', only: ['index', 'show']),
-            new Middleware(middleware: 'permission:sms.send', only: ['compose', 'store', 'send', 'destroy']),
-            new Middleware(middleware: 'permission:sms.templates', only: [
-                'templates', 'createTemplate', 'storeTemplate', 
-                'editTemplate', 'updateTemplate', 'destroyTemplate'
-            ]),
+            'auth',
+            new Middleware('permission:sms.view', only: ['index', 'show']),
+            new Middleware('permission:sms.send', only: ['compose', 'store', 'send']),
+            new Middleware('permission:sms.templates', only: ['templates', 'createTemplate', 'storeTemplate', 'editTemplate', 'updateTemplate', 'destroyTemplate']),
         ];
     }
 
@@ -33,9 +31,6 @@ class SmsController extends Controller implements HasMiddleware
     // SMS MESSAGES
     // ==========================================
 
-    /**
-     * Display a listing of SMS messages.
-     */
     public function index(Request $request)
     {
         $query = SmsMessage::with('sentBy');
@@ -48,7 +43,7 @@ class SmsController extends Controller implements HasMiddleware
         }
 
         if ($request->filled('status')) {
-            $query->byStatus($request->status);
+            $query->where('status', $request->status);
         }
 
         if ($request->filled('category')) {
@@ -59,19 +54,16 @@ class SmsController extends Controller implements HasMiddleware
         $messages = $query->paginate(20)->withQueryString();
 
         $stats = [
-            'total_sent' => SmsMessage::sent()->count() + SmsMessage::where('status', 'partially_sent')->count(),
+            'total_sent' => SmsMessage::whereIn('status', ['sent', 'partially_sent'])->count(),
             'total_recipients' => SmsMessage::sum('recipient_count'),
             'total_delivered' => SmsMessage::sum('successful_count'),
-            'this_month' => SmsMessage::thisMonth()->count(),
-            'drafts' => SmsMessage::draft()->count(),
+            'this_month' => SmsMessage::whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->count(),
+            'drafts' => SmsMessage::where('status', 'draft')->count(),
         ];
 
         return view('admin.sms.index', compact('messages', 'stats'));
     }
 
-    /**
-     * Display the specified SMS message.
-     */
     public function show(SmsMessage $smsMessage)
     {
         $smsMessage->load(['sentBy', 'recipients' => fn($q) => $q->orderBy('status')->limit(100)]);
@@ -86,14 +78,11 @@ class SmsController extends Controller implements HasMiddleware
         return view('admin.sms.show', compact('smsMessage', 'recipientStats'));
     }
 
-    /**
-     * Show the compose SMS form.
-     */
     public function compose(Request $request)
     {
-        $templates = SmsTemplate::active()->orderBy('name')->get();
-        $ministries = Ministry::active()->orderBy('name')->get();
-        $memberCount = Member::active()->whereNotNull('phone_primary')->count();
+        $templates = SmsTemplate::where('is_active', true)->orderBy('name')->get();
+        $ministries = Ministry::where('is_active', true)->orderBy('name')->get();
+        $memberCount = Member::where('membership_status', 'active')->whereNotNull('phone_primary')->count();
         
         $selectedTemplate = $request->has('template_id') 
             ? SmsTemplate::find($request->template_id) 
@@ -102,9 +91,6 @@ class SmsController extends Controller implements HasMiddleware
         return view('admin.sms.compose', compact('templates', 'ministries', 'memberCount', 'selectedTemplate'));
     }
 
-    /**
-     * Store a newly created SMS message.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -132,7 +118,7 @@ class SmsController extends Controller implements HasMiddleware
         foreach ($recipients as $recipient) {
             $message->recipients()->create([
                 'member_id' => $recipient['member_id'] ?? null,
-                'phone_number' => $recipient['phone_number'],
+                'phone' => $recipient['phone'],
                 'recipient_name' => $recipient['name'] ?? null,
                 'status' => 'pending',
             ]);
@@ -141,7 +127,7 @@ class SmsController extends Controller implements HasMiddleware
         $message->update(['recipient_count' => $message->recipients()->count()]);
 
         if ($request->input('action') === 'send') {
-            $message->send();
+            $this->sendMessage($message);
             return redirect()->route('admin.sms.show', $message)
                 ->with('success', "Message sent to {$message->recipient_count} recipients.");
         }
@@ -150,23 +136,17 @@ class SmsController extends Controller implements HasMiddleware
             ->with('success', 'Message saved as draft with ' . $message->recipient_count . ' recipients.');
     }
 
-    /**
-     * Send an SMS message.
-     */
     public function send(SmsMessage $smsMessage)
     {
         if (!in_array($smsMessage->status, ['draft', 'failed'])) {
             return back()->with('error', 'This message cannot be sent.');
         }
 
-        $smsMessage->send();
+        $this->sendMessage($smsMessage);
 
         return back()->with('success', "Message sent! {$smsMessage->successful_count} delivered, {$smsMessage->failed_count} failed.");
     }
 
-    /**
-     * Remove the specified SMS message.
-     */
     public function destroy(SmsMessage $smsMessage)
     {
         if ($smsMessage->status !== 'draft') {
@@ -184,26 +164,17 @@ class SmsController extends Controller implements HasMiddleware
     // SMS TEMPLATES
     // ==========================================
 
-    /**
-     * Display a listing of SMS templates.
-     */
     public function templates()
     {
         $templates = SmsTemplate::with('createdBy')->orderBy('category')->orderBy('name')->get();
         return view('admin.sms.templates.index', compact('templates'));
     }
 
-    /**
-     * Show the form for creating a new template.
-     */
     public function createTemplate()
     {
         return view('admin.sms.templates.create');
     }
 
-    /**
-     * Store a newly created template.
-     */
     public function storeTemplate(Request $request)
     {
         $validated = $request->validate([
@@ -226,17 +197,11 @@ class SmsController extends Controller implements HasMiddleware
             ->with('success', 'Template created successfully.');
     }
 
-    /**
-     * Show the form for editing a template.
-     */
     public function editTemplate(SmsTemplate $smsTemplate)
     {
-        return view('admin.sms.templates.edit', compact('smsTemplate'));
+        return view('admin.sms.templates.edit', ['smsTemplate' => $smsTemplate]);
     }
 
-    /**
-     * Update the specified template.
-     */
     public function updateTemplate(Request $request, SmsTemplate $smsTemplate)
     {
         $validated = $request->validate([
@@ -257,9 +222,6 @@ class SmsController extends Controller implements HasMiddleware
             ->with('success', 'Template updated successfully.');
     }
 
-    /**
-     * Remove the specified template.
-     */
     public function destroyTemplate(SmsTemplate $smsTemplate)
     {
         $smsTemplate->delete();
@@ -271,20 +233,17 @@ class SmsController extends Controller implements HasMiddleware
     // PRIVATE HELPERS
     // ==========================================
 
-    /**
-     * Resolve recipients based on recipient type.
-     */
     private function resolveRecipients(array $data): array
     {
         $recipients = [];
 
         switch ($data['recipient_type']) {
             case 'all':
-                $members = Member::active()->whereNotNull('phone_primary')->get();
+                $members = Member::where('membership_status', 'active')->whereNotNull('phone_primary')->get();
                 foreach ($members as $member) {
                     $recipients[] = [
                         'member_id' => $member->id,
-                        'phone_number' => $member->phone_primary,
+                        'phone' => $member->phone_primary,
                         'name' => $member->full_name,
                     ];
                 }
@@ -293,13 +252,14 @@ class SmsController extends Controller implements HasMiddleware
             case 'ministry':
                 $ministry = Ministry::find($data['ministry_id']);
                 if ($ministry) {
-                    $members = $ministry->activeMembers()
+                    $members = $ministry->members()
                         ->whereNotNull('phone_primary')
+                        ->where('membership_status', 'active')
                         ->get();
                     foreach ($members as $member) {
                         $recipients[] = [
                             'member_id' => $member->id,
-                            'phone_number' => $member->phone_primary,
+                            'phone' => $member->phone_primary,
                             'name' => $member->full_name,
                         ];
                     }
@@ -314,7 +274,7 @@ class SmsController extends Controller implements HasMiddleware
                         $member = Member::where('phone_primary', $number)->first();
                         $recipients[] = [
                             'member_id' => $member?->id,
-                            'phone_number' => $number,
+                            'phone' => $number,
                             'name' => $member?->full_name ?? 'Unknown',
                         ];
                     }
@@ -323,5 +283,40 @@ class SmsController extends Controller implements HasMiddleware
         }
 
         return $recipients;
+    }
+
+    private function sendMessage(SmsMessage $message): void
+    {
+        $message->update([
+            'status' => 'sending',
+            'sent_at' => now(),
+        ]);
+
+        $successCount = 0;
+        $failCount = 0;
+
+        foreach ($message->recipients()->where('status', 'pending')->get() as $recipient) {
+            try {
+                // TODO: Integrate with Africa's Talking API here
+                // For now, simulate sending
+                $recipient->update([
+                    'status' => 'sent',
+                    'sent_at' => now(),
+                ]);
+                $successCount++;
+            } catch (\Exception $e) {
+                $recipient->update([
+                    'status' => 'failed',
+                    'error_message' => $e->getMessage(),
+                ]);
+                $failCount++;
+            }
+        }
+
+        $message->update([
+            'successful_count' => $successCount,
+            'failed_count' => $failCount,
+            'status' => $failCount === 0 ? 'sent' : ($successCount === 0 ? 'failed' : 'partially_sent'),
+        ]);
     }
 }

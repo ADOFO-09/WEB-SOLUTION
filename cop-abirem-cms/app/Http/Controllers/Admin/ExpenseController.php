@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Http\Request;
 
 class ExpenseController extends Controller implements HasMiddleware
 {
@@ -17,20 +17,14 @@ class ExpenseController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware(middleware: 'permission:finance.view', only: [
-                'index', 'show', 'printVoucher', 'budgetReport'
-            ]),
-            new Middleware(middleware: 'permission:finance.create', only: ['create', 'store']),
-            new Middleware(middleware: 'permission:finance.edit', only: [
-                'edit', 'update', 'approve', 'reject', 'markPaid'
-            ]),
-            new Middleware(middleware: 'permission:finance.delete', only: ['destroy']),
+            'auth',
+            new Middleware('permission:finance.view', only: ['index', 'show']),
+            new Middleware('permission:finance.create', only: ['create', 'store']),
+            new Middleware('permission:finance.edit', only: ['edit', 'update', 'approve', 'reject', 'markPaid']),
+            new Middleware('permission:finance.delete', only: ['destroy']),
         ];
     }
 
-    /**
-     * Display a listing of expenses.
-     */
     public function index(Request $request)
     {
         $query = Expense::with(['expenseCategory', 'requestedBy', 'approvedBy']);
@@ -46,11 +40,11 @@ class ExpenseController extends Controller implements HasMiddleware
         }
 
         if ($request->filled('category_id')) {
-            $query->byCategory($request->category_id);
+            $query->where('expense_category_id', $request->category_id);
         }
 
         if ($request->filled('status')) {
-            $query->byStatus($request->status);
+            $query->where('status', $request->status);
         }
 
         if ($request->filled('date_from')) {
@@ -64,30 +58,24 @@ class ExpenseController extends Controller implements HasMiddleware
         $expenses = $query->paginate(20)->withQueryString();
 
         $stats = [
-            'total_paid' => Expense::thisYear()->paid()->sum('amount'),
-            'this_month' => Expense::thisMonth()->paid()->sum('amount'),
-            'pending_count' => Expense::pending()->count(),
-            'pending_amount' => Expense::pending()->sum('amount'),
-            'approved_count' => Expense::approved()->count(),
+            'total_paid' => Expense::whereYear('expense_date', date('Y'))->where('status', 'paid')->sum('amount'),
+            'this_month' => Expense::whereMonth('expense_date', date('m'))->whereYear('expense_date', date('Y'))->where('status', 'paid')->sum('amount'),
+            'pending_count' => Expense::where('status', 'pending')->count(),
+            'pending_amount' => Expense::where('status', 'pending')->sum('amount'),
+            'approved_count' => Expense::where('status', 'approved')->count(),
         ];
 
-        $categories = ExpenseCategory::active()->orderBy('name')->get();
+        $categories = ExpenseCategory::where('is_active', true)->orderBy('name')->get();
 
         return view('admin.finance.expenses.index', compact('expenses', 'stats', 'categories'));
     }
 
-    /**
-     * Show the form for creating a new expense.
-     */
     public function create()
     {
-        $categories = ExpenseCategory::active()->orderBy('name')->get();
+        $categories = ExpenseCategory::where('is_active', true)->orderBy('name')->get();
         return view('admin.finance.expenses.create', compact('categories'));
     }
 
-    /**
-     * Store a newly created expense.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -103,6 +91,7 @@ class ExpenseController extends Controller implements HasMiddleware
 
         $validated['status'] = 'pending';
         $validated['requested_by'] = auth()->id();
+        $validated['reference_number'] = Expense::generateReferenceNumber();
 
         $expense = Expense::create($validated);
 
@@ -110,31 +99,22 @@ class ExpenseController extends Controller implements HasMiddleware
             ->with('success', 'Expense request submitted. Reference: ' . $expense->reference_number);
     }
 
-    /**
-     * Display the specified expense.
-     */
     public function show(Expense $expense)
     {
         $expense->load(['expenseCategory', 'requestedBy', 'approvedBy', 'financialYear']);
         return view('admin.finance.expenses.show', compact('expense'));
     }
 
-    /**
-     * Show the form for editing the specified expense.
-     */
     public function edit(Expense $expense)
     {
         if ($expense->status !== 'pending') {
             return back()->with('error', 'Only pending expenses can be edited.');
         }
 
-        $categories = ExpenseCategory::active()->orderBy('name')->get();
+        $categories = ExpenseCategory::where('is_active', true)->orderBy('name')->get();
         return view('admin.finance.expenses.edit', compact('expense', 'categories'));
     }
 
-    /**
-     * Update the specified expense.
-     */
     public function update(Request $request, Expense $expense)
     {
         if ($expense->status !== 'pending') {
@@ -158,9 +138,6 @@ class ExpenseController extends Controller implements HasMiddleware
             ->with('success', 'Expense updated successfully.');
     }
 
-    /**
-     * Remove the specified expense.
-     */
     public function destroy(Expense $expense)
     {
         if (!in_array($expense->status, ['pending', 'rejected'])) {
@@ -172,26 +149,24 @@ class ExpenseController extends Controller implements HasMiddleware
             ->with('success', 'Expense deleted successfully.');
     }
 
-    /**
-     * Approve an expense.
-     */
     public function approve(Expense $expense)
     {
-        if (!$expense->can_approve) {
+        if ($expense->status !== 'pending') {
             return back()->with('error', 'This expense cannot be approved.');
         }
 
-        $expense->approve();
+        $expense->update([
+            'status' => 'approved',
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+        ]);
 
         return back()->with('success', 'Expense approved successfully.');
     }
 
-    /**
-     * Reject an expense.
-     */
     public function reject(Request $request, Expense $expense)
     {
-        if (!$expense->can_approve) {
+        if ($expense->status !== 'pending') {
             return back()->with('error', 'This expense cannot be rejected.');
         }
 
@@ -199,17 +174,19 @@ class ExpenseController extends Controller implements HasMiddleware
             'rejection_reason' => 'required|string|max:500',
         ]);
 
-        $expense->reject($validated['rejection_reason']);
+        $expense->update([
+            'status' => 'rejected',
+            'rejection_reason' => $validated['rejection_reason'],
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+        ]);
 
         return back()->with('success', 'Expense rejected.');
     }
 
-    /**
-     * Mark expense as paid.
-     */
     public function markPaid(Request $request, Expense $expense)
     {
-        if (!$expense->can_pay) {
+        if ($expense->status !== 'approved') {
             return back()->with('error', 'Only approved expenses can be marked as paid.');
         }
 
@@ -218,35 +195,31 @@ class ExpenseController extends Controller implements HasMiddleware
             'payment_reference' => 'nullable|string|max:100',
         ]);
 
-        $expense->markAsPaid($validated);
+        $expense->update(array_merge(['status' => 'paid'], array_filter($validated)));
 
-        return back()->with('success', 'Expense marked as paid. Voucher: ' . ($validated['voucher_number'] ?? 'N/A'));
+        return back()->with('success', 'Expense marked as paid.');
     }
 
-    /**
-     * Print expense voucher.
-     */
     public function printVoucher(Expense $expense)
     {
         $expense->load(['expenseCategory', 'requestedBy', 'approvedBy']);
         return view('admin.finance.expenses.voucher', compact('expense'));
     }
 
-    /**
-     * Budget report.
-     */
     public function budgetReport(Request $request)
     {
         $year = $request->get('year', date('Y'));
 
-        $categories = ExpenseCategory::active()
-            ->withCount(['expenses as paid_expenses_count' => fn($q) => $q->paid()->whereYear('expense_date', $year)])
-            ->get()
-            ->map(function ($cat) use ($year) {
-                $cat->spent = $cat->getSpentAmount($year);
-                $cat->usage_percentage = $cat->getBudgetUsedPercentage($year);
-                return $cat;
-            });
+        $categories = ExpenseCategory::where('is_active', true)->get()->map(function ($cat) use ($year) {
+            $cat->spent = Expense::where('expense_category_id', $cat->id)
+                ->where('status', 'paid')
+                ->whereYear('expense_date', $year)
+                ->sum('amount');
+            $cat->usage_percentage = $cat->budget_amount > 0 
+                ? min(100, round(($cat->spent / $cat->budget_amount) * 100, 1)) 
+                : 0;
+            return $cat;
+        });
 
         $totalBudget = $categories->sum('budget_amount');
         $totalSpent = $categories->sum('spent');

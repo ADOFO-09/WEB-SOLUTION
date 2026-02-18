@@ -3,49 +3,66 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ActivityLog;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
-class ProfileController extends Controller
+class ProfileController extends Controller implements HasMiddleware
 {
     /**
-     * Display the user's profile.
+     * Get the middleware that should be assigned to the controller.
      */
-    public function show()
+    public static function middleware(): array
     {
-        $user = auth()->user();
-        $user->load(['role', 'loginHistory' => function ($q) {
-            $q->take(5);
-        }]);
-
-        return view('admin.profile.show', compact('user'));
+        return ['auth'];
     }
 
     /**
-     * Update the user's profile information.
+     * Show the user's profile.
+     */
+    public function show()
+    {
+        return view('admin.profile.show', [
+            'user' => auth()->user(),
+        ]);
+    }
+
+    /**
+     * Show the form for editing the user's profile.
+     */
+    public function edit()
+    {
+        return view('admin.profile.edit', [
+            'user' => auth()->user(),
+        ]);
+    }
+
+    /**
+     * Update the user's profile.
      */
     public function update(Request $request)
     {
         $user = auth()->user();
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:20',
         ]);
 
         $user->update($validated);
 
-        return back()->with('success', 'Profile updated successfully.');
+        return redirect()->route('admin.profile.show')
+            ->with('success', 'Profile updated successfully.');
     }
 
     /**
-     * Show the change password form.
+     * Show the password change form.
      */
-    public function showChangePasswordForm()
+    public function password()
     {
-        return view('admin.profile.change-password');
+        return view('admin.profile.password');
     }
 
     /**
@@ -53,33 +70,16 @@ class ProfileController extends Controller
      */
     public function updatePassword(Request $request)
     {
-        $user = auth()->user();
-
         $validated = $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'current_password' => 'required|current_password',
+            'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        $user->update([
+        auth()->user()->update([
             'password' => Hash::make($validated['password']),
-            'must_change_password' => false,
         ]);
 
-        ActivityLog::log('password.changed');
-
-        return redirect()->route('admin.dashboard')
+        return redirect()->route('admin.profile.show')
             ->with('success', 'Password changed successfully.');
-    }
-
-    /**
-     * Show the change password form for forced password change.
-     */
-    public function showForceChangePasswordForm()
-    {
-        if (!auth()->user()->must_change_password) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        return view('admin.profile.force-change-password');
     }
 }

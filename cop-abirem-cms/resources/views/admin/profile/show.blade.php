@@ -3,60 +3,53 @@
 @section('title', 'My Profile')
 
 @section('header')
-<h1>My Profile</h1>
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-gray-900">My Profile</h1>
+        <a href="{{ route('admin.profile.edit') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+            Edit Profile
+        </a>
+    </div>
 @endsection
 
 @section('content')
-<div class="grid grid-cols-3" style="gap: 1.5rem;">
-    <div style="grid-column: span 2;">
-        <div class="card">
-            <div class="card-header"><h3 style="font-weight: 600;">Profile Information</h3></div>
-            <div class="card-body">
-                <form method="POST" action="{{ route('admin.profile.update') }}">
-                    @csrf
-                    @method('PUT')
-                    
-                    <div class="form-group">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="name" class="form-input" value="{{ old('name', $user->name) }}" required>
-                        @error('name')<p class="form-error">{{ $message }}</p>@enderror
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-input" value="{{ old('email', $user->email) }}" required>
-                        @error('email')<p class="form-error">{{ $message }}</p>@enderror
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">Update Profile</button>
-                </form>
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-8 text-center bg-gradient-to-r from-indigo-500 to-purple-600">
+            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white text-indigo-600 text-3xl font-bold">
+                {{ strtoupper(substr($user->name, 0, 2)) }}
             </div>
+            <h2 class="mt-4 text-xl font-bold text-white">{{ $user->name }}</h2>
+            <p class="text-indigo-100">{{ $user->role->name ?? 'User' }}</p>
         </div>
-    </div>
-    
-    <div>
-        <div class="card">
-            <div class="card-header"><h3 style="font-weight: 600;">Account Info</h3></div>
-            <div class="card-body">
-                <div style="margin-bottom: 1rem;">
-                    <span style="color: #64748b; font-size: 0.875rem;">Role</span>
-                    <div><span class="badge badge-info">{{ $user->role->name }}</span></div>
+
+        <div class="p-6">
+            <dl class="divide-y divide-gray-200">
+                <div class="py-4 flex justify-between">
+                    <dt class="text-sm font-medium text-gray-500">Email</dt>
+                    <dd class="text-sm text-gray-900">{{ $user->email }}</dd>
                 </div>
-                <div style="margin-bottom: 1rem;">
-                    <span style="color: #64748b; font-size: 0.875rem;">Member Since</span>
-                    <div>{{ $user->created_at->format('M j, Y') }}</div>
+                <div class="py-4 flex justify-between">
+                    <dt class="text-sm font-medium text-gray-500">Phone</dt>
+                    <dd class="text-sm text-gray-900">{{ $user->phone ?? 'Not set' }}</dd>
                 </div>
-                <div>
-                    <span style="color: #64748b; font-size: 0.875rem;">Last Login</span>
-                    <div>{{ $user->last_login_at ? $user->last_login_at->format('M j, Y g:i A') : 'Never' }}</div>
+                <div class="py-4 flex justify-between">
+                    <dt class="text-sm font-medium text-gray-500">Role</dt>
+                    <dd class="text-sm text-gray-900">{{ $user->role->name ?? 'N/A' }}</dd>
                 </div>
-            </div>
-        </div>
-        
-        <div class="card" style="margin-top: 1rem;">
-            <div class="card-header"><h3 style="font-weight: 600;">Security</h3></div>
-            <div class="card-body">
-                <a href="{{ route('admin.profile.password') }}" class="btn btn-secondary" style="width: 100%;">Change Password</a>
+                <div class="py-4 flex justify-between">
+                    <dt class="text-sm font-medium text-gray-500">Member Since</dt>
+                    <dd class="text-sm text-gray-900">{{ $user->created_at->format('F d, Y') }}</dd>
+                </div>
+                <div class="py-4 flex justify-between">
+                    <dt class="text-sm font-medium text-gray-500">Last Login</dt>
+                    <dd class="text-sm text-gray-900">{{ $user->last_login_at?->diffForHumans() ?? 'Never' }}</dd>
+                </div>
+            </dl>
+
+            <div class="mt-6 pt-6 border-t">
+                <a href="{{ route('admin.profile.password') }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                    Change Password →
+                </a>
             </div>
         </div>
     </div>
