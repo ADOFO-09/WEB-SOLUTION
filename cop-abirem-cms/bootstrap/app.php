@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'admin.access' => \App\Http\Middleware\AdminAccess::class,
             'log.activity' => \App\Http\Middleware\LogActivity::class,
+            'member.access' => \App\Http\Middleware\MemberAccess::class,
         ]);
 
         // Add activity logging to web middleware group

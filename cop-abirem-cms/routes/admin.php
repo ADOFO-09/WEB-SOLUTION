@@ -91,6 +91,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::get('/{member}/card', [MemberController::class, 'printCard'])->name('card');
         Route::get('/{member}/qr', [MemberController::class, 'downloadQr'])->name('qr');
         Route::get('/{member}/qrcode', [MemberController::class, 'downloadQr'])->name('qrcode');
+        Route::get('/{member}/family', [MemberController::class, 'family'])->name('family');
+        Route::post('/{member}/family', [MemberController::class, 'storeFamily'])->name('family.store');
+        Route::delete('/{member}/family/{relationship}', [MemberController::class, 'destroyFamily'])->name('family.destroy');
     });
 
     // ===========================================

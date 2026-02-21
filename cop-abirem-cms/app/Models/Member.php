@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\FamilyRelationship;
+
 
 class Member extends Model
 {
@@ -315,4 +317,128 @@ class Member extends Model
             ->get()
             ->pluck('relatedMember');
     }
+
+    public function family(Member $member)
+    {
+        $member->load(['familyRelationships.relatedMember']);
+        
+        // Get all members except current one for adding relationships
+        $availableMembers = Member::where('id', '!=', $member->id)
+            ->where('membership_status', 'active')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+        
+        $relationshipTypes = [
+            'spouse' => 'Spouse',
+            'father' => 'Father',
+            'mother' => 'Mother',
+            'son' => 'Son',
+            'daughter' => 'Daughter',
+            'brother' => 'Brother',
+            'sister' => 'Sister',
+            'grandfather' => 'Grandfather',
+            'grandmother' => 'Grandmother',
+            'grandson' => 'Grandson',
+            'granddaughter' => 'Granddaughter',
+            'uncle' => 'Uncle',
+            'aunt' => 'Aunt',
+            'nephew' => 'Nephew',
+            'niece' => 'Niece',
+            'cousin' => 'Cousin',
+            'in-law' => 'In-Law',
+            'other' => 'Other',
+        ];
+        
+        return view('admin.members.family', compact('member', 'availableMembers', 'relationshipTypes'));
+    }
+
+    /**
+     * Store a new family relationship.
+     */
+    public function storeFamily(Request $request, Member $member)
+    {
+        $validated = $request->validate([
+            'related_member_id' => 'required|exists:members,id|different:member',
+            'relationship_type' => 'required|string|max:50',
+        ]);
+        
+        // Check if relationship already exists
+        $exists = FamilyRelationship::where('member_id', $member->id)
+            ->where('related_member_id', $validated['related_member_id'])
+            ->exists();
+        
+        if ($exists) {
+            return back()->with('error', 'This family relationship already exists.');
+        }
+        
+        // Create the relationship
+        FamilyRelationship::create([
+            'member_id' => $member->id,
+            'related_member_id' => $validated['related_member_id'],
+            'relationship_type' => $validated['relationship_type'],
+        ]);
+        
+        // Optionally create the inverse relationship
+        $inverseType = $this->getInverseRelationship($validated['relationship_type'], $member->gender);
+        if ($inverseType) {
+            FamilyRelationship::firstOrCreate([
+                'member_id' => $validated['related_member_id'],
+                'related_member_id' => $member->id,
+            ], [
+                'relationship_type' => $inverseType,
+            ]);
+        }
+        
+        return back()->with('success', 'Family relationship added successfully.');
+    }
+
+    /**
+     * Remove a family relationship.
+     */
+    public function destroyFamily(Member $member, FamilyRelationship $relationship)
+    {
+        // Ensure the relationship belongs to this member
+        if ($relationship->member_id !== $member->id) {
+            abort(403);
+        }
+        
+        // Also remove the inverse relationship if exists
+        FamilyRelationship::where('member_id', $relationship->related_member_id)
+            ->where('related_member_id', $member->id)
+            ->delete();
+        
+        $relationship->delete();
+        
+        return back()->with('success', 'Family relationship removed.');
+    }
+
+    /**
+     * Get the inverse relationship type.
+     */
+    private function getInverseRelationship(string $type, ?string $gender): ?string
+    {
+        $inverses = [
+            'spouse' => 'spouse',
+            'father' => $gender === 'male' ? 'son' : 'daughter',
+            'mother' => $gender === 'male' ? 'son' : 'daughter',
+            'son' => $gender === 'male' ? 'father' : 'mother',
+            'daughter' => $gender === 'male' ? 'father' : 'mother',
+            'brother' => $gender === 'male' ? 'brother' : 'sister',
+            'sister' => $gender === 'male' ? 'brother' : 'sister',
+            'grandfather' => $gender === 'male' ? 'grandson' : 'granddaughter',
+            'grandmother' => $gender === 'male' ? 'grandson' : 'granddaughter',
+            'grandson' => $gender === 'male' ? 'grandfather' : 'grandmother',
+            'granddaughter' => $gender === 'male' ? 'grandfather' : 'grandmother',
+            'uncle' => $gender === 'male' ? 'nephew' : 'niece',
+            'aunt' => $gender === 'male' ? 'nephew' : 'niece',
+            'nephew' => $gender === 'male' ? 'uncle' : 'aunt',
+            'niece' => $gender === 'male' ? 'uncle' : 'aunt',
+            'cousin' => 'cousin',
+        ];
+        
+        return $inverses[$type] ?? null;
+    }
+
+
 }
