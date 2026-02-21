@@ -139,6 +139,16 @@
             </a>
         </div>
         @endif
+
+        @if(auth()->user()->hasPermission('settings.logs'))
+        <div class="nav-section">
+            <div class="nav-section-title">User Management</div>
+            <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-2 2m0 0l-4-4m4 4l4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Users
+            </a>
+        </div>
+        @endif
     </nav>
 
     <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
@@ -149,4 +159,9 @@
             {{ now()->format('M d, Y') }}
         </div>
     </div>
+
+     
+    
 </aside>
+
+        

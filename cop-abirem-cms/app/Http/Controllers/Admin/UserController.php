@@ -5,20 +5,35 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Role;
-use App\Models\ActivityLog;
+use App\Models\Member;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
-use Illuminate\Validation\Rule;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class UserController extends Controller
+class UserController extends Controller implements HasMiddleware
 {
+    /**
+     * Get the middleware that should be assigned to the controller.
+     */
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+            new Middleware('permission:users.view', only: ['index', 'show']),
+            new Middleware('permission:users.create', only: ['create', 'store']),
+            new Middleware('permission:users.edit', only: ['edit', 'update', 'linkMember', 'unlinkMember']),
+            new Middleware('permission:users.delete', only: ['destroy']),
+        ];
+    }
+
     /**
      * Display a listing of users.
      */
     public function index(Request $request)
     {
-        $query = User::with('role')->withTrashed();
+        $query = User::with(['role', 'member']);
 
         // Search
         if ($request->filled('search')) {
@@ -30,34 +45,35 @@ class UserController extends Controller
         }
 
         // Filter by role
-        if ($request->filled('role')) {
-            $query->whereHas('role', function ($q) use ($request) {
-                $q->where('slug', $request->role);
-            });
+        if ($request->filled('role_id')) {
+            $query->where('role_id', $request->role_id);
         }
 
         // Filter by status
         if ($request->filled('status')) {
-            if ($request->status === 'active') {
-                $query->where('is_active', true)->whereNull('deleted_at');
-            } elseif ($request->status === 'inactive') {
-                $query->where('is_active', false)->whereNull('deleted_at');
-            } elseif ($request->status === 'deleted') {
-                $query->onlyTrashed();
-            }
-        } else {
-            $query->whereNull('deleted_at');
+            $query->where('is_active', $request->status === 'active');
         }
 
-        // Sort
-        $sortField = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
-        $query->orderBy($sortField, $sortDirection);
+        // Filter by member link status
+        if ($request->filled('member_status')) {
+            if ($request->member_status === 'linked') {
+                $query->whereNotNull('member_id');
+            } else {
+                $query->whereNull('member_id');
+            }
+        }
 
-        $users = $query->paginate(15)->withQueryString();
+        $users = $query->orderBy('name')->paginate(15)->withQueryString();
         $roles = Role::orderBy('name')->get();
 
-        return view('admin.users.index', compact('users', 'roles'));
+        $stats = [
+            'total' => User::count(),
+            'active' => User::where('is_active', true)->count(),
+            'linked' => User::whereNotNull('member_id')->count(),
+            'unlinked' => User::whereNull('member_id')->count(),
+        ];
+
+        return view('admin.users.index', compact('users', 'roles', 'stats'));
     }
 
     /**
@@ -66,7 +82,13 @@ class UserController extends Controller
     public function create()
     {
         $roles = Role::orderBy('name')->get();
-        return view('admin.users.create', compact('roles'));
+        $members = Member::where('membership_status', 'active')
+            ->whereDoesntHave('user')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+
+        return view('admin.users.create', compact('roles', 'members'));
     }
 
     /**
@@ -75,31 +97,18 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
-            'role_id' => ['required', 'exists:roles,id'],
-            'is_active' => ['boolean'],
-            'send_welcome_email' => ['boolean'],
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => ['required', 'confirmed', Password::min(8)],
+            'role_id' => 'required|exists:roles,id',
+            'member_id' => 'nullable|exists:members,id|unique:users,member_id',
+            'is_active' => 'boolean',
         ]);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role_id' => $validated['role_id'],
-            'is_active' => $validated['is_active'] ?? true,
-            'must_change_password' => true,
-            'created_by' => auth()->id(),
-        ]);
+        $validated['password'] = Hash::make($validated['password']);
+        $validated['is_active'] = $request->boolean('is_active', true);
 
-        // Log activity
-        ActivityLog::log('user.created', $user);
-
-        // TODO: Send welcome email if requested
-        // if ($request->boolean('send_welcome_email')) {
-        //     $user->notify(new WelcomeNotification($validated['password']));
-        // }
+        $user = User::create($validated);
 
         return redirect()->route('admin.users.index')
             ->with('success', "User '{$user->name}' created successfully.");
@@ -110,16 +119,11 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $user->load(['role', 'creator', 'loginHistory' => function ($q) {
-            $q->take(10);
+        $user->load(['role', 'member', 'activityLogs' => function ($q) {
+            $q->latest()->take(10);
         }]);
 
-        $activityLogs = ActivityLog::where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->take(50)
-            ->get();
-
-        return view('admin.users.show', compact('user', 'activityLogs'));
+        return view('admin.users.show', compact('user'));
     }
 
     /**
@@ -128,7 +132,16 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $roles = Role::orderBy('name')->get();
-        return view('admin.users.edit', compact('user', 'roles'));
+        $members = Member::where('membership_status', 'active')
+            ->where(function ($q) use ($user) {
+                $q->whereDoesntHave('user')
+                  ->orWhere('id', $user->member_id);
+            })
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+
+        return view('admin.users.edit', compact('user', 'roles', 'members'));
     }
 
     /**
@@ -136,31 +149,24 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        // Prevent editing own role
-        if ($user->id === auth()->id() && $request->role_id != $user->role_id) {
-            return back()->with('error', 'You cannot change your own role.');
-        }
-
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'role_id' => ['required', 'exists:roles,id'],
-            'is_active' => ['boolean'],
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => ['nullable', 'confirmed', Password::min(8)],
+            'role_id' => 'required|exists:roles,id',
+            'member_id' => 'nullable|exists:members,id|unique:users,member_id,' . $user->id,
+            'is_active' => 'boolean',
         ]);
 
-        // Prevent deactivating own account
-        if ($user->id === auth()->id() && !($validated['is_active'] ?? true)) {
-            return back()->with('error', 'You cannot deactivate your own account.');
+        if (!empty($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
+        } else {
+            unset($validated['password']);
         }
 
-        $oldValues = $user->toArray();
+        $validated['is_active'] = $request->boolean('is_active', true);
 
-        $user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'role_id' => $validated['role_id'],
-            'is_active' => $validated['is_active'] ?? false,
-        ]);
+        $user->update($validated);
 
         return redirect()->route('admin.users.index')
             ->with('success', "User '{$user->name}' updated successfully.");
@@ -171,63 +177,111 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        // Prevent self-deletion
         if ($user->id === auth()->id()) {
             return back()->with('error', 'You cannot delete your own account.');
         }
 
-        // Prevent deleting last admin
-        if ($user->hasRole('admin')) {
-            $adminCount = User::whereHas('role', function ($q) {
-                $q->where('slug', 'admin');
-            })->count();
-
-            if ($adminCount <= 1) {
-                return back()->with('error', 'Cannot delete the last administrator.');
-            }
-        }
-
-        $userName = $user->name;
+        $name = $user->name;
         $user->delete();
 
-        ActivityLog::log('user.deleted', $user);
-
         return redirect()->route('admin.users.index')
-            ->with('success', "User '{$userName}' deleted successfully.");
+            ->with('success', "User '{$name}' deleted successfully.");
     }
 
     /**
-     * Restore a soft-deleted user.
+     * Show form to link a user to a member.
      */
-    public function restore($id)
+    public function linkMemberForm(User $user)
     {
-        $user = User::withTrashed()->findOrFail($id);
-        $user->restore();
+        if ($user->member_id) {
+            return redirect()->route('admin.users.show', $user)
+                ->with('info', 'This user is already linked to a member.');
+        }
 
-        ActivityLog::log('user.restored', $user);
+        $members = Member::where('membership_status', 'active')
+            ->whereDoesntHave('user')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
 
-        return redirect()->route('admin.users.index')
-            ->with('success', "User '{$user->name}' restored successfully.");
+        return view('admin.users.link-member', compact('user', 'members'));
     }
 
     /**
-     * Reset user password.
+     * Link a user to a member profile.
      */
-    public function resetPassword(Request $request, User $user)
+    public function linkMember(Request $request, User $user)
     {
         $validated = $request->validate([
-            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
-            'force_change' => ['boolean'],
+            'member_id' => 'required|exists:members,id|unique:users,member_id',
         ]);
 
-        $user->update([
+        $user->update(['member_id' => $validated['member_id']]);
+
+        $member = Member::find($validated['member_id']);
+
+        return redirect()->route('admin.users.show', $user)
+            ->with('success', "User linked to member '{$member->full_name}' successfully.");
+    }
+
+    /**
+     * Unlink a user from their member profile.
+     */
+    public function unlinkMember(User $user)
+    {
+        if (!$user->member_id) {
+            return back()->with('error', 'This user is not linked to any member.');
+        }
+
+        $memberName = $user->member->full_name ?? 'Unknown';
+        $user->update(['member_id' => null]);
+
+        return redirect()->route('admin.users.show', $user)
+            ->with('success', "User unlinked from member '{$memberName}'.");
+    }
+
+    /**
+     * Create a user account for a member.
+     */
+    public function createForMember(Member $member)
+    {
+        if ($member->user) {
+            return redirect()->route('admin.members.show', $member)
+                ->with('info', 'This member already has a user account.');
+        }
+
+        $roles = Role::orderBy('name')->get();
+
+        return view('admin.users.create-for-member', compact('member', 'roles'));
+    }
+
+    /**
+     * Store a user account for a member.
+     */
+    public function storeForMember(Request $request, Member $member)
+    {
+        if ($member->user) {
+            return redirect()->route('admin.members.show', $member)
+                ->with('error', 'This member already has a user account.');
+        }
+
+        $validated = $request->validate([
+            'email' => 'required|email|unique:users,email',
+            'password' => ['required', 'confirmed', Password::min(8)],
+            'role_id' => 'nullable|exists:roles,id',
+        ]);
+
+        $user = User::create([
+            'name' => $member->full_name,
+            'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'must_change_password' => $validated['force_change'] ?? true,
+            'role_id' => $validated['role_id'],
+            'member_id' => $member->id,
+            'is_active' => true,
         ]);
 
-        ActivityLog::log('password.reset', $user);
-
-        return back()->with('success', "Password reset successfully for '{$user->name}'.");
+        return redirect()->route('admin.members.show', $member)
+            ->with('success', "User account created for '{$member->full_name}'.");
     }
 
     /**
@@ -235,9 +289,8 @@ class UserController extends Controller
      */
     public function toggleStatus(User $user)
     {
-        // Prevent toggling own status
         if ($user->id === auth()->id()) {
-            return back()->with('error', 'You cannot change your own status.');
+            return back()->with('error', 'You cannot deactivate your own account.');
         }
 
         $user->update(['is_active' => !$user->is_active]);
@@ -248,12 +301,18 @@ class UserController extends Controller
     }
 
     /**
-     * Unlock a locked user account.
+     * Reset user password.
      */
-    public function unlock(User $user)
+    public function resetPassword(Request $request, User $user)
     {
-        $user->unlockAccount();
+        $validated = $request->validate([
+            'password' => ['required', 'confirmed', Password::min(8)],
+        ]);
 
-        return back()->with('success', "User '{$user->name}' has been unlocked.");
+        $user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return back()->with('success', "Password reset for '{$user->name}'.");
     }
 }

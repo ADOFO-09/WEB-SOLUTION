@@ -229,4 +229,33 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::post('/{smsMessage}/send', [SmsController::class, 'send'])->name('send');
         Route::delete('/{smsMessage}', [SmsController::class, 'destroy'])->name('destroy');
     });
+
+    // ===========================================
+// USER MANAGEMENT (with Member Linking)
+// ===========================================
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', [UserController::class, 'index'])->name('index');
+        Route::get('/create', [UserController::class, 'create'])->name('create');
+        Route::post('/', [UserController::class, 'store'])->name('store');
+        Route::get('/{user}', [UserController::class, 'show'])->name('show');
+        Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [UserController::class, 'update'])->name('update');
+        Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+        
+        // Member linking
+        Route::get('/{user}/link-member', [UserController::class, 'linkMemberForm'])->name('link-member.form');
+        Route::post('/{user}/link-member', [UserController::class, 'linkMember'])->name('link-member');
+        Route::post('/{user}/unlink-member', [UserController::class, 'unlinkMember'])->name('unlink-member');
+        
+        // User actions
+        Route::post('/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/{user}/reset-password', [UserController::class, 'resetPassword'])->name('reset-password');
+    });
+
+    // Create user for member (add to members routes section)
+    Route::get('/members/{member}/create-user', [UserController::class, 'createForMember'])->name('members.create-user');
+    Route::post('/members/{member}/create-user', [UserController::class, 'storeForMember'])->name('members.store-user');
+
+
+
 });
