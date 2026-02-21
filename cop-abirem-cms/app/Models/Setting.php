@@ -7,133 +7,73 @@ use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
         'key',
         'value',
         'group',
         'type',
-        'description',
-        'is_public',
     ];
-
-    /**
-     * The attributes that should be cast.
-     */
-    protected $casts = [
-        'is_public' => 'boolean',
-    ];
-
-    /**
-     * Cache key for settings.
-     */
-    protected static string $cacheKey = 'app_settings';
 
     /**
      * Get a setting value by key.
      */
     public static function get(string $key, $default = null)
     {
-        $settings = static::getAllCached();
-        
-        if (!isset($settings[$key])) {
-            return $default;
-        }
+        $setting = Cache::rememberForever("setting.{$key}", function () use ($key) {
+            return static::where('key', $key)->first();
+        });
 
-        $setting = $settings[$key];
-        
-        // Cast value based on type
-        return match($setting['type']) {
-            'boolean' => filter_var($setting['value'], FILTER_VALIDATE_BOOLEAN),
-            'number' => is_numeric($setting['value']) ? (float) $setting['value'] : $default,
-            'json' => json_decode($setting['value'], true) ?? $default,
-            default => $setting['value'] ?? $default,
-        };
+        return $setting ? $setting->value : $default;
     }
 
     /**
      * Set a setting value.
      */
-    public static function set(string $key, $value): bool
+    public static function set(string $key, $value, string $group = 'general'): void
     {
-        $setting = static::where('key', $key)->first();
-        
-        if (!$setting) {
-            return false;
-        }
+        static::updateOrCreate(
+            ['key' => $key],
+            ['value' => $value, 'group' => $group]
+        );
 
-        // Convert value to string for storage
-        if (is_array($value)) {
-            $value = json_encode($value);
-        } elseif (is_bool($value)) {
-            $value = $value ? 'true' : 'false';
-        }
-
-        $setting->update(['value' => $value]);
-        
-        // Clear cache
-        static::clearCache();
-
-        return true;
+        Cache::forget("setting.{$key}");
+        Cache::forget("settings.group.{$group}");
     }
 
     /**
-     * Get all settings cached.
+     * Get all settings for a group.
      */
-    public static function getAllCached(): array
+    public static function getGroup(string $group): array
     {
-        return Cache::remember(static::$cacheKey, 3600, function () {
-            return static::all()->keyBy('key')->map(function ($setting) {
-                return [
-                    'value' => $setting->value,
-                    'type' => $setting->type,
-                    'group' => $setting->group,
-                ];
-            })->toArray();
-        });
-    }
-
-    /**
-     * Get settings by group.
-     */
-    public static function getByGroup(string $group): array
-    {
-        $settings = static::getAllCached();
-        
-        return array_filter($settings, fn($s) => $s['group'] === $group);
-    }
-
-    /**
-     * Clear settings cache.
-     */
-    public static function clearCache(): void
-    {
-        Cache::forget(static::$cacheKey);
-    }
-
-    /**
-     * Get all available groups.
-     */
-    public static function getGroups(): array
-    {
-        return static::distinct()->pluck('group')->toArray();
-    }
-
-    /**
-     * Boot function to clear cache on changes.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::saved(function () {
-            static::clearCache();
+        $settings = Cache::rememberForever("settings.group.{$group}", function () use ($group) {
+            return static::where('group', $group)->pluck('value', 'key')->toArray();
         });
 
-        static::deleted(function () {
-            static::clearCache();
-        });
+        return $settings;
+    }
+
+    /**
+     * Check if a setting exists.
+     */
+    public static function has(string $key): bool
+    {
+        return static::where('key', $key)->exists();
+    }
+
+    /**
+     * Remove a setting.
+     */
+    public static function remove(string $key): void
+    {
+        static::where('key', $key)->delete();
+        Cache::forget("setting.{$key}");
+    }
+
+    /**
+     * Get all settings as array.
+     */
+    public static function getAllAsArray(): array
+    {
+        return static::all()->pluck('value', 'key')->toArray();
     }
 }

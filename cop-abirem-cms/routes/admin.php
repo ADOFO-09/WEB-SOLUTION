@@ -17,7 +17,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Admin\SettingsController;
 /*
 |--------------------------------------------------------------------------
 | Admin Routes
@@ -256,6 +256,37 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
     Route::get('/members/{member}/create-user', [UserController::class, 'createForMember'])->name('members.create-user');
     Route::post('/members/{member}/create-user', [UserController::class, 'storeForMember'])->name('members.store-user');
 
+    // ===========================================
+// SETTINGS & BACKUP
+// ===========================================
+    Route::prefix('settings')->name('settings.')->middleware('permission:settings.manage')->group(function () {
+        // General Settings
+        Route::get('/general', [SettingsController::class, 'general'])->name('general');
+        Route::put('/general', [SettingsController::class, 'updateGeneral'])->name('general.update');
+        
+        // Financial Settings
+        Route::get('/financial', [SettingsController::class, 'financial'])->name('financial');
+        Route::put('/financial', [SettingsController::class, 'updateFinancial'])->name('financial.update');
+        
+        // SMS Settings
+        Route::get('/sms', [SettingsController::class, 'sms'])->name('sms');
+        Route::put('/sms', [SettingsController::class, 'updateSms'])->name('sms.update');
+        
+        // System Settings
+        Route::get('/system', [SettingsController::class, 'system'])->name('system');
+        Route::put('/system', [SettingsController::class, 'updateSystem'])->name('system.update');
+        
+        // Backup Management
+        Route::get('/backup', [SettingsController::class, 'backup'])->name('backup');
+        Route::post('/backup/create', [SettingsController::class, 'createBackup'])->name('backup.create');
+        Route::get('/backup/download/{filename}', [SettingsController::class, 'downloadBackup'])->name('backup.download');
+        Route::delete('/backup/{filename}', [SettingsController::class, 'deleteBackup'])->name('backup.delete');
+        Route::post('/backup/restore/{filename}', [SettingsController::class, 'restoreBackup'])->name('backup.restore');
+        
+        // Cache Management
+        Route::post('/cache/clear', [SettingsController::class, 'clearCache'])->name('cache.clear');
+        Route::post('/optimize', [SettingsController::class, 'optimize'])->name('optimize');
+    });
 
 
 });
