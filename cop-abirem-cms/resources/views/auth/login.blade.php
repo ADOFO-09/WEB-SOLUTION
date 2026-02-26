@@ -103,27 +103,29 @@
         .brand-logo {
             width: 100px;
             height: 100px;
-            background: var(--accent);
-            border-radius: 24px;
+            background: var(--white);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 2rem;
-            box-shadow: 0 20px 40px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             animation: logoFloat 3s ease-in-out infinite;
+            overflow: hidden;
+            padding: 8px;
+        }
+        
+        .brand-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
         
         @keyframes logoFloat {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
         }
-        
-        .brand-logo svg {
-            width: 60px;
-            height: 60px;
-            fill: var(--primary-dark);
-        }
-        
+
         .brand-content h1 {
             font-family: 'Playfair Display', serif;
             font-size: 2.5rem;
@@ -183,12 +185,10 @@
         .login-panel {
             flex: 1;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            padding: 3rem;
+            justify-content: center;
+            padding: 2rem;
             background: var(--white);
-            max-width: 600px;
         }
         
         .login-container {
@@ -214,114 +214,52 @@
             font-size: 0.95rem;
         }
         
-        /* Role Selection */
-        .role-selector {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .role-card {
-            position: relative;
-            padding: 1.25rem;
-            border: 2px solid var(--gray-200);
-            border-radius: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            background: var(--white);
-        }
-        
-        .role-card:hover {
-            border-color: var(--primary-light);
-            background: var(--gray-50);
-        }
-        
-        .role-card.active {
-            border-color: var(--primary);
-            background: rgba(30, 58, 95, 0.05);
-            box-shadow: 0 0 0 4px rgba(30, 58, 95, 0.1);
-        }
-        
-        .role-card input {
-            position: absolute;
-            opacity: 0;
-            cursor: pointer;
-        }
-        
-        .role-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--gray-100);
+        /* Error/Success Messages */
+        .error-message {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
             border-radius: 12px;
+            margin-bottom: 1.5rem;
+            color: var(--error);
+            font-size: 0.9rem;
+        }
+        
+        .error-message svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        
+        .success-message {
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin: 0 auto 0.75rem;
-            transition: all 0.3s ease;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            color: var(--success);
+            font-size: 0.9rem;
         }
         
-        .role-card.active .role-icon {
-            background: var(--primary);
-        }
-        
-        .role-icon svg {
-            width: 24px;
-            height: 24px;
-            stroke: var(--gray-500);
-            transition: all 0.3s ease;
-        }
-        
-        .role-card.active .role-icon svg {
-            stroke: var(--white);
-        }
-        
-        .role-card h4 {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--gray-800);
-            margin-bottom: 0.25rem;
-        }
-        
-        .role-card span {
-            font-size: 0.75rem;
-            color: var(--gray-500);
-        }
-        
-        .role-card .check-mark {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 22px;
-            height: 22px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .role-card.active .check-mark {
-            display: flex;
-        }
-        
-        .check-mark svg {
-            width: 12px;
-            height: 12px;
-            stroke: var(--white);
-            stroke-width: 3;
+        .success-message svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
         }
         
         /* Form Styles */
         .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
+            margin-bottom: 2rem;
         }
         
         .form-group {
-            position: relative;
+            margin-bottom: 1.5rem;
         }
         
         .form-group label {
@@ -336,6 +274,27 @@
             position: relative;
         }
         
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 1rem;
+            color: var(--gray-800);
+            background: var(--white);
+            transition: all 0.3s ease;
+        }
+        
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(30, 58, 95, 0.1);
+        }
+        
+        .input-wrapper input::placeholder {
+            color: var(--gray-400);
+        }
+        
         .input-wrapper .icon {
             position: absolute;
             left: 1rem;
@@ -348,30 +307,9 @@
             transition: stroke 0.3s ease;
         }
         
-        .input-wrapper input {
-            width: 100%;
-            padding: 0.875rem 1rem 0.875rem 3rem;
-            border: 2px solid var(--gray-200);
-            border-radius: 12px;
-            font-size: 0.95rem;
-            color: var(--gray-800);
-            background: var(--white);
-            transition: all 0.3s ease;
-        }
-        
-        .input-wrapper input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(30, 58, 95, 0.1);
-        }
-        
         .input-wrapper input:focus + .icon,
-        .input-wrapper input:not(:placeholder-shown) + .icon {
+        .input-wrapper input:focus ~ .icon {
             stroke: var(--primary);
-        }
-        
-        .input-wrapper input::placeholder {
-            color: var(--gray-400);
         }
         
         .password-toggle {
@@ -382,7 +320,7 @@
             background: none;
             border: none;
             cursor: pointer;
-            padding: 0;
+            padding: 0.25rem;
         }
         
         .password-toggle svg {
@@ -393,14 +331,15 @@
         }
         
         .password-toggle:hover svg {
-            stroke: var(--primary);
+            stroke: var(--gray-600);
         }
         
-        /* Remember & Forgot */
+        /* Form Options */
         .form-options {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
         }
         
         .remember-me {
@@ -408,6 +347,8 @@
             align-items: center;
             gap: 0.5rem;
             cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--gray-600);
         }
         
         .remember-me input {
@@ -425,33 +366,26 @@
             transition: all 0.3s ease;
         }
         
-        .remember-me input:checked + .checkbox-custom {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-        
         .checkbox-custom svg {
             width: 12px;
             height: 12px;
             stroke: var(--white);
             stroke-width: 3;
             opacity: 0;
-            transform: scale(0);
-            transition: all 0.2s ease;
+            transition: opacity 0.2s ease;
+        }
+        
+        .remember-me input:checked + .checkbox-custom {
+            background: var(--primary);
+            border-color: var(--primary);
         }
         
         .remember-me input:checked + .checkbox-custom svg {
             opacity: 1;
-            transform: scale(1);
-        }
-        
-        .remember-me span {
-            font-size: 0.875rem;
-            color: var(--gray-600);
         }
         
         .forgot-link {
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             color: var(--primary);
             text-decoration: none;
             font-weight: 500;
@@ -459,32 +393,31 @@
         }
         
         .forgot-link:hover {
-            color: var(--primary-dark);
-            text-decoration: underline;
+            color: var(--primary-light);
         }
         
         /* Submit Button */
         .btn-submit {
             width: 100%;
             padding: 1rem;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: var(--white);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
             border: none;
             border-radius: 12px;
+            color: var(--white);
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.75rem;
-            margin-top: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(30, 58, 95, 0.3);
         }
         
         .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(30, 58, 95, 0.3);
+            box-shadow: 0 8px 25px rgba(30, 58, 95, 0.4);
         }
         
         .btn-submit:active {
@@ -494,150 +427,60 @@
         .btn-submit svg {
             width: 20px;
             height: 20px;
+            transition: transform 0.3s ease;
         }
         
-        /* Divider */
-        .divider {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin: 1.5rem 0;
+        .btn-submit:hover svg {
+            transform: translateX(4px);
         }
         
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--gray-200);
-        }
-        
-        .divider span {
-            font-size: 0.8rem;
-            color: var(--gray-400);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-        
-        /* Help Link */
+        /* Help Section */
         .help-section {
             text-align: center;
-            margin-top: 2rem;
             padding-top: 1.5rem;
-            border-top: 1px solid var(--gray-100);
+            border-top: 1px solid var(--gray-200);
         }
         
         .help-section p {
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             color: var(--gray-500);
+            margin-bottom: 0.25rem;
         }
         
         .help-section a {
             color: var(--primary);
-            font-weight: 600;
             text-decoration: none;
+            font-weight: 500;
         }
         
         .help-section a:hover {
             text-decoration: underline;
         }
         
-        /* Error Message */
-        .error-message {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: var(--error);
-            padding: 1rem;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .error-message svg {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-        }
-        
-        /* Back to home */
-        .back-link {
-            position: absolute;
-            top: 2rem;
-            left: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: rgba(255, 255, 255, 0.7);
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: color 0.3s ease;
-            z-index: 20;
-        }
-        
-        .back-link:hover {
-            color: var(--white);
-        }
-        
-        .back-link svg {
-            width: 18px;
-            height: 18px;
-        }
-        
         /* Responsive */
         @media (max-width: 1024px) {
-            body {
-                flex-direction: column;
-            }
-            
             .brand-panel {
-                padding: 4rem 2rem 3rem;
-                min-height: auto;
-            }
-            
-            .brand-content h1 {
-                font-size: 2rem;
-            }
-            
-            .brand-content p,
-            .brand-features {
                 display: none;
             }
             
-            .brand-logo {
-                width: 80px;
-                height: 80px;
-                margin-bottom: 1.5rem;
-            }
-            
-            .brand-logo svg {
-                width: 45px;
-                height: 45px;
-            }
-            
             .login-panel {
-                max-width: none;
-                flex: none;
-                padding: 2rem;
-            }
-            
-            .back-link {
-                top: 1rem;
-                left: 1rem;
+                flex: 1;
             }
         }
         
         @media (max-width: 480px) {
-            .role-selector {
-                grid-template-columns: 1fr;
+            .login-panel {
+                padding: 1.5rem;
+            }
+            
+            .login-header h2 {
+                font-size: 1.75rem;
             }
             
             .form-options {
                 flex-direction: column;
-                gap: 1rem;
                 align-items: flex-start;
+                gap: 1rem;
             }
         }
     </style>
@@ -651,32 +494,25 @@
             <div class="shape shape-2"></div>
             <div class="shape shape-3"></div>
         </div>
-        
-        <a href="{{ url('/') }}" class="back-link">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            Back to Home
-        </a>
-        
         <div class="brand-content">
             <div class="brand-logo">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18l6.9 3.45L12 11.09 5.1 7.64 12 4.18zM4 8.82l7 3.5v7.36l-7-3.5V8.82zm16 7.36l-7 3.5v-7.36l7-3.5v7.36z"/>
-                </svg>
+                <img src="{{ asset('images/cop-logo.png') }}" alt="COP Logo" onerror="this.style.display='none'">
             </div>
             <h1>Church of Pentecost</h1>
-            <p class="subtitle">Abirem Local Assembly</p>
-            <p>Access your church management portal to manage members, track giving, and strengthen our community together.</p>
+            <div class="subtitle">Abirem Assembly</div>
+            <p>Empowering our church community with modern tools for efficient administration, member care, and spiritual growth.</p>
             
             <div class="brand-features">
                 <div class="brand-feature">
                     <div class="brand-feature-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 010 7.75"/>
                         </svg>
                     </div>
-                    <span>Secure & encrypted login</span>
+                    <span>Complete member management</span>
                 </div>
                 <div class="brand-feature">
                     <div class="brand-feature-icon">
@@ -685,7 +521,7 @@
                             <path d="M7 11V7a5 5 0 0110 0v4"/>
                         </svg>
                     </div>
-                    <span>Role-based access control</span>
+                    <span>Secure access control</span>
                 </div>
                 <div class="brand-feature">
                     <div class="brand-feature-icon">
@@ -720,7 +556,7 @@
             @endif
             
             @if (session('status'))
-            <div class="error-message" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: var(--success);">
+            <div class="success-message">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
                     <polyline points="22 4 12 14.01 9 11.01"/>
@@ -729,47 +565,9 @@
             </div>
             @endif
             
-            <!-- Role Selection -->
-            <div class="role-selector">
-                <label class="role-card active" data-role="admin">
-                    <input type="radio" name="portal_type" value="admin" checked>
-                    <div class="check-mark">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                    </div>
-                    <div class="role-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                            <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
-                            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
-                        </svg>
-                    </div>
-                    <h4>Administrator</h4>
-                    <span>Full system access</span>
-                </label>
-                
-                <label class="role-card" data-role="member">
-                    <input type="radio" name="portal_type" value="member">
-                    <div class="check-mark">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                    </div>
-                    <div class="role-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                    </div>
-                    <h4>Member</h4>
-                    <span>Personal portal</span>
-                </label>
-            </div>
-            
             <!-- Login Form -->
-            <form method="POST" action="{{ route('login') }}" class="login-form" id="loginForm">
+            <form method="POST" action="{{ route('login') }}" class="login-form">
                 @csrf
-                <input type="hidden" name="portal_type" id="portalType" value="admin">
                 
                 <div class="form-group">
                     <label for="email">Email Address</label>
@@ -831,16 +629,6 @@
     </div>
     
     <script>
-        // Role card selection
-        document.querySelectorAll('.role-card').forEach(card => {
-            card.addEventListener('click', function() {
-                document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
-                this.classList.add('active');
-                this.querySelector('input').checked = true;
-                document.getElementById('portalType').value = this.dataset.role;
-            });
-        });
-        
         // Password toggle
         function togglePassword() {
             const passwordInput = document.getElementById('password');
@@ -857,7 +645,7 @@
         
         // Form animation on load
         document.addEventListener('DOMContentLoaded', function() {
-            const elements = document.querySelectorAll('.login-header, .role-selector, .form-group, .form-options, .btn-submit');
+            const elements = document.querySelectorAll('.login-header, .form-group, .form-options, .btn-submit, .help-section');
             elements.forEach((el, index) => {
                 el.style.opacity = '0';
                 el.style.transform = 'translateY(20px)';
