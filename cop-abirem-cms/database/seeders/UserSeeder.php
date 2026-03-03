@@ -2,69 +2,133 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
-use App\Models\Role;
-use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     * Creates test user accounts for each role.
      */
     public function run(): void
     {
-        // Ensure roles exist (assuming RoleSeeder has run first)
-        $adminRole = Role::where('slug', 'admin')->first();
-        if (!$adminRole) {
-            throw new \Exception('Admin role not found. Ensure RoleSeeder runs before UserSeeder.');
-        }
+        $now = Carbon::now();
 
-        // Create a default admin user with id=1 (to resolve foreign key issues in other seeders)
-        User::create([
-            'id' => 1,  // Explicitly set to ensure id=1 exists
-            'role_id' => $adminRole->id,
-            'member_id' => null,  // No associated member initially
-            'name' => 'System Administrator',
-            'email' => 'admin@example.com',
-            'email_verified_at' => Carbon::now(),
-            'password' => Hash::make('password'),  // Change this in production!
-            'is_active' => 1,
-            'must_change_password' => 1,
-            'last_login_at' => null,
-            'last_login_ip' => null,
-            'login_attempts' => 0,
-            'locked_until' => null,
-            'created_by' => null,  // System-created
-            'remember_token' => null,
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
-            'deleted_at' => null,
-        ]);
+        // Get role IDs
+        $roles = DB::table('roles')->pluck('id', 'slug');
 
-        // Optionally, create additional users (e.g., a regular user)
-        $userRole = Role::where('slug', 'member')->first();  // Assuming a 'member' role exists
-        if ($userRole) {
-            User::create([
-                'role_id' => $userRole->id,
+        $users = [
+            // 1. System Administrator
+            [
+                'name' => 'System Administrator',
+                'email' => 'admin@copabirem.org',
+                'password' => Hash::make('Admin@123!'),
+                'role_id' => $roles['admin'],
                 'member_id' => null,
-                'name' => 'John Doe',
-                'email' => 'john.doe@example.com',
-                'email_verified_at' => Carbon::now(),
-                'password' => Hash::make('password'),
-                'is_active' => 1,
-                'must_change_password' => 0,
-                'last_login_at' => null,
-                'last_login_ip' => null,
-                'login_attempts' => 0,
-                'locked_until' => null,
-                'created_by' => 1,  // Created by admin
-                'remember_token' => null,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-                'deleted_at' => null,
-            ]);
+                'is_active' => true,
+                'must_change_password' => false,
+                'email_verified_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            
+            // 2. Presiding Elder
+            [
+                'name' => 'Elder Kwame Mensah',
+                'email' => 'elder@copabirem.org',
+                'password' => Hash::make('Elder@123!'),
+                'role_id' => $roles['elder'],
+                'member_id' => 1, // Link to first member (Elder Kwame Mensah)
+                'is_active' => true,
+                'must_change_password' => false,
+                'email_verified_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            
+            // 3. Local Secretary
+            [
+                'name' => 'Ama Mensah',
+                'email' => 'secretary@copabirem.org',
+                'password' => Hash::make('Secretary@123!'),
+                'role_id' => $roles['secretary'],
+                'member_id' => 2, // Link to second member (Deaconess Ama Mensah)
+                'is_active' => true,
+                'must_change_password' => false,
+                'email_verified_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            
+            // 4. Financial Secretary
+            [
+                'name' => 'Kofi Adjei',
+                'email' => 'finance@copabirem.org',
+                'password' => Hash::make('Finance@123!'),
+                'role_id' => $roles['finance'],
+                'member_id' => 3, // Link to third member (Kofi Adjei)
+                'is_active' => true,
+                'must_change_password' => false,
+                'email_verified_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            
+            // 5. Ministry Leader
+            [
+                'name' => 'Emmanuel Frimpong',
+                'email' => 'ministry@copabirem.org',
+                'password' => Hash::make('Ministry@123!'),
+                'role_id' => $roles['ministry_leader'],
+                'member_id' => 7, // Link to Deacon Emmanuel Frimpong
+                'is_active' => true,
+                'must_change_password' => false,
+                'email_verified_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            
+            // 6. General Member
+            [
+                'name' => 'Grace Appiah',
+                'email' => 'member@copabirem.org',
+                'password' => Hash::make('Member@123!'),
+                'role_id' => $roles['member'],
+                'member_id' => 10, // Link to Grace Appiah
+                'is_active' => true,
+                'must_change_password' => false,
+                'email_verified_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+        ];
+
+        // DB::table('users')->insert($users);
+
+        foreach ($users as $userData) {
+            User::updateOrCreate(
+                ['email' => $userData['email']], // Find by email
+                $userData // Update or create with this data
+            );
         }
+
+        $this->command->info('✓ ' . count($users) . ' test users seeded successfully.');
+        $this->command->newLine();
+        $this->command->info('=== TEST LOGIN CREDENTIALS ===');
+        $this->command->table(
+            ['Role', 'Email', 'Password'],
+            [
+                ['System Administrator', 'admin@copabirem.org', 'Admin@123!'],
+                ['Presiding Elder', 'elder@copabirem.org', 'Elder@123!'],
+                ['Local Secretary', 'secretary@copabirem.org', 'Secretary@123!'],
+                ['Financial Secretary', 'finance@copabirem.org', 'Finance@123!'],
+                ['Ministry Leader', 'ministry@copabirem.org', 'Ministry@123!'],
+                ['Member', 'member@copabirem.org', 'Member@123!'],
+            ]
+        );
     }
 }

@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\ExpenseCategory;
+use App\Models\User;
+use App\Models\FinancialYear;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -81,6 +84,8 @@ class Expense extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    
 
     // ==========================================
     // SCOPES
