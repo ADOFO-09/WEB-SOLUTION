@@ -27,31 +27,31 @@ class FinanceDashboardController extends Controller
         $currentMonth = Carbon::now();
         $currentYear = Carbon::now()->year;
 
-        // Today's Collections
+        // Today's Collections - using payment_date
         $todayStats = [
-            'tithes' => Tithe::whereDate('tithe_date', today())->sum('amount') ?? 0,
-            'offerings' => Offering::whereDate('offering_date', today())->sum('amount') ?? 0,
-            'donations' => Donation::whereDate('donation_date', today())->sum('amount') ?? 0,
+            'tithes' => Tithe::whereDate('payment_date', today())->sum('amount') ?? 0,
+            'offerings' => Offering::whereDate('payment_date', today())->sum('amount') ?? 0,
+            'donations' => Donation::whereDate('payment_date', today())->sum('amount') ?? 0,
         ];
         $todayStats['total'] = $todayStats['tithes'] + $todayStats['offerings'] + $todayStats['donations'];
 
         // This Week's Collections
         $weekStart = now()->startOfWeek();
         $weekStats = [
-            'tithes' => Tithe::whereBetween('tithe_date', [$weekStart, now()])->sum('amount') ?? 0,
-            'offerings' => Offering::whereBetween('offering_date', [$weekStart, now()])->sum('amount') ?? 0,
-            'donations' => Donation::whereBetween('donation_date', [$weekStart, now()])->sum('amount') ?? 0,
+            'tithes' => Tithe::whereBetween('payment_date', [$weekStart, now()])->sum('amount') ?? 0,
+            'offerings' => Offering::whereBetween('payment_date', [$weekStart, now()])->sum('amount') ?? 0,
+            'donations' => Donation::whereBetween('payment_date', [$weekStart, now()])->sum('amount') ?? 0,
         ];
         $weekStats['total'] = $weekStats['tithes'] + $weekStats['offerings'] + $weekStats['donations'];
 
         // This Month's Summary
         $monthStats = [
-            'tithes' => Tithe::whereMonth('tithe_date', $currentMonth->month)
-                ->whereYear('tithe_date', $currentYear)->sum('amount') ?? 0,
-            'offerings' => Offering::whereMonth('offering_date', $currentMonth->month)
-                ->whereYear('offering_date', $currentYear)->sum('amount') ?? 0,
-            'donations' => Donation::whereMonth('donation_date', $currentMonth->month)
-                ->whereYear('donation_date', $currentYear)->sum('amount') ?? 0,
+            'tithes' => Tithe::whereMonth('payment_date', $currentMonth->month)
+                ->whereYear('payment_date', $currentYear)->sum('amount') ?? 0,
+            'offerings' => Offering::whereMonth('payment_date', $currentMonth->month)
+                ->whereYear('payment_date', $currentYear)->sum('amount') ?? 0,
+            'donations' => Donation::whereMonth('payment_date', $currentMonth->month)
+                ->whereYear('payment_date', $currentYear)->sum('amount') ?? 0,
             'expenses' => Expense::whereMonth('expense_date', $currentMonth->month)
                 ->whereYear('expense_date', $currentYear)
                 ->where('status', 'approved')->sum('amount') ?? 0,
@@ -61,23 +61,23 @@ class FinanceDashboardController extends Controller
 
         // Year to Date Summary
         $ytdStats = [
-            'tithes' => Tithe::whereYear('tithe_date', $currentYear)->sum('amount') ?? 0,
-            'offerings' => Offering::whereYear('offering_date', $currentYear)->sum('amount') ?? 0,
-            'donations' => Donation::whereYear('donation_date', $currentYear)->sum('amount') ?? 0,
+            'tithes' => Tithe::whereYear('payment_date', $currentYear)->sum('amount') ?? 0,
+            'offerings' => Offering::whereYear('payment_date', $currentYear)->sum('amount') ?? 0,
+            'donations' => Donation::whereYear('payment_date', $currentYear)->sum('amount') ?? 0,
             'expenses' => Expense::whereYear('expense_date', $currentYear)
                 ->where('status', 'approved')->sum('amount') ?? 0,
         ];
         $ytdStats['total_income'] = $ytdStats['tithes'] + $ytdStats['offerings'] + $ytdStats['donations'];
         $ytdStats['net'] = $ytdStats['total_income'] - $ytdStats['expenses'];
 
-        // Pledge Summary
+        // Pledge Summary - using total_amount and due_date like Elder controller
         $pledgeStats = [
             'active_pledges' => Pledge::where('status', 'active')->count(),
-            'total_pledged' => Pledge::where('status', '!=', 'cancelled')->sum('amount') ?? 0,
+            'total_pledged' => Pledge::where('status', '!=', 'cancelled')->sum('total_amount') ?? 0,
             'total_paid' => Pledge::where('status', '!=', 'cancelled')->sum('amount_paid') ?? 0,
             'overdue_count' => Pledge::where('status', 'active')
-                ->where('end_date', '<', now())
-                ->whereRaw('amount_paid < amount')->count(),
+                ->where('due_date', '<', now())
+                ->whereRaw('amount_paid < total_amount')->count(),
         ];
         $pledgeStats['balance'] = $pledgeStats['total_pledged'] - $pledgeStats['total_paid'];
         $pledgeStats['collection_rate'] = $pledgeStats['total_pledged'] > 0 
@@ -89,7 +89,7 @@ class FinanceDashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->take(5)->get();
 
-        $recentOfferings = Offering::with('serviceType')
+        $recentOfferings = Offering::with('session')
             ->orderBy('created_at', 'desc')
             ->take(5)->get();
 
@@ -97,16 +97,16 @@ class FinanceDashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->take(5)->get();
 
-        // Pending Expenses (awaiting approval)
-        $pendingExpenses = Expense::where('status', 'pending')
-            ->with('category')
-            ->orderBy('created_at', 'desc')
+        // Pending Expenses (awaiting approval) - using expenseCategory like Elder controller
+        $pendingExpenses = Expense::pending()
+            ->with(['expenseCategory', 'requestedBy'])
+            ->latest()
             ->take(10)->get();
 
         // Top Tithe Contributors (This Month)
         $topTithers = Tithe::select('member_id', DB::raw('SUM(amount) as total'))
-            ->whereMonth('tithe_date', $currentMonth->month)
-            ->whereYear('tithe_date', $currentYear)
+            ->whereMonth('payment_date', $currentMonth->month)
+            ->whereYear('payment_date', $currentYear)
             ->groupBy('member_id')
             ->orderByDesc('total')
             ->with('member:id,first_name,last_name,member_id')
@@ -119,12 +119,12 @@ class FinanceDashboardController extends Controller
             $monthlyTrend[] = [
                 'month' => $month->format('M'),
                 'year' => $month->format('Y'),
-                'tithes' => Tithe::whereMonth('tithe_date', $month->month)
-                    ->whereYear('tithe_date', $month->year)->sum('amount') ?? 0,
-                'offerings' => Offering::whereMonth('offering_date', $month->month)
-                    ->whereYear('offering_date', $month->year)->sum('amount') ?? 0,
-                'donations' => Donation::whereMonth('donation_date', $month->month)
-                    ->whereYear('donation_date', $month->year)->sum('amount') ?? 0,
+                'tithes' => Tithe::whereMonth('payment_date', $month->month)
+                    ->whereYear('payment_date', $month->year)->sum('amount') ?? 0,
+                'offerings' => Offering::whereMonth('payment_date', $month->month)
+                    ->whereYear('payment_date', $month->year)->sum('amount') ?? 0,
+                'donations' => Donation::whereMonth('payment_date', $month->month)
+                    ->whereYear('payment_date', $month->year)->sum('amount') ?? 0,
             ];
         }
 
@@ -161,7 +161,7 @@ class FinanceDashboardController extends Controller
         $validated = $request->validate([
             'member_id' => 'required|exists:members,id',
             'amount' => 'required|numeric|min:0.01',
-            'tithe_date' => 'required|date',
+            'payment_date' => 'required|date',
             'payment_method' => 'required|in:cash,cheque,mobile_money,bank_transfer',
         ]);
 
@@ -173,7 +173,7 @@ class FinanceDashboardController extends Controller
         Tithe::create([
             'member_id' => $validated['member_id'],
             'amount' => $validated['amount'],
-            'tithe_date' => $validated['tithe_date'],
+            'payment_date' => $validated['payment_date'],
             'payment_method' => $validated['payment_method'],
             'receipt_number' => $receiptNumber,
             'recorded_by' => auth()->id(),
@@ -189,7 +189,7 @@ class FinanceDashboardController extends Controller
     {
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'offering_date' => 'required|date',
+            'payment_date' => 'required|date',
             'service_type_id' => 'nullable|exists:service_types,id',
             'offering_type' => 'required|string',
         ]);
@@ -201,7 +201,7 @@ class FinanceDashboardController extends Controller
 
         Offering::create([
             'amount' => $validated['amount'],
-            'offering_date' => $validated['offering_date'],
+            'payment_date' => $validated['payment_date'],
             'service_type_id' => $validated['service_type_id'],
             'offering_type' => $validated['offering_type'],
             'receipt_number' => $receiptNumber,
@@ -217,7 +217,7 @@ class FinanceDashboardController extends Controller
     public function quickExpense(Request $request)
     {
         $validated = $request->validate([
-            'category_id' => 'required|exists:expense_categories,id',
+            'expense_category_id' => 'required|exists:expense_categories,id',
             'amount' => 'required|numeric|min:0.01',
             'expense_date' => 'required|date',
             'description' => 'required|string|max:500',
@@ -230,14 +230,14 @@ class FinanceDashboardController extends Controller
         );
 
         Expense::create([
-            'category_id' => $validated['category_id'],
+            'expense_category_id' => $validated['expense_category_id'],
             'amount' => $validated['amount'],
             'expense_date' => $validated['expense_date'],
             'description' => $validated['description'],
             'payment_method' => $validated['payment_method'],
             'voucher_number' => $voucherNumber,
-            'status' => 'pending', // Requires approval
-            'recorded_by' => auth()->id(),
+            'status' => 'pending',
+            'requested_by' => auth()->id(),
         ]);
 
         return back()->with('success', 'Expense of GH₵' . number_format($validated['amount'], 2) . ' submitted for approval. Voucher: ' . $voucherNumber);

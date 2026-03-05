@@ -4,6 +4,10 @@ use App\Http\Middleware\AdminAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use App\Http\Middleware\MemberAccess;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,6 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role.redirect' => \App\Http\Middleware\RedirectBasedOnRole::class,
             'admin.access' => AdminAccess::class,
+            'member.access' => MemberAccess::class,
+
+            // Spatie middleware aliases
+        'permission' => PermissionMiddleware::class,
+        'role' => RoleMiddleware::class,
+        'role_or_permission' => RoleOrPermissionMiddleware::class,
         ]);
     })
 
