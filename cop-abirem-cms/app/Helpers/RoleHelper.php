@@ -118,6 +118,7 @@ class RoleHelper
 
     /**
      * Return the named route for the user's role-specific dashboard.
+     * Used by RedirectBasedOnRole middleware with redirect()->route().
      */
     public static function getDashboardRoute(User $user): string
     {
@@ -130,5 +131,21 @@ class RoleHelper
             $slug === self::MEMBER                                     => 'member.dashboard',
             default                                                    => 'admin.dashboard',
         };
+    }
+
+    /**
+     * Return the resolved URL for the user's role-specific dashboard.
+     * Used in Blade templates where a href URL is needed.
+     * Accepts an optional User; falls back to the authenticated user.
+     */
+    public static function getDashboardUrl(?User $user = null): string
+    {
+        $user = $user ?? auth()->user();
+
+        if (!$user) {
+            return route('login');
+        }
+
+        return route(self::getDashboardRoute($user));
     }
 }
