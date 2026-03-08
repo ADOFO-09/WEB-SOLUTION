@@ -11,6 +11,8 @@ class CheckRole
     /**
      * Handle an incoming request.
      *
+     * Accepts one or more role slugs. The user must match at least one.
+     *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      * @param  string  ...$roles
      */
@@ -36,9 +38,19 @@ class CheckRole
                 ->with('error', 'Your account is temporarily locked. Please try again later.');
         }
 
-        // Check if user has any of the required roles
-        if (!empty($roles) && !$user->hasAnyRole($roles)) {
-            abort(403, 'You do not have permission to access this page.');
+        // Check if user has any of the required roles (fixed: was calling non-existent hasAnyRole())
+        if (!empty($roles)) {
+            $hasRole = false;
+            foreach ($roles as $role) {
+                if ($user->hasRole($role)) {
+                    $hasRole = true;
+                    break;
+                }
+            }
+
+            if (!$hasRole) {
+                abort(403, 'You do not have permission to access this page.');
+            }
         }
 
         return $next($request);

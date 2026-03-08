@@ -13,7 +13,7 @@ use App\Http\Controllers\Admin\Roles\MinistryDashboardController;
 | Middleware 'auth' is applied at the route group level.
 */
 
-Route::middleware(['web', 'auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->group(function () {
     
     // ==========================================
     // PRESIDING ELDER ROUTES

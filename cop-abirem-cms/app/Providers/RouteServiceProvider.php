@@ -11,11 +11,32 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->routes(function () {
 
+            // Core web routes (includes role_routes.php, member.php, auth.php via require)
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
 
+            // Admin core — Dashboard & Profile
             Route::middleware('web')
                 ->group(base_path('routes/admin.php'));
+
+            // Domain-based route files
+            Route::middleware('web')
+                ->group(base_path('routes/people.php'));
+
+            Route::middleware('web')
+                ->group(base_path('routes/attendance.php'));
+
+            Route::middleware('web')
+                ->group(base_path('routes/finance.php'));
+
+            Route::middleware('web')
+                ->group(base_path('routes/communication.php'));
+
+            Route::middleware('web')
+                ->group(base_path('routes/reports.php'));
+
+            Route::middleware('web')
+                ->group(base_path('routes/system.php'));
         });
     }
 }

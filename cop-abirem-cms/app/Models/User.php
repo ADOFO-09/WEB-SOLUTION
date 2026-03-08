@@ -111,7 +111,7 @@ class User extends Authenticatable
             return false;
         }
 
-        return in_array($this->role->slug, ['super-admin', 'admin', 'secretary', 'finance-officer', 'pastor']);
+        return in_array($this->role->slug, \App\Helpers\RoleHelper::ADMIN_PANEL_SLUGS);
     }
 
     /**
