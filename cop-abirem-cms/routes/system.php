@@ -46,6 +46,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
     // =========================================
     Route::resource('roles', RoleController::class);
 
+    // Dedicated permission assignment page for a role
+    Route::get('/roles/{role}/permissions', [RoleController::class, 'permissions'])
+        ->name('roles.permissions');
+    Route::put('/roles/{role}/permissions', [RoleController::class, 'updatePermissions'])
+        ->name('roles.permissions.update');
+
     // =========================================
     // ACTIVITY LOGS
     // =========================================

@@ -118,6 +118,41 @@ class RoleController extends Controller
     }
 
     /**
+     * Show the permission management form for a role.
+     */
+    public function permissions(Role $role)
+    {
+        $allPermissions = Permission::orderBy('module')->orderBy('name')->get()->groupBy('module');
+        $rolePermissionIds = $role->permissions->pluck('id')->toArray();
+
+        return view('admin.roles.permissions', compact('role', 'allPermissions', 'rolePermissionIds'));
+    }
+
+    /**
+     * Update the permissions assigned to a role.
+     * System Administrator (is_system + slug=admin) cannot be edited.
+     */
+    public function updatePermissions(Request $request, Role $role)
+    {
+        // Protect the System Administrator role
+        if ($role->is_system && $role->slug === 'admin') {
+            return back()->with('error', 'System Administrator permissions cannot be modified.');
+        }
+
+        $validated = $request->validate([
+            'permissions'   => ['array'],
+            'permissions.*' => ['exists:permissions,id'],
+        ]);
+
+        $role->syncPermissions($validated['permissions'] ?? []);
+
+        ActivityLog::log('role.permissions_updated', $role);
+
+        return redirect()->route('admin.roles.index')
+            ->with('success', "Permissions for '{$role->name}' updated successfully.");
+    }
+
+    /**
      * Remove the specified role.
      */
     public function destroy(Role $role)

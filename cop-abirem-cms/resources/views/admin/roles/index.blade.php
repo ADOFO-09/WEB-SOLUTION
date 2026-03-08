@@ -42,6 +42,9 @@
                     <td style="text-align: right;">
                         <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
                             <a href="{{ route('admin.roles.show', $role) }}" class="btn btn-secondary btn-sm">View</a>
+                            @if(auth()->user()->hasPermission('permissions.assign'))
+                            <a href="{{ route('admin.roles.permissions', $role) }}" class="btn btn-secondary btn-sm">Permissions</a>
+                            @endif
                             @if(auth()->user()->hasPermission('roles.edit'))
                             <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-secondary btn-sm">Edit</a>
                             @endif

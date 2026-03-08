@@ -24,195 +24,165 @@ class RolePermissionSeeder extends Seeder
         $rolePermissions = [];
 
         // ============================================
-        // 1. SYSTEM ADMINISTRATOR - Full Access
+        // HELPER — build role permission rows from slug arrays
         // ============================================
-        $adminPermissions = $permissions->keys()->toArray(); // ALL permissions
-        foreach ($adminPermissions as $permSlug) {
-            if (isset($permissions[$permSlug])) {
-                $rolePermissions[] = [
-                    'role_id' => $roles['admin'],
-                    'permission_id' => $permissions[$permSlug],
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
+        $addPermissions = function (string $roleSlug, array $slugs) use (&$rolePermissions, $roles, $permissions, $now) {
+            if (!isset($roles[$roleSlug])) {
+                return;
             }
-        }
+            foreach ($slugs as $slug) {
+                if (isset($permissions[$slug])) {
+                    $rolePermissions[] = [
+                        'role_id'       => $roles[$roleSlug],
+                        'permission_id' => $permissions[$slug],
+                        'created_at'    => $now,
+                        'updated_at'    => $now,
+                    ];
+                }
+            }
+        };
 
         // ============================================
-        // 2. PRESIDING ELDER - Everything except system settings
+        // 1. SYSTEM ADMINISTRATOR — ALL permissions
         // ============================================
-        $elderPermissions = [
+        $addPermissions('admin', $permissions->keys()->toArray());
+
+        // ============================================
+        // 2. PRESIDING ELDER
+        //    All operations + expense approval. No system config.
+        // ============================================
+        $addPermissions('elder', [
             // Dashboard
             'dashboard.view', 'dashboard.stats',
-            
-            // Members - Full access
-            'members.view', 'members.create', 'members.edit', 'members.delete', 'members.export',
-            
-            // Visitors - Full access
-            'visitors.view', 'visitors.create', 'visitors.edit', 'visitors.delete', 'visitors.followup',
-            
-            // Attendance - Full access
-            'attendance.view', 'attendance.create', 'attendance.mark', 'attendance.edit', 'attendance.delete',
+
+            // Members — full access
+            'members.view', 'members.create', 'members.edit', 'members.delete',
+            'members.export', 'members.approve-updates',
+
+            // Visitors — full access
+            'visitors.view', 'visitors.create', 'visitors.edit', 'visitors.delete',
+            'visitors.followup', 'visitors.convert',
+
+            // Attendance — full access
+            'attendance.view', 'attendance.create', 'attendance.mark',
+            'attendance.mark-manual', 'attendance.mark-qr',
+            'attendance.edit', 'attendance.delete',
             'service-types.view', 'service-types.manage',
-            
-            // Finance - Full access including approval
-            'tithes.view', 'tithes.create', 'tithes.edit', 'tithes.delete',
-            'offerings.view', 'offerings.create', 'offerings.edit', 'offerings.delete',
-            'donations.view', 'donations.create', 'donations.edit', 'donations.delete',
-            'pledges.view', 'pledges.create', 'pledges.edit', 'pledges.delete', 'pledges.payments',
-            'expenses.view', 'expenses.create', 'expenses.edit', 'expenses.delete', 'expenses.approve',
-            'finance.view', 'finance.receipts',
-            
-            // SMS - Full access
+
+            // Finance — view + approve (not create/edit/delete)
+            'tithes.view', 'offerings.view', 'donations.view',
+            'pledges.view', 'expenses.view', 'expenses.approve',
+            'finance.view', 'receipts.view',
+
+            // Communication
             'sms.view', 'sms.send', 'sms.bulk', 'sms.templates',
-            
-            // Reports - Full access
-            'reports.view', 'reports.generate', 'reports.export', 
+            'announcements.view', 'announcements.manage',
+
+            // Ministries — view all
+            'ministries.view',
+
+            // Reports — full
+            'reports.view', 'reports.generate', 'reports.export',
             'reports.financial', 'reports.membership', 'reports.attendance',
-            
-            // Users - View only (cannot manage system users)
-            'users.view',
-            
-            // Settings - View logs only
+
+            // System — logs only
             'settings.logs',
-        ];
-        
-        foreach ($elderPermissions as $permSlug) {
-            if (isset($permissions[$permSlug])) {
-                $rolePermissions[] = [
-                    'role_id' => $roles['elder'],
-                    'permission_id' => $permissions[$permSlug],
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-        }
+        ]);
 
         // ============================================
-        // 3. LOCAL SECRETARY - Member management & communication
+        // 3. LOCAL SECRETARY
+        //    Members, visitors, attendance, SMS, read-only finance
         // ============================================
-        $secretaryPermissions = [
+        $addPermissions('secretary', [
             // Dashboard
             'dashboard.view', 'dashboard.stats',
-            
-            // Members - Full access
-            'members.view', 'members.create', 'members.edit', 'members.delete', 'members.export',
-            
-            // Visitors - Full access
-            'visitors.view', 'visitors.create', 'visitors.edit', 'visitors.delete', 'visitors.followup',
-            
-            // Attendance - Full access
-            'attendance.view', 'attendance.create', 'attendance.mark', 'attendance.edit', 'attendance.delete',
+
+            // Members — create & edit, no delete
+            'members.view', 'members.create', 'members.edit', 'members.export',
+
+            // Visitors — full access
+            'visitors.view', 'visitors.create', 'visitors.edit', 'visitors.delete',
+            'visitors.followup', 'visitors.convert',
+
+            // Attendance — full except delete
+            'attendance.view', 'attendance.create', 'attendance.mark',
+            'attendance.mark-manual', 'attendance.mark-qr',
+            'attendance.edit',
             'service-types.view',
-            
-            // Finance - View only (read-only)
+
+            // Finance — read-only view
+            'tithes.view', 'offerings.view', 'donations.view', 'pledges.view',
             'finance.summary_only',
-            
-            // SMS - Full access
+
+            // Communication
             'sms.view', 'sms.send', 'sms.bulk', 'sms.templates',
-            
-            // Reports - Membership and attendance only
+            'announcements.view',
+
+            // Ministries — view only
+            'ministries.view',
+
+            // Reports — membership & attendance
             'reports.view', 'reports.generate', 'reports.export',
             'reports.membership', 'reports.attendance',
-        ];
-        
-        foreach ($secretaryPermissions as $permSlug) {
-            if (isset($permissions[$permSlug])) {
-                $rolePermissions[] = [
-                    'role_id' => $roles['secretary'],
-                    'permission_id' => $permissions[$permSlug],
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-        }
+        ]);
 
         // ============================================
-        // 4. FINANCIAL SECRETARY - Finance operations only
+        // 4. FINANCIAL SECRETARY
+        //    All finance, limited members, no users/settings
         // ============================================
-        $financePermissions = [
+        $addPermissions('finance', [
             // Dashboard
             'dashboard.view', 'dashboard.stats',
-            
-            // Members - Names only (limited access)
-            'members.view_names',
-            
-            // Finance - Full access except approval
+
+            // Members — names only (limited)
+            'members.view', 'members.view_names',
+
+            // Finance — full CRUD except approve
             'tithes.view', 'tithes.create', 'tithes.edit', 'tithes.delete',
             'offerings.view', 'offerings.create', 'offerings.edit', 'offerings.delete',
             'donations.view', 'donations.create', 'donations.edit', 'donations.delete',
             'pledges.view', 'pledges.create', 'pledges.edit', 'pledges.delete', 'pledges.payments',
-            'expenses.view', 'expenses.create', 'expenses.edit', // No delete, no approve
+            'expenses.view', 'expenses.create', 'expenses.edit',
             'finance.view', 'finance.receipts',
-            
-            // Reports - Financial only
-            'reports.view', 'reports.generate', 'reports.export',
-            'reports.financial',
-        ];
-        
-        foreach ($financePermissions as $permSlug) {
-            if (isset($permissions[$permSlug])) {
-                $rolePermissions[] = [
-                    'role_id' => $roles['finance'],
-                    'permission_id' => $permissions[$permSlug],
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-        }
+            'receipts.view', 'receipts.issue', 'receipts.print',
+
+            // Reports — financial only
+            'reports.view', 'reports.generate', 'reports.export', 'reports.financial',
+        ]);
 
         // ============================================
-        // 5. MINISTRY LEADER - Ministry-specific access
+        // 5. MINISTRY LEADER
+        //    Own ministry only — attendance, members, SMS
         // ============================================
-        $ministryLeaderPermissions = [
+        $addPermissions('ministry_leader', [
             // Dashboard
             'dashboard.view',
-            
-            // Members - View only within ministry
-            'members.view',
-            
-            // Attendance - Ministry only
+
+            // Own ministry only
+            'ministry.own.view', 'ministry.own.attendance',
+            'ministry.own.members', 'ministry.own.sms', 'ministry.own.reports',
+
+            // Legacy compatibility
             'attendance.view', 'attendance.ministry_only',
-            
-            // SMS - Ministry only
             'sms.view', 'sms.ministry_only',
-            
-            // Reports - Ministry only
             'reports.view', 'reports.ministry_only',
-        ];
-        
-        foreach ($ministryLeaderPermissions as $permSlug) {
-            if (isset($permissions[$permSlug])) {
-                $rolePermissions[] = [
-                    'role_id' => $roles['ministry_leader'],
-                    'permission_id' => $permissions[$permSlug],
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-        }
+
+            // Announcements — view only
+            'announcements.view',
+        ]);
 
         // ============================================
-        // 6. MEMBER - Self-service portal only
+        // 6. MEMBER — Self-service portal only
         // ============================================
-        $memberPermissions = [
-            // Portal access only
-            'portal.access',
-            'portal.profile',
-            'portal.contributions',
-            'portal.attendance',
-        ];
-        
-        foreach ($memberPermissions as $permSlug) {
-            if (isset($permissions[$permSlug])) {
-                $rolePermissions[] = [
-                    'role_id' => $roles['member'],
-                    'permission_id' => $permissions[$permSlug],
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-        }
+        $addPermissions('member', [
+            // Legacy slugs
+            'portal.access', 'portal.profile', 'portal.contributions', 'portal.attendance',
+
+            // Canonical extended slugs
+            'portal.dashboard', 'portal.profile.view', 'portal.profile.edit',
+            'portal.contributions.view', 'portal.statements.download',
+            'portal.announcements.view', 'portal.attendance.view',
+        ]);
 
         DB::table('role_permission')->truncate();
         

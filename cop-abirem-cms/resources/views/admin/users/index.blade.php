@@ -5,16 +5,24 @@
 @section('header')
 <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
-    @can('users.create')
-    <a href="{{ route('admin.users.create') }}" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-        <span class="flex items-center">
+    <div class="flex items-center space-x-2">
+        @if(auth()->user()->hasPermission('roles.view'))
+        <a href="{{ route('admin.roles.index') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            Manage Roles
+        </a>
+        @endif
+        @if(auth()->user()->hasPermission('users.create'))
+        <a href="{{ route('admin.users.create') }}" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
             </svg>
             Add User
-        </span>
-    </a>
-    @endcan
+        </a>
+        @endif
+    </div>
 </div>
 @endsection
 

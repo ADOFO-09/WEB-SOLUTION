@@ -115,11 +115,66 @@ class PermissionSeeder extends Seeder
             ['name' => 'Manage Backups', 'slug' => 'settings.backup', 'module' => 'settings', 'description' => 'Create and restore backups'],
             ['name' => 'System Maintenance', 'slug' => 'settings.maintenance', 'module' => 'settings', 'description' => 'System maintenance operations'],
 
-            // Member Portal
+            // Member Portal (legacy slugs — kept for backward compatibility)
             ['name' => 'Access Member Portal', 'slug' => 'portal.access', 'module' => 'portal', 'description' => 'Access member self-service portal'],
             ['name' => 'View Own Profile', 'slug' => 'portal.profile', 'module' => 'portal', 'description' => 'View own profile information'],
             ['name' => 'View Own Contributions', 'slug' => 'portal.contributions', 'module' => 'portal', 'description' => 'View own tithes, offerings, donations, pledges'],
             ['name' => 'View Own Attendance', 'slug' => 'portal.attendance', 'module' => 'portal', 'description' => 'View own attendance history'],
+
+            // -----------------------------------------------
+            // EXTENDED PERMISSIONS
+            // -----------------------------------------------
+
+            // Members - extended
+            ['name' => 'Approve Member Updates', 'slug' => 'members.approve-updates', 'module' => 'members', 'description' => 'Approve member contact update requests'],
+
+            // Visitors - extended
+            ['name' => 'Convert Visitors to Members', 'slug' => 'visitors.convert', 'module' => 'visitors', 'description' => 'Convert visitors to full members'],
+
+            // Attendance - method-specific marking
+            ['name' => 'Mark Attendance (Manual)', 'slug' => 'attendance.mark-manual', 'module' => 'attendance', 'description' => 'Mark attendance manually from list'],
+            ['name' => 'Mark Attendance (QR Code)', 'slug' => 'attendance.mark-qr', 'module' => 'attendance', 'description' => 'Mark attendance via QR code scan'],
+            ['name' => 'Mark Attendance (Biometric)', 'slug' => 'attendance.mark-biometric', 'module' => 'attendance', 'description' => 'Mark attendance via biometric device'],
+            ['name' => 'Mark Attendance (Face Recognition)', 'slug' => 'attendance.mark-face', 'module' => 'attendance', 'description' => 'Mark attendance via face recognition'],
+
+            // Finance - Receipts
+            ['name' => 'View Receipts', 'slug' => 'receipts.view', 'module' => 'finance', 'description' => 'View issued receipts'],
+            ['name' => 'Issue Receipts', 'slug' => 'receipts.issue', 'module' => 'finance', 'description' => 'Issue receipts for contributions'],
+            ['name' => 'Print Receipts', 'slug' => 'receipts.print', 'module' => 'finance', 'description' => 'Print contribution receipts'],
+
+            // Announcements
+            ['name' => 'View Announcements', 'slug' => 'announcements.view', 'module' => 'communication', 'description' => 'View church announcements'],
+            ['name' => 'Manage Announcements', 'slug' => 'announcements.manage', 'module' => 'communication', 'description' => 'Create and edit announcements'],
+
+            // Ministries
+            ['name' => 'View All Ministries', 'slug' => 'ministries.view', 'module' => 'ministries', 'description' => 'View all ministry groups'],
+            ['name' => 'Manage Ministries', 'slug' => 'ministries.manage', 'module' => 'ministries', 'description' => 'Create, edit, delete ministry groups'],
+
+            // Ministry Leader — own ministry only
+            ['name' => 'View Own Ministry', 'slug' => 'ministry.own.view', 'module' => 'ministries', 'description' => 'View own ministry details'],
+            ['name' => 'Own Ministry Attendance', 'slug' => 'ministry.own.attendance', 'module' => 'ministries', 'description' => 'Mark attendance for own ministry'],
+            ['name' => 'Own Ministry Members', 'slug' => 'ministry.own.members', 'module' => 'ministries', 'description' => 'View members of own ministry'],
+            ['name' => 'Own Ministry SMS', 'slug' => 'ministry.own.sms', 'module' => 'ministries', 'description' => 'Send SMS to own ministry members'],
+            ['name' => 'Own Ministry Reports', 'slug' => 'ministry.own.reports', 'module' => 'ministries', 'description' => 'Generate reports for own ministry'],
+
+            // Roles & Permissions management
+            ['name' => 'View Roles', 'slug' => 'roles.view', 'module' => 'users', 'description' => 'View system roles'],
+            ['name' => 'Manage Roles', 'slug' => 'roles.manage', 'module' => 'users', 'description' => 'Create and edit roles'],
+            ['name' => 'Assign Permissions', 'slug' => 'permissions.assign', 'module' => 'users', 'description' => 'Assign permissions to roles'],
+
+            // System operations
+            ['name' => 'Backup Database', 'slug' => 'system.backup', 'module' => 'settings', 'description' => 'Create database backups'],
+            ['name' => 'Restore Database', 'slug' => 'system.restore', 'module' => 'settings', 'description' => 'Restore from database backups'],
+            ['name' => 'System Maintenance', 'slug' => 'system.maintenance', 'module' => 'settings', 'description' => 'Perform system maintenance tasks'],
+
+            // Member Portal — canonical extended slugs
+            ['name' => 'Access Dashboard (Portal)', 'slug' => 'portal.dashboard', 'module' => 'portal', 'description' => 'Access the member portal dashboard'],
+            ['name' => 'View Own Profile (Portal)', 'slug' => 'portal.profile.view', 'module' => 'portal', 'description' => 'View own profile via portal'],
+            ['name' => 'Request Profile Update', 'slug' => 'portal.profile.edit', 'module' => 'portal', 'description' => 'Request contact info updates via portal'],
+            ['name' => 'View Own Contributions (Portal)', 'slug' => 'portal.contributions.view', 'module' => 'portal', 'description' => 'View own contribution history via portal'],
+            ['name' => 'Download Statements', 'slug' => 'portal.statements.download', 'module' => 'portal', 'description' => 'Download contribution statements'],
+            ['name' => 'View Announcements (Portal)', 'slug' => 'portal.announcements.view', 'module' => 'portal', 'description' => 'View church announcements via portal'],
+            ['name' => 'View Own Attendance (Portal)', 'slug' => 'portal.attendance.view', 'module' => 'portal', 'description' => 'View own attendance history via portal'],
         ];
 
         foreach ($permissions as &$permission) {
