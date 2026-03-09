@@ -128,6 +128,7 @@ class RoleHelper
             in_array($slug, [self::ELDER, self::PASTOR])              => 'admin.elder.dashboard',
             in_array($slug, [self::FINANCE, self::FINANCE_OFFICER])   => 'admin.finance.dashboard',
             $slug === self::MINISTRY_LEADER                            => 'admin.ministry.dashboard',
+            $slug === self::SECRETARY                                  => 'admin.secretary.dashboard',
             $slug === self::MEMBER                                     => 'member.dashboard',
             default                                                    => 'admin.dashboard',
         };

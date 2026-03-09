@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Roles\ElderDashboardController;
 use App\Http\Controllers\Admin\Roles\FinanceDashboardController;
 use App\Http\Controllers\Admin\Roles\MinistryDashboardController;
+use App\Http\Controllers\Admin\Roles\SecretaryDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +33,13 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
         Route::post('/quick-tithe', [FinanceDashboardController::class, 'quickTithe'])->name('quick-tithe');
         Route::post('/quick-offering', [FinanceDashboardController::class, 'quickOffering'])->name('quick-offering');
         Route::post('/quick-expense', [FinanceDashboardController::class, 'quickExpense'])->name('quick-expense');
+    });
+
+    // ==========================================
+    // LOCAL SECRETARY ROUTES
+    // ==========================================
+    Route::prefix('secretary')->name('secretary.')->group(function () {
+        Route::get('/dashboard', [SecretaryDashboardController::class, 'index'])->name('dashboard');
     });
 
     // ==========================================
