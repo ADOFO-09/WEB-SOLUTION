@@ -7,6 +7,7 @@ use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
@@ -81,5 +82,122 @@ class AttendanceController extends Controller
         return view('member.attendance.index', compact(
             'records', 'monthlySummary', 'stats', 'year', 'month', 'years', 'months'
         ));
+    }
+
+    /**
+     * Show QR scanner page for self check-in.
+     */
+    public function showScanner(Request $request)
+    {
+        $member = $request->user()->member;
+
+        if (!$member) {
+            return redirect()->route('member.dashboard')
+                ->with('error', 'No member profile is linked to your account.');
+        }
+
+        $recentAttendance = AttendanceRecord::where('member_id', $member->id)
+            ->with('session.serviceType')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('member.attendance.scan', compact('recentAttendance'));
+    }
+
+    /**
+     * Verify a session QR token and show confirmation page.
+     */
+    public function verifyQr(Request $request, string $token)
+    {
+        $member = $request->user()->member;
+
+        if (!$member) {
+            return redirect()->route('member.dashboard')
+                ->with('error', 'No member profile is linked to your account.');
+        }
+
+        $session = AttendanceSession::where('qr_token', $token)
+            ->with('serviceType')
+            ->first();
+
+        if (!$session) {
+            return redirect()->route('member.attendance.scan')
+                ->with('error', 'Invalid QR code. Please scan the correct session QR code.');
+        }
+
+        if (!$session->isQrValid()) {
+            if ($session->status === 'closed') {
+                $msg = 'This session has been closed and is no longer accepting attendance.';
+            } elseif ($session->qr_expires_at && $session->qr_expires_at->isPast()) {
+                $msg = 'This QR code has expired. Please ask the admin to update it.';
+            } else {
+                $msg = 'QR attendance is currently disabled for this session.';
+            }
+            return redirect()->route('member.attendance.scan')->with('error', $msg);
+        }
+
+        // Already marked?
+        $existing = AttendanceRecord::where('session_id', $session->id)
+            ->where('member_id', $member->id)
+            ->first();
+
+        if ($existing) {
+            return redirect()->route('member.attendance.scan')
+                ->with('info', 'You have already marked attendance for this session ('
+                    . $session->service_title . ').');
+        }
+
+        return view('member.attendance.confirm', compact('session', 'member'));
+    }
+
+    /**
+     * Record attendance after member confirms.
+     */
+    public function recordAttendance(Request $request)
+    {
+        $validated = $request->validate([
+            'session_id' => 'required|exists:attendance_sessions,id',
+        ]);
+
+        $member = $request->user()->member;
+
+        if (!$member) {
+            return back()->with('error', 'No member profile found.');
+        }
+
+        $session = AttendanceSession::findOrFail($validated['session_id']);
+
+        if (!$session->isQrValid()) {
+            return back()->with('error', 'This session QR is no longer valid.');
+        }
+
+        // Prevent duplicates
+        $exists = AttendanceRecord::where('session_id', $session->id)
+            ->where('member_id', $member->id)
+            ->exists();
+
+        if ($exists) {
+            return redirect()->route('member.attendance.scan')
+                ->with('info', 'Attendance already recorded for this session.');
+        }
+
+        AttendanceRecord::create([
+            'session_id'       => $session->id,
+            'member_id'        => $member->id,
+            'check_in_time'    => now(),
+            'attendance_method' => 'qr_code',
+            'is_late'          => $session->isLateCheckIn(),
+            'marked_by'        => $request->user()->id,
+        ]);
+
+        // Update session member count
+        $session->update([
+            'total_members'    => $session->records()->whereNotNull('member_id')->count(),
+            'total_attendance' => $session->records()->count(),
+        ]);
+
+        return redirect()->route('member.attendance.scan')
+            ->with('success', 'Attendance recorded for: ' . $session->service_title . '.');
     }
 }

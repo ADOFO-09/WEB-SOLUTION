@@ -48,8 +48,11 @@ Route::middleware(['auth', 'member.access'])->prefix('member')->name('member.')-
         Route::get('/{pledge}', [PledgeController::class, 'show'])->name('show');
     });
     
-    // Attendance History
+    // Attendance History & QR Scanning
     Route::prefix('attendance')->name('attendance.')->group(function () {
         Route::get('/', [AttendanceController::class, 'index'])->name('index');
+        Route::get('/scan', [AttendanceController::class, 'showScanner'])->name('scan');
+        Route::get('/verify/{token}', [AttendanceController::class, 'verifyQr'])->name('verify');
+        Route::post('/record', [AttendanceController::class, 'recordAttendance'])->name('record');
     });
 });

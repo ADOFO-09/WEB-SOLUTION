@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class AttendanceSession extends Model
@@ -29,6 +30,9 @@ class AttendanceSession extends Model
         'created_by',
         'closed_by',
         'closed_at',
+        'qr_token',
+        'qr_expires_at',
+        'allow_qr_attendance',
     ];
 
     protected $casts = [
@@ -36,6 +40,8 @@ class AttendanceSession extends Model
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
         'closed_at' => 'datetime',
+        'qr_expires_at' => 'datetime',
+        'allow_qr_attendance' => 'boolean',
         'total_members' => 'integer',
         'total_visitors' => 'integer',
         'total_children' => 'integer',
@@ -43,6 +49,21 @@ class AttendanceSession extends Model
     ];
 
     protected $appends = ['is_open', 'formatted_date'];
+
+    // ==========================================
+    // BOOT
+    // ==========================================
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($session) {
+            if (empty($session->qr_token)) {
+                $session->qr_token = Str::uuid()->toString();
+            }
+        });
+    }
 
     // ==========================================
     // ACCESSORS
@@ -62,6 +83,30 @@ class AttendanceSession extends Model
     {
         $title = $this->serviceType->name ?? 'Service';
         return $title . ' - ' . $this->service_date->format('M d, Y');
+    }
+
+    public function getQrCodeUrlAttribute(): string
+    {
+        return route('member.attendance.verify', ['token' => $this->qr_token]);
+    }
+
+    public function isQrValid(): bool
+    {
+        if (!$this->allow_qr_attendance) {
+            return false;
+        }
+        if ($this->status === 'closed') {
+            return false;
+        }
+        if ($this->qr_expires_at && $this->qr_expires_at->isPast()) {
+            return false;
+        }
+        return true;
+    }
+
+    public function regenerateQrToken(): void
+    {
+        $this->update(['qr_token' => Str::uuid()->toString()]);
     }
 
     // ==========================================

@@ -15,9 +15,9 @@
                 <p class="text-sm text-gray-500">{{ $attendance->formatted_date }}</p>
             </div>
         </div>
-        <div class="mt-4 sm:mt-0 flex space-x-3">
+        <div class="mt-4 sm:mt-0 flex flex-wrap gap-2">
             @if($attendance->is_open)
-            <a href="{{ route('admin.attendance.mark', $attendance) }}" 
+            <a href="{{ route('admin.attendance.mark', $attendance) }}"
                class="inline-flex items-center px-4 py-2 border border-green-600 rounded-md shadow-sm text-sm font-medium text-green-600 bg-white hover:bg-green-50">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -134,6 +134,42 @@
                 <div class="text-xs text-purple-600">Children</div>
             </div>
             @endif
+        </div>
+    </div>
+
+        <!-- QR Attendance -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">QR Attendance</h3>
+                @if($attendance->allow_qr_attendance)
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                @else
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">Disabled</span>
+                @endif
+            </div>
+            <div class="text-center mb-4">
+                <div class="text-3xl font-bold text-indigo-600">
+                    {{ $attendance->records()->where('attendance_method', 'qr_code')->count() }}
+                </div>
+                <div class="text-xs text-gray-500 mt-0.5">members via QR scan</div>
+            </div>
+            <div class="space-y-2">
+                @if($attendance->is_open)
+                <a href="{{ route('admin.attendance.qr-display', $attendance) }}"
+                   class="block w-full text-center px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">
+                    Display QR Code
+                </a>
+                @endif
+                <form action="{{ route('admin.attendance.toggle-qr', $attendance) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="w-full px-4 py-2 text-sm font-medium rounded-lg border
+                        {{ $attendance->allow_qr_attendance
+                            ? 'border-red-200 text-red-600 hover:bg-red-50'
+                            : 'border-green-200 text-green-600 hover:bg-green-50' }}">
+                        {{ $attendance->allow_qr_attendance ? 'Disable QR' : 'Enable QR' }}
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 

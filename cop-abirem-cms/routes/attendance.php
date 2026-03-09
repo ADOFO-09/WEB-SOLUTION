@@ -34,6 +34,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::post('/{session}/close', [AttendanceController::class, 'close'])->name('close');
         Route::post('/{session}/reopen', [AttendanceController::class, 'reopen'])->name('reopen');
         Route::delete('/{session}', [AttendanceController::class, 'destroy'])->name('destroy');
+        // Session QR code management
+        Route::get('/{session}/qr-display', [AttendanceController::class, 'qrDisplay'])->name('qr-display');
+        Route::get('/{session}/qr-scan-count', [AttendanceController::class, 'qrScanCount'])->name('qr-scan-count');
+        Route::post('/{session}/regenerate-qr', [AttendanceController::class, 'regenerateQr'])->name('regenerate-qr');
+        Route::post('/{session}/toggle-qr', [AttendanceController::class, 'toggleQr'])->name('toggle-qr');
     });
 
     // =========================================

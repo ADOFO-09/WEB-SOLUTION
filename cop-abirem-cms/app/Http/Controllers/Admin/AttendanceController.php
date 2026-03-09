@@ -477,6 +477,50 @@ class AttendanceController extends Controller implements HasMiddleware
     }
 
     /**
+     * Return live QR scan count (AJAX).
+     */
+    public function qrScanCount(AttendanceSession $session)
+    {
+        return response()->json([
+            'count' => $session->records()->where('attendance_method', 'qr_code')->count(),
+        ]);
+    }
+
+    /**
+     * Display the session QR code for projection/printing.
+     */
+    public function qrDisplay(AttendanceSession $session)
+    {
+        $session->load('serviceType');
+        $qrScanCount = $session->records()->where('attendance_method', 'qr_code')->count();
+
+        return view('admin.attendance.qr-display', compact('session', 'qrScanCount'));
+    }
+
+    /**
+     * Regenerate the session QR token (invalidates the old one).
+     */
+    public function regenerateQr(AttendanceSession $session)
+    {
+        $session->regenerateQrToken();
+
+        return redirect()->route('admin.attendance.qr-display', $session)
+            ->with('success', 'QR code regenerated. The old QR code is now invalid.');
+    }
+
+    /**
+     * Toggle QR attendance on/off for a session.
+     */
+    public function toggleQr(AttendanceSession $session)
+    {
+        $session->update(['allow_qr_attendance' => !$session->allow_qr_attendance]);
+
+        $status = $session->allow_qr_attendance ? 'enabled' : 'disabled';
+
+        return back()->with('success', "QR attendance {$status} for this session.");
+    }
+
+    /**
      * Unmark attendance record (AJAX).
      */
     public function unmark(Request $request, AttendanceSession $session)

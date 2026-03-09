@@ -16,14 +16,14 @@
             </div>
         </div>
         <div class="mt-4 sm:mt-0 flex space-x-3">
-            <a href="{{ route('admin.attendance.scanner', $attendance) }}" 
-               class="inline-flex items-center px-4 py-2 border border-purple-600 rounded-md shadow-sm text-sm font-medium text-purple-600 bg-white hover:bg-purple-50">
+            <a href="{{ route('admin.attendance.qr-display', $attendance) }}"
+               class="inline-flex items-center px-4 py-2 border border-indigo-500 rounded-md shadow-sm text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
                 </svg>
-                QR Scanner
+                Display QR Code
             </a>
-            <form action="{{ route('admin.attendance.close', $attendance) }}" method="POST" 
+            <form action="{{ route('admin.attendance.close', $attendance) }}" method="POST"
                   onsubmit="return confirm('Close this session? You can reopen it later if needed.');">
                 @csrf
                 <button type="submit" 
@@ -39,6 +39,21 @@
 @endsection
 
 @section('content')
+{{-- QR info banner --}}
+<div class="mb-5 flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+    <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <div class="flex-1 text-sm text-blue-700">
+        Members can mark their own attendance by scanning the <strong>Session QR Code</strong> in the Member Portal.
+        Use this page for <strong>manual attendance only</strong> (e.g. members without smartphones).
+    </div>
+    <a href="{{ route('admin.attendance.qr-display', $attendance) }}"
+       class="flex-shrink-0 text-sm font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap">
+        View QR Code →
+    </a>
+</div>
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Left: Mark Attendance -->
     <div class="lg:col-span-2 space-y-6">
