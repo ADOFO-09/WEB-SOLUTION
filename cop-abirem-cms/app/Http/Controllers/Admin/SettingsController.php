@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -223,10 +224,7 @@ class SettingsController extends Controller
             }
 
             // Log the backup
-            activity()
-                ->causedBy(auth()->user())
-                ->withProperties(['filename' => $filename])
-                ->log('Created database backup');
+            ActivityLog::log('backup_created', null, null, ['filename' => $filename]);
 
             return back()->with('success', "Backup created successfully: {$filename}");
 
@@ -300,10 +298,7 @@ class SettingsController extends Controller
             }
 
             // Log the restore
-            activity()
-                ->causedBy(auth()->user())
-                ->withProperties(['filename' => $filename])
-                ->log('Restored database from backup');
+            ActivityLog::log('backup_restored', null, null, ['filename' => $filename]);
 
             return back()->with('success', 'Database restored successfully from backup.');
 
