@@ -116,6 +116,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Gender</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Ministries</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Biometric</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Joined</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
                     </tr>
@@ -190,6 +191,22 @@
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$member->membership_status] ?? 'bg-gray-100 text-gray-800' }}">
                                 {{ ucfirst(str_replace('_', ' ', $member->membership_status)) }}
                             </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($member->biometric_enrolled)
+                            <a href="{{ route('admin.members.biometric', $member) }}"
+                               class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full hover:bg-purple-200 transition-colors">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Enrolled
+                            </a>
+                            @else
+                            <a href="{{ route('admin.members.biometric', $member) }}"
+                               class="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-500 rounded-full hover:bg-purple-100 hover:text-purple-700 transition-colors">
+                                Enroll
+                            </a>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ $member->date_joined?->format('M d, Y') }}

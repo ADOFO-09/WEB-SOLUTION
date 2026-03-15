@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -36,7 +37,11 @@ class Member extends Model
         'emergency_contact_name',
         'emergency_contact_phone',
         'photo_path',
-        'qr_code_path',  // <-- ADDED
+        'qr_code_path',
+        'fingerprint_template_1',
+        'fingerprint_template_2',
+        'biometric_enrolled',
+        'biometric_enrolled_at',
         'date_joined',
         'baptism_date',
         'baptism_type',
@@ -48,9 +53,11 @@ class Member extends Model
     ];
 
     protected $casts = [
-        'date_of_birth' => 'date',
-        'date_joined' => 'date',
-        'baptism_date' => 'date',
+        'date_of_birth'       => 'date',
+        'date_joined'         => 'date',
+        'baptism_date'        => 'date',
+        'biometric_enrolled'  => 'boolean',
+        'biometric_enrolled_at' => 'datetime',
     ];
 
     protected $appends = ['full_name', 'age'];

@@ -296,6 +296,77 @@
         </div>
     </div>
 
+    <!-- Biometric Enrollment -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+            </svg>
+            Biometric Enrollment
+        </h3>
+
+        @if($member->biometric_enrolled)
+        <div class="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
+            <div class="flex items-center gap-3">
+                <svg class="w-6 h-6 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <p class="text-sm font-semibold text-green-800">Biometric Enrolled</p>
+                    <p class="text-xs text-green-600">
+                        {{ $member->biometric_enrolled_at ? 'Enrolled ' . $member->biometric_enrolled_at->format('M d, Y g:i A') : '' }}
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('admin.members.biometric', $member) }}"
+                   class="px-3 py-1.5 text-xs font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                    Re-enroll
+                </a>
+                <form action="{{ route('admin.members.biometric.remove', $member) }}" method="POST"
+                      onsubmit="return confirm('Remove all biometric data for {{ addslashes($member->full_name) }}?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            class="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        Remove
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
+                <span class="text-gray-500">Primary Finger</span>
+                <span class="{{ $member->fingerprint_template_1 ? 'text-green-600 font-medium' : 'text-gray-400' }}">
+                    {{ $member->fingerprint_template_1 ? '✓ Enrolled' : 'Not enrolled' }}
+                </span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
+                <span class="text-gray-500">Backup Finger</span>
+                <span class="{{ $member->fingerprint_template_2 ? 'text-green-600 font-medium' : 'text-gray-400' }}">
+                    {{ $member->fingerprint_template_2 ? '✓ Enrolled' : 'Not enrolled' }}
+                </span>
+            </div>
+        </div>
+        @else
+        <div class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <div class="flex items-center gap-3">
+                <svg class="w-6 h-6 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/>
+                </svg>
+                <div>
+                    <p class="text-sm font-medium text-gray-800">Not Enrolled</p>
+                    <p class="text-xs text-gray-500">Enroll fingerprint for biometric attendance</p>
+                </div>
+            </div>
+            <a href="{{ route('admin.members.biometric', $member) }}"
+               class="px-4 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                Enroll Now
+            </a>
+        </div>
+        @endif
+    </div>
+
     <!-- Actions -->
     <div class="flex justify-end space-x-3">
         <a href="{{ route('admin.members.show', $member) }}" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">

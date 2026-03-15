@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AttendanceController;
+use App\Http\Controllers\Admin\BiometricAttendanceController;
 use App\Http\Controllers\Admin\ServiceTypeController;
 use Illuminate\Support\Facades\Route;
 
@@ -39,6 +40,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::get('/{session}/qr-scan-count', [AttendanceController::class, 'qrScanCount'])->name('qr-scan-count');
         Route::post('/{session}/regenerate-qr', [AttendanceController::class, 'regenerateQr'])->name('regenerate-qr');
         Route::post('/{session}/toggle-qr', [AttendanceController::class, 'toggleQr'])->name('toggle-qr');
+        // Biometric attendance station
+        Route::get('/{session}/biometric', [BiometricAttendanceController::class, 'showStation'])->name('biometric');
+        Route::post('/biometric/verify', [BiometricAttendanceController::class, 'verify'])->name('biometric.verify');
     });
 
     // =========================================

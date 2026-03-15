@@ -311,6 +311,72 @@
         </div>
     </div>
 
+    <!-- Biometric Enrollment (Optional) -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+            </svg>
+            Biometric Enrollment <span class="ml-1 text-sm font-normal text-gray-400">(Optional)</span>
+        </h3>
+        <p class="text-sm text-gray-500 mb-4">Enroll the member's fingerprint for biometric attendance. You can also do this later from their profile.</p>
+
+        <div class="flex items-center mb-4">
+            <input type="checkbox" id="enroll_biometric" name="enroll_biometric" value="1"
+                   class="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                   onchange="toggleBiometricSection(this.checked)">
+            <label for="enroll_biometric" class="ml-2 text-sm font-medium text-gray-700">Enroll fingerprint now</label>
+        </div>
+
+        <div id="biometric_section" class="hidden space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Primary Finger -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h4 class="text-sm font-semibold text-gray-800 mb-3">Primary Finger</h4>
+                    <div id="fp_status_1" class="mb-3 text-sm text-gray-400">Not captured</div>
+                    <input type="hidden" name="fingerprint_template_1" id="fingerprint_template_1">
+                    <button type="button" onclick="captureFingerprint(1)"
+                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/>
+                        </svg>
+                        Capture Primary Finger
+                    </button>
+                </div>
+
+                <!-- Backup Finger -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h4 class="text-sm font-semibold text-gray-800 mb-3">Backup Finger <span class="font-normal text-gray-400">(optional)</span></h4>
+                    <div id="fp_status_2" class="mb-3 text-sm text-gray-400">Not captured</div>
+                    <input type="hidden" name="fingerprint_template_2" id="fingerprint_template_2">
+                    <button type="button" onclick="captureFingerprint(2)"
+                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/>
+                        </svg>
+                        Capture Backup Finger
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scanning indicator (shown while waiting) -->
+            <div id="fp_scanning" class="hidden flex items-center gap-2 p-3 bg-purple-50 rounded-lg text-sm text-purple-700">
+                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                Waiting for fingerprint scan…
+            </div>
+
+            <!-- No scanner warning -->
+            <div id="fp_warning" class="hidden p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+                <strong>Scanner not detected.</strong>
+                Connect a fingerprint scanner (DigitalPersona, SecuGen, ZKTeco) and try again.
+                You can also enroll biometrics later from the member's profile.
+            </div>
+        </div>
+    </div>
+
     <!-- Actions -->
     <div class="flex justify-end space-x-3">
         <a href="{{ route('admin.members.index') }}" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
@@ -333,6 +399,63 @@ function previewImage(input) {
         }
         reader.readAsDataURL(input.files[0]);
     }
+}
+
+// ── Biometric capture (WebSocket bridge to local scanner server) ────────────
+let fpWs = null;
+let fpCapturingIndex = null;
+
+function toggleBiometricSection(show) {
+    document.getElementById('biometric_section').classList.toggle('hidden', !show);
+    if (show && !fpWs) connectFpScanner();
+}
+
+function connectFpScanner() {
+    try {
+        fpWs = new WebSocket('ws://localhost:15896/fingerprint');
+        fpWs.onopen  = () => { document.getElementById('fp_warning').classList.add('hidden'); };
+        fpWs.onclose = () => { fpWs = null; document.getElementById('fp_warning').classList.remove('hidden'); };
+        fpWs.onerror = () => { fpWs = null; document.getElementById('fp_warning').classList.remove('hidden'); };
+        fpWs.onmessage = (e) => {
+            const d = JSON.parse(e.data);
+            if (d.type === 'capture_result' && fpCapturingIndex) {
+                document.getElementById('fp_scanning').classList.add('hidden');
+                if (d.success) {
+                    onFpCaptured(fpCapturingIndex, d.template);
+                } else {
+                    onFpError(fpCapturingIndex, d.message || 'Capture failed. Try again.');
+                }
+                fpCapturingIndex = null;
+            }
+        };
+    } catch (_) {
+        document.getElementById('fp_warning').classList.remove('hidden');
+    }
+}
+
+function captureFingerprint(index) {
+    if (!fpWs || fpWs.readyState !== WebSocket.OPEN) {
+        document.getElementById('fp_warning').classList.remove('hidden');
+        return;
+    }
+    fpCapturingIndex = index;
+    document.getElementById('fp_scanning').classList.remove('hidden');
+    document.getElementById('fp_status_' + index).textContent = 'Scanning…';
+    fpWs.send(JSON.stringify({ action: 'capture' }));
+}
+
+function onFpCaptured(index, template) {
+    document.getElementById('fingerprint_template_' + index).value = template;
+    document.getElementById('fp_status_' + index).innerHTML =
+        '<span class="inline-flex items-center gap-1 text-green-600 font-medium">' +
+        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' +
+        'Captured</span>';
+}
+
+function onFpError(index, msg) {
+    document.getElementById('fp_status_' + index).innerHTML =
+        '<span class="text-red-600">' + msg + '</span>';
 }
 </script>
 @endpush

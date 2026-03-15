@@ -171,6 +171,38 @@
                 </form>
             </div>
         </div>
+
+        <!-- Biometric Attendance -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Biometric</h3>
+                @php $bioCount = $attendance->records()->where('attendance_method', 'biometric')->count(); @endphp
+                @if($bioCount > 0)
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">{{ $bioCount }} scanned</span>
+                @endif
+            </div>
+            <div class="text-center mb-4">
+                <div class="text-3xl font-bold text-purple-600">{{ $bioCount }}</div>
+                <div class="text-xs text-gray-500 mt-0.5">members via fingerprint</div>
+            </div>
+            <div class="space-y-2">
+                @if($attendance->is_open)
+                <a href="{{ route('admin.attendance.biometric', $attendance) }}" target="_blank"
+                   class="block w-full text-center px-4 py-2 text-sm font-medium rounded-lg bg-purple-600 text-white hover:bg-purple-700">
+                    <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/>
+                    </svg>
+                    Open Biometric Station
+                </a>
+                @else
+                <p class="text-xs text-gray-400 text-center">Session is closed</p>
+                @endif
+                <a href="{{ route('admin.members.index') }}?biometric=enrolled"
+                   class="block w-full text-center px-4 py-2 text-sm font-medium rounded-lg border border-purple-200 text-purple-600 hover:bg-purple-50">
+                    Manage Enrollment
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- Attendance Records -->

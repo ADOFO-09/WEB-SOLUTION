@@ -128,6 +128,8 @@ class MemberController extends Controller implements HasMiddleware
             'notes' => 'nullable|string|max:1000',
             'ministries' => 'nullable|array',
             'ministries.*' => 'exists:ministries,id',
+            'fingerprint_template_1' => 'nullable|string',
+            'fingerprint_template_2' => 'nullable|string',
         ]);
 
         DB::beginTransaction();
@@ -138,8 +140,16 @@ class MemberController extends Controller implements HasMiddleware
                 $validated['photo_path'] = $request->file('photo')->store('members/photos', 'public');
             }
 
+            // Handle biometric enrollment during creation
+            if (!empty($validated['fingerprint_template_1'])) {
+                $validated['biometric_enrolled']    = true;
+                $validated['biometric_enrolled_at'] = now();
+            } else {
+                unset($validated['fingerprint_template_1'], $validated['fingerprint_template_2']);
+            }
+
             $validated['created_by'] = auth()->id();
-            
+
             $member = Member::create($validated);
 
             // Assign ministries
@@ -158,8 +168,13 @@ class MemberController extends Controller implements HasMiddleware
 
             DB::commit();
 
+            $successMsg = 'Member registered successfully.';
+            if ($member->biometric_enrolled) {
+                $successMsg .= ' Biometric fingerprint enrolled.';
+            }
+
             return redirect()->route('admin.members.show', $member)
-                ->with('success', 'Member registered successfully.');
+                ->with('success', $successMsg);
 
         } catch (\Exception $e) {
             DB::rollBack();

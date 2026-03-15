@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\VisitorController;
 use App\Http\Controllers\Admin\MinistryController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\BiometricController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,6 +41,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         // Create user account for an existing member
         Route::get('/{member}/create-user', [UserController::class, 'createForMember'])->name('create-user');
         Route::post('/{member}/create-user', [UserController::class, 'storeForMember'])->name('store-user');
+
+        // Biometric enrollment
+        Route::get('/{member}/biometric', [BiometricController::class, 'showEnrollment'])->name('biometric');
+        Route::post('/{member}/biometric/enroll', [BiometricController::class, 'enroll'])->name('biometric.enroll');
+        Route::delete('/{member}/biometric', [BiometricController::class, 'remove'])->name('biometric.remove');
     });
 
     // =========================================

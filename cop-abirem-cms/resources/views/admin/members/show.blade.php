@@ -13,7 +13,18 @@
             <h1 class="text-2xl font-bold text-gray-900">{{ $member->full_name }}</h1>
         </div>
         <div class="mt-4 sm:mt-0 flex space-x-3">
-            <a href="{{ route('admin.members.qrcode', $member) }}" 
+            {{-- Biometric Enrollment --}}
+            <a href="{{ route('admin.members.biometric', $member) }}"
+               class="inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium
+                      {{ $member->biometric_enrolled
+                           ? 'border-green-300 text-green-700 bg-green-50 hover:bg-green-100'
+                           : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50' }}">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/>
+                </svg>
+                {{ $member->biometric_enrolled ? 'Biometric Enrolled' : 'Enroll Biometric' }}
+            </a>
+            <a href="{{ route('admin.members.qrcode', $member) }}"
                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
