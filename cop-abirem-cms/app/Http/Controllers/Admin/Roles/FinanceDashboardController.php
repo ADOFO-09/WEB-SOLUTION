@@ -134,6 +134,14 @@ class FinanceDashboardController extends Controller
             ->orderBy('first_name')->get();
         $serviceTypes = ServiceType::where('is_active', true)->get();
         $expenseCategories = ExpenseCategory::where('is_active', true)->get();
+        $offeringCategories = IncomeCategory::where('type', 'offering')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+        $sessions = \App\Models\AttendanceSession::with('serviceType')
+            ->orderBy('service_date', 'desc')
+            ->limit(20)
+            ->get();
 
         return view('admin.roles.finance.dashboard', compact(
             'todayStats',
@@ -149,7 +157,9 @@ class FinanceDashboardController extends Controller
             'monthlyTrend',
             'members',
             'serviceTypes',
-            'expenseCategories'
+            'expenseCategories',
+            'offeringCategories',
+            'sessions'
         ));
     }
 
@@ -179,7 +189,8 @@ class FinanceDashboardController extends Controller
             'recorded_by' => auth()->id(),
         ]);
 
-        return back()->with('success', 'Tithe of GH₵' . number_format($validated['amount'], 2) . ' recorded. Receipt: ' . $receiptNumber);
+        return redirect()->route('admin.finance.dashboard')
+            ->with('success', 'Tithe of GH₵' . number_format($validated['amount'], 2) . ' recorded. Receipt: ' . $receiptNumber);
     }
 
     /**
@@ -188,27 +199,22 @@ class FinanceDashboardController extends Controller
     public function quickOffering(Request $request)
     {
         $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-            'payment_date' => 'required|date',
-            'service_type_id' => 'nullable|exists:service_types,id',
-            'offering_type' => 'required|string',
+            'income_category_id' => 'required|exists:income_categories,id',
+            'amount'             => 'required|numeric|min:0.01',
+            'payment_date'       => 'required|date',
+            'payment_method'     => 'nullable|in:cash,mobile_money,bank_transfer,cheque',
         ]);
 
-        $receiptNumber = 'OF-' . date('Ymd') . '-' . str_pad(
-            Offering::whereDate('created_at', today())->count() + 1, 
-            4, '0', STR_PAD_LEFT
-        );
-
-        Offering::create([
-            'amount' => $validated['amount'],
-            'payment_date' => $validated['payment_date'],
-            'service_type_id' => $validated['service_type_id'],
-            'offering_type' => $validated['offering_type'],
-            'receipt_number' => $receiptNumber,
-            'recorded_by' => auth()->id(),
+        $offering = Offering::create([
+            'income_category_id' => $validated['income_category_id'],
+            'amount'             => $validated['amount'],
+            'payment_date'       => $validated['payment_date'],
+            'payment_method'     => $validated['payment_method'] ?? 'cash',
+            'recorded_by'        => auth()->id(),
         ]);
 
-        return back()->with('success', 'Offering of GH₵' . number_format($validated['amount'], 2) . ' recorded. Receipt: ' . $receiptNumber);
+        return redirect()->route('admin.finance.dashboard')
+            ->with('success', 'Offering of GH₵' . number_format($validated['amount'], 2) . ' recorded. Receipt: ' . $offering->reference_number);
     }
 
     /**
@@ -240,6 +246,7 @@ class FinanceDashboardController extends Controller
             'requested_by' => auth()->id(),
         ]);
 
-        return back()->with('success', 'Expense of GH₵' . number_format($validated['amount'], 2) . ' submitted for approval. Voucher: ' . $voucherNumber);
+        return redirect()->route('admin.finance.dashboard')
+            ->with('success', 'Expense of GH₵' . number_format($validated['amount'], 2) . ' submitted for approval. Voucher: ' . $voucherNumber);
     }
 }

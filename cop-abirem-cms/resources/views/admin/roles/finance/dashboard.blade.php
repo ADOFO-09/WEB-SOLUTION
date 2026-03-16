@@ -85,43 +85,52 @@
 </div>
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-    <!-- Quick Entry: Tithe -->
+    <!-- Quick Entry: Session Tithe -->
     <div class="card">
         <div class="card-header">
-            <h3 style="font-weight: 600; color: #1e3a5f;">Quick Record Tithe</h3>
+            <h3 style="font-weight: 600; color: #1e3a5f;">Record Session Tithe</h3>
+            <span style="font-size: 0.75rem; color: #64748b;">Total tithe for a service</span>
         </div>
         <div class="card-body">
-            <form action="{{ route('admin.finance.quick-tithe') }}" method="POST">
+            <form action="{{ route('admin.tithes.session.store') }}" method="POST">
                 @csrf
                 <div class="form-group">
-                    <label class="form-label">Member</label>
-                    <select name="member_id" class="form-select" required>
-                        <option value="">Select Member</option>
-                        @foreach($members as $member)
-                        <option value="{{ $member->id }}">{{ $member->first_name }} {{ $member->last_name }} ({{ $member->member_id }})</option>
+                    <label class="form-label">Service / Session</label>
+                    <select name="attendance_session_id" class="form-select" required>
+                        <option value="">Select Session</option>
+                        @foreach($sessions as $session)
+                        <option value="{{ $session->id }}">
+                            {{ $session->serviceType->name ?? 'Service' }} — {{ $session->service_date->format('D, M d, Y') }}
+                            @if($session->status === 'open') (Open) @endif
+                        </option>
                         @endforeach
                     </select>
+                    @if($sessions->isEmpty())
+                    <p style="font-size: 0.75rem; color: #d97706; margin-top: 0.25rem;">
+                        No sessions found. <a href="{{ route('admin.attendance.create') }}" style="text-decoration: underline;">Create one</a>.
+                    </p>
+                    @endif
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
-                        <label class="form-label">Amount (GH₵)</label>
+                        <label class="form-label">Total Amount (GH₵)</label>
                         <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required placeholder="0.00">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Date</label>
-                        <input type="date" name="tithe_date" class="form-input" value="{{ date('Y-m-d') }}" required>
+                        <label class="form-label">Payment Method</label>
+                        <select name="payment_method" class="form-select" required>
+                            <option value="cash">Cash</option>
+                            <option value="mobile_money">Mobile Money</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="cheque">Cheque</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Payment Method</label>
-                    <select name="payment_method" class="form-select" required>
-                        <option value="cash">Cash</option>
-                        <option value="mobile_money">Mobile Money</option>
-                        <option value="bank_transfer">Bank Transfer</option>
-                        <option value="cheque">Cheque</option>
-                    </select>
+                    <label class="form-label">Notes (Optional)</label>
+                    <input type="text" name="notes" class="form-input" placeholder="Any notes about this collection...">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Record Tithe</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Record Session Tithe</button>
             </form>
         </div>
     </div>
@@ -135,12 +144,12 @@
             <form action="{{ route('admin.finance.quick-offering') }}" method="POST">
                 @csrf
                 <div class="form-group">
-                    <label class="form-label">Offering Type</label>
-                    <select name="offering_type" class="form-select" required>
-                        <option value="sunday">Sunday Offering</option>
-                        <option value="midweek">Midweek Offering</option>
-                        <option value="thanksgiving">Thanksgiving Offering</option>
-                        <option value="special">Special Offering</option>
+                    <label class="form-label">Offering Category</label>
+                    <select name="income_category_id" class="form-select" required>
+                        <option value="">Select category...</option>
+                        @foreach($offeringCategories as $cat)
+                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -150,16 +159,16 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Date</label>
-                        <input type="date" name="offering_date" class="form-input" value="{{ date('Y-m-d') }}" required>
+                        <input type="date" name="payment_date" class="form-input" value="{{ date('Y-m-d') }}" required>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Service Type (Optional)</label>
-                    <select name="service_type_id" class="form-select">
-                        <option value="">Select Service</option>
-                        @foreach($serviceTypes as $service)
-                        <option value="{{ $service->id }}">{{ $service->name }}</option>
-                        @endforeach
+                    <label class="form-label">Payment Method</label>
+                    <select name="payment_method" class="form-select">
+                        <option value="cash">Cash</option>
+                        <option value="mobile_money">Mobile Money</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="cheque">Cheque</option>
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Record Offering</button>
@@ -303,6 +312,7 @@
                 <h3 style="font-weight: 600; color: #1e3a5f;">Quick Actions</h3>
             </div>
             <div class="card-body">
+                <a href="{{ route('admin.tithes.session.create') }}" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">Record Session Tithe</a>
                 <a href="{{ route('admin.tithes.index') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">View All Tithes</a>
                 <a href="{{ route('admin.pledges.index') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">Manage Pledges</a>
                 <a href="{{ route('admin.expenses.create') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">New Expense</a>

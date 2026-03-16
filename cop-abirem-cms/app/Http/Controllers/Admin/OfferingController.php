@@ -19,10 +19,10 @@ class OfferingController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware(middleware: 'permission:finance.view', only: ['index', 'show', 'sessionSummary']),
-            new Middleware(middleware: 'permission:finance.create', only: ['create', 'store']),
-            new Middleware(middleware: 'permission:finance.edit', only: ['edit', 'update']),
-            new Middleware(middleware: 'permission:finance.delete', only: ['destroy']),
+            new Middleware(middleware: 'permission:offerings.view', only: ['index', 'show', 'sessionSummary']),
+            new Middleware(middleware: 'permission:offerings.create', only: ['create', 'store']),
+            new Middleware(middleware: 'permission:offerings.edit', only: ['edit', 'update']),
+            new Middleware(middleware: 'permission:offerings.delete', only: ['destroy']),
         ];
     }
 

@@ -20,10 +20,10 @@ class PledgeController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware(middleware: 'permission:finance.view', only: ['index', 'show', 'overdueReport']),
-            new Middleware(middleware: 'permission:finance.create', only: ['create', 'store', 'recordPayment']),
-            new Middleware(middleware: 'permission:finance.edit', only: ['edit', 'update', 'cancel']),
-            new Middleware(middleware: 'permission:finance.delete', only: ['destroy']),
+            new Middleware(middleware: 'permission:pledges.view', only: ['index', 'show', 'overdueReport']),
+            new Middleware(middleware: 'permission:pledges.create', only: ['create', 'store', 'recordPayment']),
+            new Middleware(middleware: 'permission:pledges.edit', only: ['edit', 'update', 'cancel']),
+            new Middleware(middleware: 'permission:pledges.delete', only: ['destroy']),
         ];
     }
 

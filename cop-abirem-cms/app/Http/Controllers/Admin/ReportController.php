@@ -42,25 +42,42 @@ class ReportController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        $reportCategories = [
+        $user = auth()->user();
+
+        $allCategories = [
             'financial' => [
-                ['name' => 'Income Statement', 'route' => 'admin.reports.income-statement', 'description' => 'Comprehensive income and expense summary'],
-                ['name' => 'Tithe Report', 'route' => 'admin.reports.tithes', 'description' => 'Detailed tithe contributions by member'],
-                ['name' => 'Offering Report', 'route' => 'admin.reports.offerings', 'description' => 'Offering collections by category'],
-                ['name' => 'Expense Report', 'route' => 'admin.reports.expenses', 'description' => 'Expense breakdown by category'],
-                ['name' => 'Pledge Report', 'route' => 'admin.reports.pledges', 'description' => 'Active pledges and fulfillment status'],
+                'permission' => 'reports.financial',
+                'reports' => [
+                    ['name' => 'Income Statement', 'route' => 'admin.reports.income-statement', 'description' => 'Comprehensive income and expense summary'],
+                    ['name' => 'Tithe Report',     'route' => 'admin.reports.tithes',            'description' => 'Detailed tithe contributions by member'],
+                    ['name' => 'Offering Report',  'route' => 'admin.reports.offerings',         'description' => 'Offering collections by category'],
+                    ['name' => 'Expense Report',   'route' => 'admin.reports.expenses',          'description' => 'Expense breakdown by category'],
+                    ['name' => 'Pledge Report',    'route' => 'admin.reports.pledges',           'description' => 'Active pledges and fulfillment status'],
+                ],
             ],
             'membership' => [
-                ['name' => 'Member Directory', 'route' => 'admin.reports.member-directory', 'description' => 'Complete member listing with contact info'],
-                ['name' => 'Membership Statistics', 'route' => 'admin.reports.membership', 'description' => 'Demographics and growth analysis'],
-                ['name' => 'Ministry Report', 'route' => 'admin.reports.ministries', 'description' => 'Ministry membership breakdown'],
-                ['name' => 'Birthday Report', 'route' => 'admin.reports.birthdays', 'description' => 'Upcoming member birthdays'],
+                'permission' => 'reports.membership',
+                'reports' => [
+                    ['name' => 'Member Directory',      'route' => 'admin.reports.member-directory', 'description' => 'Complete member listing with contact info'],
+                    ['name' => 'Membership Statistics', 'route' => 'admin.reports.membership',       'description' => 'Demographics and growth analysis'],
+                    ['name' => 'Ministry Report',       'route' => 'admin.reports.ministries',       'description' => 'Ministry membership breakdown'],
+                    ['name' => 'Birthday Report',       'route' => 'admin.reports.birthdays',        'description' => 'Upcoming member birthdays'],
+                ],
             ],
             'attendance' => [
-                ['name' => 'Attendance Summary', 'route' => 'admin.reports.attendance', 'description' => 'Service attendance trends'],
-                ['name' => 'Visitor Report', 'route' => 'admin.reports.visitors', 'description' => 'Visitor tracking and conversion'],
+                'permission' => 'reports.attendance',
+                'reports' => [
+                    ['name' => 'Attendance Summary', 'route' => 'admin.reports.attendance', 'description' => 'Service attendance trends'],
+                    ['name' => 'Visitor Report',     'route' => 'admin.reports.visitors',  'description' => 'Visitor tracking and conversion'],
+                ],
             ],
         ];
+
+        // Only include categories the user has permission to view
+        $reportCategories = collect($allCategories)
+            ->filter(fn($cat) => $user->hasPermission($cat['permission']))
+            ->map(fn($cat) => $cat['reports'])
+            ->all();
 
         return view('admin.reports.index', compact('reportCategories'));
     }

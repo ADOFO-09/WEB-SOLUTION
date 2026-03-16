@@ -19,10 +19,10 @@ class DonationController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware(middleware: 'permission:finance.view', only: ['index', 'show', 'printReceipt']),
-            new Middleware(middleware: 'permission:finance.create', only: ['create', 'store']),
-            new Middleware(middleware: 'permission:finance.edit', only: ['edit', 'update']),
-            new Middleware(middleware: 'permission:finance.delete', only: ['destroy']),
+            new Middleware(middleware: 'permission:donations.view', only: ['index', 'show', 'printReceipt']),
+            new Middleware(middleware: 'permission:donations.create', only: ['create', 'store']),
+            new Middleware(middleware: 'permission:donations.edit', only: ['edit', 'update']),
+            new Middleware(middleware: 'permission:donations.delete', only: ['destroy']),
         ];
     }
 

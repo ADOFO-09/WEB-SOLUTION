@@ -18,9 +18,9 @@ class ExpenseController extends Controller implements HasMiddleware
     {
         return [
             'auth',
-            new Middleware('permission:finance.view', only: ['index', 'show']),
-            new Middleware('permission:finance.create', only: ['create', 'store']),
-            new Middleware('permission:finance.edit', only: ['edit', 'update', 'approve', 'reject', 'markPaid']),
+            new Middleware('permission:expenses.view', only: ['index', 'show']),
+            new Middleware('permission:expenses.create', only: ['create', 'store']),
+            new Middleware('permission:expenses.edit', only: ['edit', 'update', 'approve', 'reject', 'markPaid']),
             new Middleware('permission:finance.delete', only: ['destroy']),
         ];
     }

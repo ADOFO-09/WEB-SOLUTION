@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tithe;
 use App\Models\Member;
 use App\Models\FinancialYear;
+use App\Models\AttendanceSession;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -18,12 +19,12 @@ class TitheController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware(middleware: 'permission:finance.view', only: [
+            new Middleware(middleware: 'permission:tithes.view', only: [
                 'index', 'show', 'memberHistory', 'printReceipt', 'monthlyReport'
             ]),
-            new Middleware(middleware: 'permission:finance.create', only: ['create', 'store']),
-            new Middleware(middleware: 'permission:finance.edit', only: ['edit', 'update']),
-            new Middleware(middleware: 'permission:finance.delete', only: ['destroy']),
+            new Middleware(middleware: 'permission:tithes.create', only: ['create', 'store', 'createForSession', 'storeForSession']),
+            new Middleware(middleware: 'permission:tithes.edit', only: ['edit', 'update']),
+            new Middleware(middleware: 'permission:tithes.delete', only: ['destroy']),
         ];
     }
 
@@ -32,7 +33,7 @@ class TitheController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-        $query = Tithe::with(['member', 'recordedBy']);
+        $query = Tithe::with(['member', 'recordedBy', 'attendanceSession']);
 
         // Search
         if ($request->filled('search')) {
@@ -222,6 +223,63 @@ class TitheController extends Controller implements HasMiddleware
         $tithe->load(['member', 'recordedBy']);
         
         return view('admin.finance.tithes.receipt', compact('tithe'));
+    }
+
+    /**
+     * Show the form for recording tithes for an attendance session.
+     */
+    public function createForSession()
+    {
+        $sessions = AttendanceSession::with('serviceType')
+            ->orderBy('service_date', 'desc')
+            ->limit(30)
+            ->get();
+
+        return view('admin.finance.tithes.create-session', compact('sessions'));
+    }
+
+    /**
+     * Store a single bulk tithe amount for an attendance session.
+     */
+    public function storeForSession(Request $request)
+    {
+        $request->validate([
+            'attendance_session_id' => 'required|exists:attendance_sessions,id',
+            'amount'                => 'required|numeric|min:0.01',
+            'payment_method'        => 'required|in:cash,mobile_money,bank_transfer,cheque',
+            'notes'                 => 'nullable|string|max:500',
+        ]);
+
+        $session = AttendanceSession::findOrFail($request->attendance_session_id);
+
+        // Prevent duplicate session tithe
+        $existing = Tithe::where('attendance_session_id', $session->id)
+            ->where('collection_type', 'session')
+            ->first();
+
+        if ($existing) {
+            return redirect()->route('admin.tithes.session.create')
+                ->with('error', 'A session tithe has already been recorded for this service. Edit the existing record instead.')
+                ->withInput();
+        }
+
+        Tithe::create([
+            'member_id'             => null,
+            'attendance_session_id' => $session->id,
+            'collection_type'       => 'session',
+            'amount'                => $request->amount,
+            'payment_date'          => $session->service_date,
+            'payment_method'        => $request->payment_method,
+            'month_for'             => $session->service_date->startOfMonth()->format('Y-m-d'),
+            'notes'                 => $request->notes,
+            'recorded_by'           => auth()->id(),
+        ]);
+
+        $serviceName = $session->serviceType->name ?? 'Service';
+        $sessionDate = $session->service_date->format('M d, Y');
+
+        return redirect()->route('admin.finance.dashboard')
+            ->with('success', "Session tithe of GH₵" . number_format($request->amount, 2) . " recorded for {$serviceName} on {$sessionDate}.");
     }
 
     /**

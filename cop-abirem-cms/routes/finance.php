@@ -26,6 +26,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::get('/', [TitheController::class, 'index'])->name('index');
         Route::get('/create', [TitheController::class, 'create'])->name('create');
         Route::post('/', [TitheController::class, 'store'])->name('store');
+        Route::get('/session/create', [TitheController::class, 'createForSession'])->name('session.create');
+        Route::post('/session', [TitheController::class, 'storeForSession'])->name('session.store');
         Route::get('/monthly-report', [TitheController::class, 'monthlyReport'])->name('monthly-report');
         Route::get('/member/{member}', [TitheController::class, 'memberHistory'])->name('member-history');
         Route::get('/{tithe}', [TitheController::class, 'show'])->name('show');

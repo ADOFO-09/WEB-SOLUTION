@@ -15,6 +15,8 @@ class Tithe extends Model
         'reference_number',
         'member_id',
         'financial_year_id',
+        'attendance_session_id',
+        'collection_type',
         'amount',
         'payment_date',
         'payment_method',
@@ -66,6 +68,11 @@ class Tithe extends Model
     public function financialYear(): BelongsTo
     {
         return $this->belongsTo(FinancialYear::class);
+    }
+
+    public function attendanceSession(): BelongsTo
+    {
+        return $this->belongsTo(AttendanceSession::class, 'attendance_session_id');
     }
 
     public function recordedBy(): BelongsTo
