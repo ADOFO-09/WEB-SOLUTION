@@ -134,10 +134,20 @@ class FinanceDashboardController extends Controller
             ->orderBy('first_name')->get();
         $serviceTypes = ServiceType::where('is_active', true)->get();
         $expenseCategories = ExpenseCategory::where('is_active', true)->get();
-        $offeringCategories = IncomeCategory::where('type', 'offering')
+        $titheCategories = IncomeCategory::where('type', 'tithe')
             ->where('is_active', true)
+            ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
+
+        $offeringCategories = IncomeCategory::whereIn('type', ['offering', 'special', 'donation'])
+            ->where('is_active', true)
+            ->orderBy('type')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('type');
+
         $sessions = \App\Models\AttendanceSession::with('serviceType')
             ->orderBy('service_date', 'desc')
             ->limit(20)
@@ -158,6 +168,7 @@ class FinanceDashboardController extends Controller
             'members',
             'serviceTypes',
             'expenseCategories',
+            'titheCategories',
             'offeringCategories',
             'sessions'
         ));
@@ -224,26 +235,27 @@ class FinanceDashboardController extends Controller
     {
         $validated = $request->validate([
             'expense_category_id' => 'required|exists:expense_categories,id',
-            'amount' => 'required|numeric|min:0.01',
-            'expense_date' => 'required|date',
-            'description' => 'required|string|max:500',
-            'payment_method' => 'required|in:cash,cheque,mobile_money,bank_transfer',
+            'payee_name'          => 'required|string|max:255',
+            'amount'              => 'required|numeric|min:0.01',
+            'expense_date'        => 'required|date',
+            'description'         => 'required|string|max:500',
+            'payment_method'      => 'required|in:cash,cheque,mobile_money,bank_transfer',
         ]);
 
         $voucherNumber = 'EXP-' . date('Ymd') . '-' . str_pad(
-            Expense::whereDate('created_at', today())->count() + 1, 
+            Expense::whereDate('created_at', today())->count() + 1,
             4, '0', STR_PAD_LEFT
         );
 
         Expense::create([
             'expense_category_id' => $validated['expense_category_id'],
-            'amount' => $validated['amount'],
-            'expense_date' => $validated['expense_date'],
-            'description' => $validated['description'],
-            'payment_method' => $validated['payment_method'],
-            'voucher_number' => $voucherNumber,
-            'status' => 'pending',
-            'requested_by' => auth()->id(),
+            'payee_name'          => $validated['payee_name'],
+            'amount'              => $validated['amount'],
+            'expense_date'        => $validated['expense_date'],
+            'description'         => $validated['description'],
+            'payment_method'      => $validated['payment_method'],
+            'voucher_number'      => $voucherNumber,
+            'status'              => 'pending',
         ]);
 
         return redirect()->route('admin.finance.dashboard')

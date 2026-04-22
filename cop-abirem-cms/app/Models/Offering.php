@@ -136,6 +136,11 @@ class Offering extends Model
         return $this->member ? $this->member->full_name : 'Unknown';
     }
 
+    public function getParticularNameAttribute(): string
+    {
+        return $this->incomeCategory?->name ?? 'General Offering';
+    }
+
     // ==========================================
     // HELPER METHODS
     // ==========================================

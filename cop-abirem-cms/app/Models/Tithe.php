@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\IncomeCategory;
 
 class Tithe extends Model
 {
@@ -15,6 +16,7 @@ class Tithe extends Model
         'reference_number',
         'member_id',
         'financial_year_id',
+        'income_category_id',
         'attendance_session_id',
         'collection_type',
         'amount',
@@ -68,6 +70,11 @@ class Tithe extends Model
     public function financialYear(): BelongsTo
     {
         return $this->belongsTo(FinancialYear::class);
+    }
+
+    public function incomeCategory(): BelongsTo
+    {
+        return $this->belongsTo(IncomeCategory::class);
     }
 
     public function attendanceSession(): BelongsTo
@@ -132,6 +139,11 @@ class Tithe extends Model
     public function getMonthForFormattedAttribute(): string
     {
         return $this->month_for ? $this->month_for->format('F Y') : 'N/A';
+    }
+
+    public function getParticularNameAttribute(): string
+    {
+        return $this->incomeCategory?->name ?? 'Tithe';
     }
 
     // ==========================================

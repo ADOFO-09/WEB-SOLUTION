@@ -118,11 +118,20 @@
                             {{ $tithe->receipt_number }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <a href="{{ route('admin.tithes.member-history', $tithe->member) }}" 
-                               class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
-                                {{ $tithe->member->full_name ?? 'Unknown' }}
-                            </a>
-                            <p class="text-xs text-gray-500">{{ $tithe->member->member_id ?? '' }}</p>
+                            @if($tithe->member)
+                                <a href="{{ route('admin.tithes.member-history', $tithe->member) }}"
+                                   class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
+                                    {{ $tithe->member->full_name }}
+                                </a>
+                                <p class="text-xs text-gray-500">{{ $tithe->member->member_id }}</p>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Session Tithe
+                                </span>
+                                @if($tithe->attendanceSession)
+                                    <p class="text-xs text-gray-500">{{ $tithe->attendanceSession->serviceType->name ?? 'Service' }}</p>
+                                @endif
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
                             GH₵ {{ number_format($tithe->amount, 2) }}
@@ -139,10 +148,13 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            @if($tithe->attendance_session_id && $tithe->attendanceSession)
+                            @if($tithe->attendanceSession)
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700">
                                     {{ $tithe->attendanceSession->service_date->format('M d') }}
                                 </span>
+                                @if($tithe->attendanceSession->serviceType)
+                                    <p class="text-xs text-gray-400">{{ $tithe->attendanceSession->serviceType->name }}</p>
+                                @endif
                             @else
                                 <span class="text-gray-300">—</span>
                             @endif

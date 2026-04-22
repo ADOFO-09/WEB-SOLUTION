@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\ExpenseLedgerController;
+use App\Http\Controllers\Admin\IncomeLedgerController;
 use App\Http\Controllers\Admin\ReportController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,5 +39,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         // Attendance & Visitor Reports
         Route::get('/attendance', [ReportController::class, 'attendanceReport'])->name('attendance');
         Route::get('/visitors', [ReportController::class, 'visitorReport'])->name('visitors');
+
+        // Ledger Views
+        Route::get('/income-ledger', [IncomeLedgerController::class, 'index'])->name('income-ledger');
+        Route::get('/expense-ledger', [ExpenseLedgerController::class, 'index'])->name('expense-ledger');
     });
 });

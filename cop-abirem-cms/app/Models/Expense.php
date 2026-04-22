@@ -136,6 +136,11 @@ class Expense extends Model
     // ACCESSORS
     // ==========================================
 
+    public function getParticularNameAttribute(): string
+    {
+        return $this->expenseCategory?->name ?? $this->description ?? 'Expense';
+    }
+
     public function getStatusBadgeAttribute(): string
     {
         return match($this->status) {

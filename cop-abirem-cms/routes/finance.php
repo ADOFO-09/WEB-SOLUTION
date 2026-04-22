@@ -5,6 +5,9 @@ use App\Http\Controllers\Admin\OfferingController;
 use App\Http\Controllers\Admin\DonationController;
 use App\Http\Controllers\Admin\PledgeController;
 use App\Http\Controllers\Admin\ExpenseController;
+use App\Http\Controllers\Admin\FinancialParticularController;
+use App\Models\ExpenseCategory;
+use App\Models\IncomeCategory;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -97,5 +100,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::post('/{expense}/reject', [ExpenseController::class, 'reject'])->name('reject');
         Route::post('/{expense}/mark-paid', [ExpenseController::class, 'markPaid'])->name('mark-paid');
         Route::get('/{expense}/voucher', [ExpenseController::class, 'printVoucher'])->name('voucher');
+    });
+
+    // =========================================
+    // FINANCIAL PARTICULARS MANAGEMENT
+    // =========================================
+    Route::prefix('finance/particulars')->name('finance.particulars.')->group(function () {
+        Route::get('/', [FinancialParticularController::class, 'index'])->name('index');
+        Route::post('/income', [FinancialParticularController::class, 'storeIncome'])->name('store.income');
+        Route::patch('/income/{category}', [FinancialParticularController::class, 'toggleIncome'])->name('toggle.income');
+        Route::delete('/income/{category}', [FinancialParticularController::class, 'destroyIncome'])->name('destroy.income');
+        Route::post('/expense', [FinancialParticularController::class, 'storeExpense'])->name('store.expense');
+        Route::delete('/expense/{category}', [FinancialParticularController::class, 'destroyExpense'])->name('destroy.expense');
+        Route::post('/ajax', [FinancialParticularController::class, 'storeAjax'])->name('store.ajax');
     });
 });

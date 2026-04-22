@@ -33,7 +33,7 @@ class TitheController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-        $query = Tithe::with(['member', 'recordedBy', 'attendanceSession']);
+        $query = Tithe::with(['member', 'recordedBy', 'attendanceSession.serviceType']);
 
         // Search
         if ($request->filled('search')) {
@@ -245,6 +245,7 @@ class TitheController extends Controller implements HasMiddleware
     {
         $request->validate([
             'attendance_session_id' => 'required|exists:attendance_sessions,id',
+            'income_category_id'    => 'nullable|exists:income_categories,id',
             'amount'                => 'required|numeric|min:0.01',
             'payment_method'        => 'required|in:cash,mobile_money,bank_transfer,cheque',
             'notes'                 => 'nullable|string|max:500',
@@ -258,7 +259,7 @@ class TitheController extends Controller implements HasMiddleware
             ->first();
 
         if ($existing) {
-            return redirect()->route('admin.tithes.session.create')
+            return back()
                 ->with('error', 'A session tithe has already been recorded for this service. Edit the existing record instead.')
                 ->withInput();
         }
@@ -266,6 +267,7 @@ class TitheController extends Controller implements HasMiddleware
         Tithe::create([
             'member_id'             => null,
             'attendance_session_id' => $session->id,
+            'income_category_id'    => $request->income_category_id ?: null,
             'collection_type'       => 'session',
             'amount'                => $request->amount,
             'payment_date'          => $session->service_date,

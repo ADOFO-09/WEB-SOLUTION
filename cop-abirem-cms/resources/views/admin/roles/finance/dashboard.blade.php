@@ -92,6 +92,11 @@
             <span style="font-size: 0.75rem; color: #64748b;">Total tithe for a service</span>
         </div>
         <div class="card-body">
+            @if(session('error'))
+            <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:.5rem;padding:.75rem;margin-bottom:1rem;font-size:.875rem;color:#991b1b;">
+                {{ session('error') }}
+            </div>
+            @endif
             <form action="{{ route('admin.tithes.session.store') }}" method="POST">
                 @csrf
                 <div class="form-group">
@@ -99,7 +104,7 @@
                     <select name="attendance_session_id" class="form-select" required>
                         <option value="">Select Session</option>
                         @foreach($sessions as $session)
-                        <option value="{{ $session->id }}">
+                        <option value="{{ $session->id }}" {{ old('attendance_session_id') == $session->id ? 'selected' : '' }}>
                             {{ $session->serviceType->name ?? 'Service' }} — {{ $session->service_date->format('D, M d, Y') }}
                             @if($session->status === 'open') (Open) @endif
                         </option>
@@ -111,10 +116,25 @@
                     </p>
                     @endif
                 </div>
+                <div class="form-group">
+                    <label class="form-label">Tithe Particular</label>
+                    <select name="income_category_id" class="form-select">
+                        <option value="">— Select Particular (optional) —</option>
+                        @foreach($titheCategories as $cat)
+                        <option value="{{ $cat->id }}" {{ old('income_category_id') == $cat->id ? 'selected' : '' }}>
+                            {{ $cat->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.25rem;">
+                        Determines the label shown in the Income Ledger (e.g. "1st Sunday Tithe")
+                    </p>
+                </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label class="form-label">Total Amount (GH₵)</label>
-                        <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required placeholder="0.00">
+                        <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required
+                               placeholder="0.00" value="{{ old('amount') }}">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Payment Method</label>
@@ -128,7 +148,8 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Notes (Optional)</label>
-                    <input type="text" name="notes" class="form-input" placeholder="Any notes about this collection...">
+                    <input type="text" name="notes" class="form-input" placeholder="Any notes about this collection..."
+                           value="{{ old('notes') }}">
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Record Session Tithe</button>
             </form>
@@ -144,11 +165,20 @@
             <form action="{{ route('admin.finance.quick-offering') }}" method="POST">
                 @csrf
                 <div class="form-group">
-                    <label class="form-label">Offering Category</label>
+                    <label class="form-label">Offering Particular</label>
                     <select name="income_category_id" class="form-select" required>
-                        <option value="">Select category...</option>
-                        @foreach($offeringCategories as $cat)
-                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        <option value="">— Select particular —</option>
+                        @php
+                        $typeLabels = ['offering' => 'Regular Offerings', 'special' => 'Special Offerings', 'donation' => 'Donations'];
+                        @endphp
+                        @foreach($typeLabels as $type => $label)
+                        @if(isset($offeringCategories[$type]) && $offeringCategories[$type]->count())
+                        <optgroup label="{{ $label }}">
+                            @foreach($offeringCategories[$type] as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                            @endforeach
+                        </optgroup>
+                        @endif
                         @endforeach
                     </select>
                 </div>
@@ -174,6 +204,72 @@
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Record Offering</button>
             </form>
         </div>
+    </div>
+</div>
+
+<!-- Quick Entry: Expense -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <h3 style="font-weight: 600; color: #1e3a5f;">Record Expense</h3>
+        <span style="font-size: 0.75rem; color: #64748b;">Submitted for approval — reflects on Expense Ledger once approved</span>
+    </div>
+    <div class="card-body">
+        <form action="{{ route('admin.finance.quick-expense') }}" method="POST">
+            @csrf
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Expense Category</label>
+                    <select name="expense_category_id" class="form-select" required>
+                        <option value="">— Select category —</option>
+                        @foreach($expenseCategories as $cat)
+                        <option value="{{ $cat->id }}" {{ old('expense_category_id') == $cat->id ? 'selected' : '' }}>
+                            {{ $cat->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.25rem;">
+                        Determines the column in the Expense Ledger
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Payee Name</label>
+                    <input type="text" name="payee_name" class="form-input" required
+                           placeholder="Who is being paid?" value="{{ old('payee_name') }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <input type="text" name="description" class="form-input" required
+                           placeholder="Brief description of expense" value="{{ old('description') }}">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Amount (GH₵)</label>
+                    <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required
+                           placeholder="0.00" value="{{ old('amount') }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="expense_date" class="form-input"
+                           value="{{ old('expense_date', date('Y-m-d')) }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Payment Method</label>
+                    <select name="payment_method" class="form-select" required>
+                        <option value="cash">Cash</option>
+                        <option value="mobile_money">Mobile Money</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="cheque">Cheque</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <p style="font-size: 0.75rem; color: #d97706;">
+                    ⚠ Expense will be submitted as <strong>pending</strong> — it appears on the Expense Ledger only after approval.
+                </p>
+                <button type="submit" class="btn btn-primary">Submit Expense for Approval</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -269,7 +365,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div>
                             <div style="font-weight: 500; font-size: 0.875rem;">{{ Str::limit($expense->description, 25) }}</div>
-                            <div style="font-size: 0.75rem; color: #64748b;">{{ $expense->category->name ?? 'Uncategorized' }}</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">{{ $expense->expenseCategory->name ?? 'Uncategorized' }}</div>
                         </div>
                         <div style="text-align: right;">
                             <div style="font-weight: 600; color: #1e3a5f;">GH₵{{ number_format($expense->amount, 2) }}</div>

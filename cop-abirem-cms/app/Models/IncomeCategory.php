@@ -15,12 +15,17 @@ class IncomeCategory extends Model
     protected $fillable = [
         'name',
         'slug',
+        'type',
         'description',
         'is_active',
+        'sort_order',
+        'is_system',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'is_active'  => 'boolean',
+        'is_system'  => 'boolean',
+        'sort_order' => 'integer',
     ];
 
     // ==========================================
@@ -47,6 +52,11 @@ class IncomeCategory extends Model
         return $this->hasMany(Offering::class);
     }
 
+    public function tithes(): HasMany
+    {
+        return $this->hasMany(Tithe::class);
+    }
+
     public function donations(): HasMany
     {
         return $this->hasMany(Donation::class);
@@ -59,6 +69,21 @@ class IncomeCategory extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeByType($query, string $type)
+    {
+        return $query->where('type', $type);
+    }
+
+    public function scopeOfferings($query)
+    {
+        return $query->whereIn('type', ['offering', 'special']);
+    }
+
+    public function scopeTithes($query)
+    {
+        return $query->where('type', 'tithe');
     }
 
     // ==========================================
