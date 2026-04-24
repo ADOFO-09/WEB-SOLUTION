@@ -4,6 +4,7 @@
 
 @section('content')
 <div class="space-y-6">
+
     {{-- Header --}}
     <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -31,7 +32,7 @@
             <table style="width:100%;border-collapse:collapse;font-size:.875rem;">
                 <thead>
                     <tr style="background:#1e3a5f;color:white;">
-                        <th style="padding:.75rem 1rem;text-align:left;border-right:1px solid #2d4f7c;width:80px;">DATE</th>
+                        <th style="padding:.75rem 1rem;text-align:left;border-right:1px solid #2d4f7c;width:70px;">DATE</th>
                         <th style="padding:.75rem 1rem;text-align:left;border-right:1px solid #2d4f7c;">PARTICULARS</th>
                         <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#14532d;width:120px;">TITHE</th>
                         <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#1e3a8a;width:120px;">OFFERING</th>
@@ -41,10 +42,11 @@
                     </tr>
                 </thead>
                 <tbody>
+
                     {{-- Balance Brought Forward --}}
                     @if($broughtForward > 0)
-                    <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;font-style:italic;">
-                        <td style="padding:.625rem 1rem;border-right:1px solid #e2e8f0;font-size:.75rem;"></td>
+                    <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;font-style:italic;">
+                        <td style="padding:.625rem 1rem;border-right:1px solid #e2e8f0;"></td>
                         <td style="padding:.625rem 1rem;border-right:1px solid #e2e8f0;font-weight:600;color:#475569;">Balance B/F</td>
                         <td style="padding:.625rem 1rem;border-right:1px solid #e2e8f0;"></td>
                         <td style="padding:.625rem 1rem;border-right:1px solid #e2e8f0;"></td>
@@ -54,14 +56,34 @@
                     </tr>
                     @endif
 
-                    {{-- Entries --}}
-                    @forelse($ledgerEntries as $entry)
-                    @php $rowTotal = $entry['tithe'] + $entry['offering'] + $entry['donation'] + $entry['special']; @endphp
-                    <tr style="border-bottom:1px solid #e2e8f0;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-                        <td style="padding:.5rem 1rem;border-right:1px solid #e2e8f0;font-family:monospace;font-size:.75rem;white-space:nowrap;">
-                            {{ \Carbon\Carbon::parse($entry['date'])->format('d/m') }}
+                    {{-- Grouped entries --}}
+                    @forelse($groupedEntries as $dateKey => $entries)
+                    @php
+                        $count       = $entries->count();
+                        $isMulti     = $count > 1;
+                        $dayTithe    = $entries->sum('tithe');
+                        $dayOffering = $entries->sum('offering');
+                        $dayDonation = $entries->sum('donation');
+                        $daySpecial  = $entries->sum('special');
+                        $dayTotal    = $dayTithe + $dayOffering + $dayDonation + $daySpecial;
+                        $dateLabel   = \Carbon\Carbon::parse($dateKey)->format('d/m');
+                    @endphp
+
+                    @foreach($entries as $i => $entry)
+                    @php
+                        $rowTotal = $entry['tithe'] + $entry['offering'] + $entry['donation'] + $entry['special'];
+                        $isFirst  = $i === 0;
+                        // Slightly alternate row background within a group
+                        $rowBg = $isMulti ? '#fafafa' : 'white';
+                    @endphp
+                    <tr style="background:{{ $rowBg }};border-bottom:1px solid #f1f5f9;"
+                        onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='{{ $rowBg }}'">
+                        <td style="padding:.5rem 1rem;border-right:1px solid #e2e8f0;font-family:monospace;font-size:.75rem;white-space:nowrap;color:{{ $isFirst ? '#1e293b' : 'transparent' }};user-select:{{ $isFirst ? 'auto' : 'none' }};">
+                            {{ $dateLabel }}
                         </td>
-                        <td style="padding:.5rem 1rem;border-right:1px solid #e2e8f0;">{{ $entry['particular'] }}</td>
+                        <td style="padding:.5rem 1rem;border-right:1px solid #e2e8f0;padding-left:{{ $isFirst ? '1rem' : '1.75rem' }};">
+                            {{ $entry['particular'] }}
+                        </td>
                         <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;background:{{ $entry['tithe'] > 0 ? '#f0fdf4' : '' }}">
                             {{ $entry['tithe'] > 0 ? number_format($entry['tithe'], 2) : '-' }}
                         </td>
@@ -74,10 +96,37 @@
                         <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;background:{{ $entry['special'] > 0 ? '#fffbeb' : '' }}">
                             {{ $entry['special'] > 0 ? number_format($entry['special'], 2) : '-' }}
                         </td>
-                        <td style="padding:.5rem 1rem;text-align:right;font-family:monospace;font-weight:600;">
-                            {{ number_format($rowTotal, 2) }}
+                        <td style="padding:.5rem 1rem;text-align:right;font-family:monospace;font-weight:{{ $isMulti ? '400' : '600' }};color:{{ $isMulti ? '#94a3b8' : '#1e293b' }};">
+                            {{ $isMulti ? '-' : number_format($rowTotal, 2) }}
                         </td>
                     </tr>
+                    @endforeach
+
+                    {{-- Day total row — only when multiple entries share the date --}}
+                    @if($isMulti)
+                    <tr style="background:#e0f2fe;border-bottom:2px solid #7dd3fc;">
+                        <td style="padding:.5rem 1rem;border-right:1px solid #bae6fd;"></td>
+                        <td style="padding:.5rem 1rem;border-right:1px solid #bae6fd;font-size:.75rem;font-weight:600;color:#0369a1;padding-left:1.75rem;">
+                            Day Total
+                        </td>
+                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #bae6fd;font-family:monospace;font-weight:600;font-size:.8rem;color:#15803d;">
+                            {{ $dayTithe > 0 ? number_format($dayTithe, 2) : '-' }}
+                        </td>
+                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #bae6fd;font-family:monospace;font-weight:600;font-size:.8rem;color:#1d4ed8;">
+                            {{ $dayOffering > 0 ? number_format($dayOffering, 2) : '-' }}
+                        </td>
+                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #bae6fd;font-family:monospace;font-weight:600;font-size:.8rem;color:#6d28d9;">
+                            {{ $dayDonation > 0 ? number_format($dayDonation, 2) : '-' }}
+                        </td>
+                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #bae6fd;font-family:monospace;font-weight:600;font-size:.8rem;color:#b45309;">
+                            {{ $daySpecial > 0 ? number_format($daySpecial, 2) : '-' }}
+                        </td>
+                        <td style="padding:.5rem 1rem;text-align:right;font-family:monospace;font-weight:700;color:#0369a1;">
+                            {{ number_format($dayTotal, 2) }}
+                        </td>
+                    </tr>
+                    @endif
+
                     @empty
                     <tr>
                         <td colspan="7" style="padding:3rem;text-align:center;color:#64748b;">
@@ -85,16 +134,17 @@
                         </td>
                     </tr>
                     @endforelse
+
                 </tbody>
                 <tfoot>
-                    <tr style="background:#e2e8f0;border-top:2px solid #94a3b8;font-weight:700;">
-                        <td style="padding:.75rem 1rem;border-right:1px solid #cbd5e1;"></td>
-                        <td style="padding:.75rem 1rem;border-right:1px solid #cbd5e1;">MONTHLY TOTAL</td>
-                        <td style="padding:.75rem 1rem;text-align:right;border-right:1px solid #cbd5e1;font-family:monospace;background:#dcfce7;">{{ number_format($totals['tithe'], 2) }}</td>
-                        <td style="padding:.75rem 1rem;text-align:right;border-right:1px solid #cbd5e1;font-family:monospace;background:#dbeafe;">{{ number_format($totals['offering'], 2) }}</td>
-                        <td style="padding:.75rem 1rem;text-align:right;border-right:1px solid #cbd5e1;font-family:monospace;background:#ede9fe;">{{ number_format($totals['donation'], 2) }}</td>
-                        <td style="padding:.75rem 1rem;text-align:right;border-right:1px solid #cbd5e1;font-family:monospace;background:#fef3c7;">{{ number_format($totals['special'], 2) }}</td>
-                        <td style="padding:.75rem 1rem;text-align:right;font-family:monospace;font-size:1rem;">{{ number_format($totals['grand_total'], 2) }}</td>
+                    <tr style="background:#1e3a5f;color:white;border-top:2px solid #0f172a;font-weight:700;">
+                        <td style="padding:.875rem 1rem;border-right:1px solid #2d4f7c;"></td>
+                        <td style="padding:.875rem 1rem;border-right:1px solid #2d4f7c;letter-spacing:.05em;font-size:.8rem;">MONTHLY TOTAL</td>
+                        <td style="padding:.875rem 1rem;text-align:right;border-right:1px solid #2d4f7c;font-family:monospace;background:#14532d;">{{ number_format($totals['tithe'], 2) }}</td>
+                        <td style="padding:.875rem 1rem;text-align:right;border-right:1px solid #2d4f7c;font-family:monospace;background:#1e3a8a;">{{ number_format($totals['offering'], 2) }}</td>
+                        <td style="padding:.875rem 1rem;text-align:right;border-right:1px solid #2d4f7c;font-family:monospace;background:#4c1d95;">{{ number_format($totals['donation'], 2) }}</td>
+                        <td style="padding:.875rem 1rem;text-align:right;border-right:1px solid #2d4f7c;font-family:monospace;background:#78350f;">{{ number_format($totals['special'], 2) }}</td>
+                        <td style="padding:.875rem 1rem;text-align:right;font-family:monospace;font-size:1rem;">{{ number_format($totals['grand_total'], 2) }}</td>
                     </tr>
                     <tr style="background:#bbf7d0;font-weight:700;border-top:1px solid #86efac;">
                         <td style="padding:.75rem 1rem;border-right:1px solid #86efac;" colspan="2">BALANCE C/F</td>
@@ -129,5 +179,6 @@
             <div style="font-size:.75rem;color:#94a3b8;">Grand Total</div>
         </div>
     </div>
+
 </div>
 @endsection

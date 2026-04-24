@@ -4,6 +4,7 @@
 
 @section('content')
 <div class="space-y-6">
+
     {{-- Header --}}
     <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -44,23 +45,63 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($ledgerEntries as $entry)
+
+                    @forelse($groupedEntries as $dateKey => $entries)
                     @php
-                        $rowTotal = $entry['transport'] + $entry['utilities'] + $entry['welfare']
-                                  + $entry['cleaning'] + $entry['maintenance'] + $entry['remittance'] + $entry['others'];
+                        $count      = $entries->count();
+                        $isMulti    = $count > 1;
+                        $dateLabel  = \Carbon\Carbon::parse($dateKey)->format('d/m');
+                        $dayCols    = [];
+                        foreach($columns as $col) {
+                            $dayCols[$col] = $entries->sum($col);
+                        }
+                        $dayTotal = array_sum($dayCols);
                     @endphp
-                    <tr style="border-bottom:1px solid #e2e8f0;" onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background=''">
-                        <td style="padding:.5rem .75rem;border-right:1px solid #e2e8f0;font-family:monospace;font-size:.75rem;white-space:nowrap;">
-                            {{ \Carbon\Carbon::parse($entry['date'])->format('d/m') }}
+
+                    @foreach($entries as $i => $entry)
+                    @php
+                        $rowTotal = 0;
+                        foreach($columns as $col) $rowTotal += $entry[$col];
+                        $isFirst  = $i === 0;
+                        $rowBg    = $isMulti ? '#fafafa' : 'white';
+                    @endphp
+                    <tr style="background:{{ $rowBg }};border-bottom:1px solid #f1f5f9;"
+                        onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background='{{ $rowBg }}'">
+                        <td style="padding:.5rem .75rem;border-right:1px solid #e2e8f0;font-family:monospace;font-size:.75rem;white-space:nowrap;color:{{ $isFirst ? '#1e293b' : 'transparent' }};user-select:{{ $isFirst ? 'auto' : 'none' }};">
+                            {{ $dateLabel }}
                         </td>
-                        <td style="padding:.5rem .75rem;border-right:1px solid #e2e8f0;">{{ $entry['particular'] }}</td>
-                        @foreach(['transport','utilities','welfare','cleaning','maintenance','remittance','others'] as $col)
+                        <td style="padding:.5rem .75rem;border-right:1px solid #e2e8f0;padding-left:{{ $isFirst ? '.75rem' : '1.5rem' }};">
+                            {{ $entry['particular'] }}
+                        </td>
+                        @foreach($columns as $col)
                         <td style="padding:.5rem .5rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;{{ $entry[$col] > 0 ? 'background:#fef2f2;' : '' }}">
                             {{ $entry[$col] > 0 ? number_format($entry[$col], 2) : '-' }}
                         </td>
                         @endforeach
-                        <td style="padding:.5rem .75rem;text-align:right;font-family:monospace;font-weight:600;">{{ number_format($rowTotal, 2) }}</td>
+                        <td style="padding:.5rem .75rem;text-align:right;font-family:monospace;font-weight:{{ $isMulti ? '400' : '600' }};color:{{ $isMulti ? '#94a3b8' : '#1e293b' }};">
+                            {{ $isMulti ? '-' : number_format($rowTotal, 2) }}
+                        </td>
                     </tr>
+                    @endforeach
+
+                    {{-- Day total row — only when multiple entries share the date --}}
+                    @if($isMulti)
+                    <tr style="background:#fee2e2;border-bottom:2px solid #fca5a5;">
+                        <td style="padding:.5rem .75rem;border-right:1px solid #fca5a5;"></td>
+                        <td style="padding:.5rem .75rem;border-right:1px solid #fca5a5;font-size:.75rem;font-weight:600;color:#991b1b;padding-left:1.5rem;">
+                            Day Total
+                        </td>
+                        @foreach($columns as $col)
+                        <td style="padding:.5rem .5rem;text-align:right;border-right:1px solid #fca5a5;font-family:monospace;font-weight:600;font-size:.8rem;color:#7f1d1d;">
+                            {{ $dayCols[$col] > 0 ? number_format($dayCols[$col], 2) : '-' }}
+                        </td>
+                        @endforeach
+                        <td style="padding:.5rem .75rem;text-align:right;font-family:monospace;font-weight:700;color:#991b1b;">
+                            {{ number_format($dayTotal, 2) }}
+                        </td>
+                    </tr>
+                    @endif
+
                     @empty
                     <tr>
                         <td colspan="10" style="padding:3rem;text-align:center;color:#64748b;">
@@ -68,15 +109,16 @@
                         </td>
                     </tr>
                     @endforelse
+
                 </tbody>
                 <tfoot>
-                    <tr style="background:#fee2e2;border-top:2px solid #fca5a5;font-weight:700;">
-                        <td style="padding:.75rem .75rem;border-right:1px solid #fca5a5;"></td>
-                        <td style="padding:.75rem .75rem;border-right:1px solid #fca5a5;">MONTHLY TOTAL</td>
-                        @foreach(['transport','utilities','welfare','cleaning','maintenance','remittance','others'] as $col)
-                        <td style="padding:.75rem .5rem;text-align:right;border-right:1px solid #fca5a5;font-family:monospace;">{{ number_format($totals[$col], 2) }}</td>
+                    <tr style="background:#7f1d1d;color:white;border-top:2px solid #450a0a;font-weight:700;">
+                        <td style="padding:.875rem .75rem;border-right:1px solid #991b1b;"></td>
+                        <td style="padding:.875rem .75rem;border-right:1px solid #991b1b;letter-spacing:.05em;font-size:.75rem;">MONTHLY TOTAL</td>
+                        @foreach($columns as $col)
+                        <td style="padding:.875rem .5rem;text-align:right;border-right:1px solid #991b1b;font-family:monospace;">{{ number_format($totals[$col], 2) }}</td>
                         @endforeach
-                        <td style="padding:.75rem .75rem;text-align:right;font-family:monospace;font-size:1rem;">{{ number_format($totals['grand_total'], 2) }}</td>
+                        <td style="padding:.875rem .75rem;text-align:right;font-family:monospace;font-size:1rem;">{{ number_format($totals['grand_total'], 2) }}</td>
                     </tr>
                 </tfoot>
             </table>
@@ -87,10 +129,10 @@
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;">
         @php
         $summaryItems = [
-            'transport'   => ['label' => 'Transport',   'bg' => '#fef2f2', 'border' => '#fca5a5', 'text' => '#991b1b'],
-            'utilities'   => ['label' => 'Utilities',   'bg' => '#eff6ff', 'border' => '#93c5fd', 'text' => '#1d4ed8'],
-            'welfare'     => ['label' => 'Welfare',     'bg' => '#faf5ff', 'border' => '#c4b5fd', 'text' => '#6d28d9'],
-            'remittance'  => ['label' => 'Remittances', 'bg' => '#fffbeb', 'border' => '#fcd34d', 'text' => '#b45309'],
+            'transport'  => ['label' => 'Transport',   'bg' => '#fef2f2', 'border' => '#fca5a5', 'text' => '#991b1b'],
+            'utilities'  => ['label' => 'Utilities',   'bg' => '#eff6ff', 'border' => '#93c5fd', 'text' => '#1d4ed8'],
+            'welfare'    => ['label' => 'Welfare',     'bg' => '#faf5ff', 'border' => '#c4b5fd', 'text' => '#6d28d9'],
+            'remittance' => ['label' => 'Remittances', 'bg' => '#fffbeb', 'border' => '#fcd34d', 'text' => '#b45309'],
         ];
         @endphp
         @foreach($summaryItems as $col => $info)
@@ -104,5 +146,6 @@
             <div style="font-size:.75rem;color:#fecaca;">Total Expenses</div>
         </div>
     </div>
+
 </div>
 @endsection

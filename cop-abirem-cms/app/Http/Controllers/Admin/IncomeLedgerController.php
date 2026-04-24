@@ -19,25 +19,21 @@ class IncomeLedgerController extends Controller
         $start = Carbon::createFromDate($year, $month, 1)->startOfMonth();
         $end   = Carbon::createFromDate($year, $month, 1)->endOfMonth();
 
-        // Tithes
         $tithes = Tithe::with('incomeCategory', 'member')
             ->whereBetween('payment_date', [$start, $end])
             ->orderBy('payment_date')
             ->get();
 
-        // Offerings
         $offerings = Offering::with('incomeCategory')
             ->whereBetween('payment_date', [$start, $end])
             ->orderBy('payment_date')
             ->get();
 
-        // Donations
         $donations = Donation::with('member')
             ->whereBetween('payment_date', [$start, $end])
             ->orderBy('payment_date')
             ->get();
 
-        // Build unified ledger rows
         $ledgerEntries = collect();
 
         foreach ($tithes as $tithe) {
@@ -78,7 +74,10 @@ class IncomeLedgerController extends Controller
             ]);
         }
 
-        $ledgerEntries = $ledgerEntries->sortBy('date')->values();
+        // Sort then group by date
+        $groupedEntries = $ledgerEntries
+            ->sortBy('date')
+            ->groupBy(fn($e) => Carbon::parse($e['date'])->format('Y-m-d'));
 
         $totals = [
             'tithe'       => $ledgerEntries->sum('tithe'),
@@ -89,18 +88,16 @@ class IncomeLedgerController extends Controller
         ];
         $totals['grand_total'] = $totals['tithe'] + $totals['offering'] + $totals['donation'] + $totals['special'];
 
-        // Balance Brought Forward = sum of all income before this month
         $broughtForward = $this->getTotalBefore($start);
         $carriedForward = $broughtForward + $totals['grand_total'];
 
-        // Month options for nav
         $months = [];
         for ($m = 1; $m <= 12; $m++) {
             $months[$m] = Carbon::createFromDate($year, $m, 1)->format('F');
         }
 
         return view('admin.reports.income-ledger', compact(
-            'ledgerEntries', 'totals', 'month', 'year',
+            'groupedEntries', 'totals', 'month', 'year',
             'broughtForward', 'carriedForward', 'months'
         ));
     }

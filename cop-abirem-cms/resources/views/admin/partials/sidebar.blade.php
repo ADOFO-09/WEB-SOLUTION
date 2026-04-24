@@ -14,7 +14,7 @@
     .nav-link svg { width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0; }
 </style>
 
-<aside class="sidebar" :class="{ 'open': sidebarOpen }">
+<aside class="sidebar" :class="{ 'open': sidebarOpen }" @click="if(window.innerWidth < 1024) sidebarOpen = false">
     <div class="sidebar-header">
         <div class="sidebar-logo">
             <div class="sidebar-logo-icon">
@@ -232,12 +232,4 @@
 
     </nav>
 
-    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1); background: linear-gradient(180deg, transparent 0%, #0f172a 100%);">
-        <div style="display: flex; align-items: center; color: rgba(255,255,255,0.7); font-size: 0.75rem;">
-            <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {{ now()->format('M d, Y') }}
-        </div>
-    </div>
 </aside>

@@ -8,7 +8,7 @@
         --success: #10b981;
         --warning: #f59e0b;
         --danger: #ef4444;
-        --sidebar-width: 280px;
+        --sidebar-width: 260px;
     }
 
     * {
@@ -485,18 +485,6 @@
         }
 
         .mobile-menu-btn {
-            display: block;
-        }
-
-        .sidebar-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 35;
-            display: none;
-        }
-
-        .sidebar-overlay.show {
             display: block;
         }
     }

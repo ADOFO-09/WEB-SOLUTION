@@ -9,23 +9,22 @@ use Illuminate\Http\Request;
 
 class ExpenseLedgerController extends Controller
 {
-    // Map expense_category names to ledger column keys
     private const CATEGORY_MAP = [
-        'Transport & Fuel'       => 'transport',
-        'Electricity'            => 'utilities',
-        'Water'                  => 'utilities',
+        'Transport & Fuel'         => 'transport',
+        'Electricity'              => 'utilities',
+        'Water'                    => 'utilities',
         'Internet & Communication' => 'utilities',
-        'Welfare & Benevolence'  => 'welfare',
-        'Cleaning & Sanitation'  => 'cleaning',
-        'Maintenance & Repairs'  => 'maintenance',
-        'Equipment Purchase'     => 'maintenance',
-        'District Remittance'    => 'remittance',
-        'Area Remittance'        => 'remittance',
-        'Ministry Support'       => 'others',
-        'Events & Programs'      => 'others',
-        'Stationery & Supplies'  => 'others',
-        'Security'               => 'others',
-        'Miscellaneous'          => 'others',
+        'Welfare & Benevolence'    => 'welfare',
+        'Cleaning & Sanitation'    => 'cleaning',
+        'Maintenance & Repairs'    => 'maintenance',
+        'Equipment Purchase'       => 'maintenance',
+        'District Remittance'      => 'remittance',
+        'Area Remittance'          => 'remittance',
+        'Ministry Support'         => 'others',
+        'Events & Programs'        => 'others',
+        'Stationery & Supplies'    => 'others',
+        'Security'                 => 'others',
+        'Miscellaneous'            => 'others',
     ];
 
     public function index(Request $request)
@@ -59,6 +58,11 @@ class ExpenseLedgerController extends Controller
             ];
         });
 
+        // Sort then group by date
+        $groupedEntries = $ledgerEntries
+            ->sortBy('date')
+            ->groupBy(fn($e) => Carbon::parse($e['date'])->format('Y-m-d'));
+
         $columns = ['transport', 'utilities', 'welfare', 'cleaning', 'maintenance', 'remittance', 'others'];
         $totals  = [];
         foreach ($columns as $col) {
@@ -72,7 +76,7 @@ class ExpenseLedgerController extends Controller
         }
 
         return view('admin.reports.expense-ledger', compact(
-            'ledgerEntries', 'totals', 'month', 'year', 'months', 'columns'
+            'groupedEntries', 'totals', 'month', 'year', 'months', 'columns'
         ));
     }
 }

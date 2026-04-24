@@ -101,24 +101,25 @@
         }
         
         .brand-logo {
-            width: 100px;
-            height: 100px;
+            width: 160px;
+            height: 160px;
             background: var(--white);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 2rem;
+            margin: 0 auto 1rem;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             animation: logoFloat 3s ease-in-out infinite;
             overflow: hidden;
-            padding: 8px;
+            padding: 0;
         }
-        
+
         .brand-logo img {
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: cover;
+            display: block;
         }
         
         @keyframes logoFloat {

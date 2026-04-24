@@ -20,7 +20,9 @@
 </head>
 <body class="h-full" x-data="{ sidebarOpen: false }">
     <!-- Sidebar Overlay (Mobile) -->
-    <div class="sidebar-overlay" :class="{ 'show': sidebarOpen }" @click="sidebarOpen = false"></div>
+    <div x-show="sidebarOpen"
+         @click="sidebarOpen = false"
+         style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:35;cursor:pointer;"></div>
 
     <!-- Sidebar -->
     @include('admin.partials.sidebar')
