@@ -37,40 +37,49 @@ class IncomeLedgerController extends Controller
         $ledgerEntries = collect();
 
         foreach ($tithes as $tithe) {
+            $voided = $tithe->isVoided();
             $ledgerEntries->push([
-                'date'       => $tithe->payment_date,
-                'particular' => $tithe->particular_name,
-                'tithe'      => (float) $tithe->amount,
-                'offering'   => 0.0,
-                'donation'   => 0.0,
-                'special'    => 0.0,
-                'reference'  => $tithe->receipt_number ?? $tithe->reference_number,
+                'date'          => $tithe->payment_date,
+                'particular'    => $tithe->particular_name,
+                'tithe'         => $voided ? 0.0 : (float) $tithe->amount,
+                'offering'      => 0.0,
+                'donation'      => 0.0,
+                'special'       => 0.0,
+                'reference'     => $tithe->receipt_number ?? $tithe->reference_number,
+                'ledger_status' => $tithe->ledger_status ?? 'active',
+                'is_adjustment' => (bool) $tithe->is_adjustment,
             ]);
         }
 
         foreach ($offerings as $offering) {
+            $voided    = $offering->isVoided();
             $type      = $offering->incomeCategory?->type ?? 'offering';
             $isSpecial = $type === 'special';
             $ledgerEntries->push([
-                'date'       => $offering->payment_date,
-                'particular' => $offering->particular_name,
-                'tithe'      => 0.0,
-                'offering'   => $isSpecial ? 0.0 : (float) $offering->amount,
-                'donation'   => 0.0,
-                'special'    => $isSpecial ? (float) $offering->amount : 0.0,
-                'reference'  => $offering->reference_number,
+                'date'          => $offering->payment_date,
+                'particular'    => $offering->particular_name,
+                'tithe'         => 0.0,
+                'offering'      => (!$voided && !$isSpecial) ? (float) $offering->amount : 0.0,
+                'donation'      => 0.0,
+                'special'       => (!$voided && $isSpecial) ? (float) $offering->amount : 0.0,
+                'reference'     => $offering->reference_number,
+                'ledger_status' => $offering->ledger_status ?? 'active',
+                'is_adjustment' => (bool) $offering->is_adjustment,
             ]);
         }
 
         foreach ($donations as $donation) {
+            $voided = $donation->isVoided();
             $ledgerEntries->push([
-                'date'       => $donation->payment_date,
-                'particular' => $donation->purpose ?? 'Donation',
-                'tithe'      => 0.0,
-                'offering'   => 0.0,
-                'donation'   => (float) $donation->amount,
-                'special'    => 0.0,
-                'reference'  => $donation->reference_number,
+                'date'          => $donation->payment_date,
+                'particular'    => $donation->purpose ?? 'Donation',
+                'tithe'         => 0.0,
+                'offering'      => 0.0,
+                'donation'      => $voided ? 0.0 : (float) $donation->amount,
+                'special'       => 0.0,
+                'reference'     => $donation->reference_number,
+                'ledger_status' => $donation->ledger_status ?? 'active',
+                'is_adjustment' => (bool) $donation->is_adjustment,
             ]);
         }
 

@@ -44,17 +44,20 @@ class ExpenseLedgerController extends Controller
         $ledgerEntries = $expenses->map(function ($expense) {
             $catName = $expense->expenseCategory?->name ?? 'Miscellaneous';
             $col     = self::CATEGORY_MAP[$catName] ?? 'others';
+            $voided  = $expense->isVoided();
             return [
-                'date'        => $expense->expense_date,
-                'particular'  => $expense->particular_name,
-                'transport'   => $col === 'transport'   ? (float) $expense->amount : 0.0,
-                'utilities'   => $col === 'utilities'   ? (float) $expense->amount : 0.0,
-                'welfare'     => $col === 'welfare'     ? (float) $expense->amount : 0.0,
-                'cleaning'    => $col === 'cleaning'    ? (float) $expense->amount : 0.0,
-                'maintenance' => $col === 'maintenance' ? (float) $expense->amount : 0.0,
-                'remittance'  => $col === 'remittance'  ? (float) $expense->amount : 0.0,
-                'others'      => $col === 'others'      ? (float) $expense->amount : 0.0,
-                'reference'   => $expense->voucher_number ?? $expense->reference_number,
+                'date'          => $expense->expense_date,
+                'particular'    => $expense->particular_name,
+                'transport'     => (!$voided && $col === 'transport')   ? (float) $expense->amount : 0.0,
+                'utilities'     => (!$voided && $col === 'utilities')   ? (float) $expense->amount : 0.0,
+                'welfare'       => (!$voided && $col === 'welfare')     ? (float) $expense->amount : 0.0,
+                'cleaning'      => (!$voided && $col === 'cleaning')    ? (float) $expense->amount : 0.0,
+                'maintenance'   => (!$voided && $col === 'maintenance') ? (float) $expense->amount : 0.0,
+                'remittance'    => (!$voided && $col === 'remittance')  ? (float) $expense->amount : 0.0,
+                'others'        => (!$voided && $col === 'others')      ? (float) $expense->amount : 0.0,
+                'reference'     => $expense->voucher_number ?? $expense->reference_number,
+                'ledger_status' => $expense->ledger_status ?? 'active',
+                'is_adjustment' => (bool) $expense->is_adjustment,
             ];
         });
 

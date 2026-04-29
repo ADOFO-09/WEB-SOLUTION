@@ -12,6 +12,7 @@ class PledgePayment extends Model
 
     protected $fillable = [
         'pledge_id',
+        'reference_number',
         'amount',
         'payment_date',
         'payment_method',
@@ -35,6 +36,9 @@ class PledgePayment extends Model
         parent::boot();
 
         static::creating(function ($model) {
+            if (empty($model->reference_number)) {
+                $model->reference_number = self::generateReferenceNumber();
+            }
             if (empty($model->receipt_number)) {
                 $model->receipt_number = self::generateReceiptNumber();
             }
@@ -67,6 +71,22 @@ class PledgePayment extends Model
     // ==========================================
     // HELPER METHODS
     // ==========================================
+
+    public static function generateReferenceNumber(): string
+    {
+        $prefix = 'PP';
+        $year   = date('Y');
+        $last   = self::whereYear('created_at', $year)
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $sequence = 1;
+        if ($last && preg_match('/(\d{5})$/', $last->reference_number, $matches)) {
+            $sequence = (int) $matches[1] + 1;
+        }
+
+        return $prefix . $year . str_pad($sequence, 5, '0', STR_PAD_LEFT);
+    }
 
     public static function generateReceiptNumber(): string
     {

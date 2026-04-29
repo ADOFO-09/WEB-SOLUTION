@@ -113,9 +113,16 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($tithes as $tithe)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="{{ $tithe->isVoided() ? 'bg-red-50 opacity-75' : ($tithe->isAdjusted() ? 'bg-yellow-50' : 'hover:bg-gray-50') }}">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $tithe->receipt_number }}
+                            @if($tithe->isVoided())
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700">VOID</span>
+                            @elseif($tithe->isAdjusted())
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-yellow-100 text-yellow-700">ADJ</span>
+                            @elseif($tithe->isAdjustment())
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700">+ADJ</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($tithe->member)
@@ -133,7 +140,7 @@
                                 @endif
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $tithe->isVoided() ? 'text-red-400 line-through' : 'text-green-600' }}">
                             GH₵ {{ number_format($tithe->amount, 2) }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -163,6 +170,17 @@
                             <div class="flex items-center justify-end space-x-2">
                                 <a href="{{ route('admin.tithes.show', $tithe) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
                                 <a href="{{ route('admin.tithes.receipt', $tithe) }}" class="text-green-600 hover:text-green-900">Receipt</a>
+                                @can('corrections.void')
+                                @if($tithe->isActive())
+                                <x-void-entry-modal
+                                    entryType="tithe"
+                                    :entryId="$tithe->id"
+                                    :reference="$tithe->receipt_number ?? $tithe->reference_number"
+                                    :route="route('admin.finance.corrections.void.tithe', $tithe)" />
+                                @elseif($tithe->isVoided())
+                                <a href="{{ route('admin.finance.corrections.history', ['tithe', $tithe->id]) }}" class="text-xs text-gray-500 hover:underline">History</a>
+                                @endif
+                                @endcan
                             </div>
                         </td>
                     </tr>

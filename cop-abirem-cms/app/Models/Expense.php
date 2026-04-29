@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\ExpenseCategory;
 use App\Models\User;
 use App\Models\FinancialYear;
+use App\Traits\HasLedgerCorrections;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Expense extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasLedgerCorrections;
 
     protected $fillable = [
         'reference_number',
@@ -32,12 +33,21 @@ class Expense extends Model
         'approved_at',
         'rejection_reason',
         'notes',
+        'ledger_status',
+        'voided_by',
+        'voided_at',
+        'void_reason',
+        'adjusted_by_id',
+        'adjusts_entry_id',
+        'is_adjustment',
     ];
 
     protected $casts = [
         'expense_date' => 'date',
         'amount' => 'decimal:2',
         'approved_at' => 'datetime',
+        'voided_at' => 'datetime',
+        'is_adjustment' => 'boolean',
     ];
 
     // ==========================================

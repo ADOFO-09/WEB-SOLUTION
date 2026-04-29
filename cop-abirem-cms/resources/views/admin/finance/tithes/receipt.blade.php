@@ -125,6 +125,7 @@
         </div>
 
         <div class="details">
+            @if($tithe->member)
             <div class="detail-row">
                 <span class="detail-label">Received From:</span>
                 <span class="detail-value">{{ $tithe->member->full_name }}</span>
@@ -133,10 +134,36 @@
                 <span class="detail-label">Member ID:</span>
                 <span class="detail-value">{{ $tithe->member->member_id }}</span>
             </div>
+            @if($tithe->member->phone)
+            <div class="detail-row">
+                <span class="detail-label">Phone:</span>
+                <span class="detail-value">{{ $tithe->member->phone }}</span>
+            </div>
+            @endif
             <div class="detail-row">
                 <span class="detail-label">Month For:</span>
                 <span class="detail-value">{{ $tithe->month_for_formatted }}</span>
             </div>
+            @else
+            <div class="detail-row">
+                <span class="detail-label">Collection Type:</span>
+                <span class="detail-value">Session Tithe (Bulk Collection)</span>
+            </div>
+            @if($tithe->attendanceSession)
+            <div class="detail-row">
+                <span class="detail-label">Service:</span>
+                <span class="detail-value">{{ $tithe->attendanceSession->serviceType->name ?? 'Service' }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Service Date:</span>
+                <span class="detail-value">{{ $tithe->attendanceSession->service_date->format('F d, Y') }}</span>
+            </div>
+            @endif
+            <div class="detail-row" style="font-size:11px; color:#888;">
+                <span class="detail-label">Note:</span>
+                <span class="detail-value">Bulk collection — not linked to individual member</span>
+            </div>
+            @endif
             <div class="detail-row">
                 <span class="detail-label">Payment Date:</span>
                 <span class="detail-value">{{ $tithe->payment_date->format('F d, Y') }}</span>

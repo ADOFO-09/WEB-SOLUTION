@@ -55,15 +55,48 @@
                 <div>
                     <label for="income_category_id" class="block text-sm font-medium text-gray-700">Category *</label>
                     <select name="income_category_id" id="income_category_id" required
+                            onchange="onCategoryChange()"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         @foreach($categories as $category)
-                            <option value="{{ $category->id }}" 
+                            <option value="{{ $category->id }}"
+                                data-type="{{ $category->type }}"
                                 {{ old('income_category_id', $offering->income_category_id ?? '') == $category->id ? 'selected' : '' }}>
                                 {{ $category->name }}
                             </option>
                         @endforeach
                     </select>
                     @error('income_category_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                <!-- Pledge Link (shown only when Special category selected) -->
+                <div id="pledge_section" style="display:none;"
+                     class="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span class="text-sm font-semibold text-amber-800">Link to a Pledge (optional)</span>
+                    </div>
+                    <p class="text-xs text-amber-700">If this special offering is a pledge payment, select the pledge below. The pledge balance will be updated automatically.</p>
+                    <div>
+                        <label for="pledge_id" class="block text-sm font-medium text-gray-700">Pledge</label>
+                        <select name="pledge_id" id="pledge_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                            <option value="">— Not a pledge payment —</option>
+                            @foreach($pledges as $pledge)
+                            <option value="{{ $pledge->id }}"
+                                data-member="{{ $pledge->member_id }}"
+                                {{ old('pledge_id', $offering->pledge_id ?? '') == $pledge->id ? 'selected' : '' }}>
+                                {{ $pledge->pledge_number }}
+                                — {{ $pledge->member->full_name ?? 'Unknown' }}
+                                — {{ $pledge->purpose ?? 'Pledge' }}
+                                (Balance: GH₵{{ number_format($pledge->balance, 2) }})
+                            </option>
+                            @endforeach
+                        </select>
+                        @error('pledge_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                    </div>
                 </div>
 
                 <!-- Session -->
@@ -145,9 +178,42 @@ function toggleMemberField() {
     memberField.style.display = isAnonymous ? 'none' : 'block';
     if (isAnonymous) {
         document.getElementById('member_id').value = '';
+        document.getElementById('pledge_id').value = '';
+    }
+    filterPledgesByMember();
+}
+
+function onCategoryChange() {
+    const sel      = document.getElementById('income_category_id');
+    const chosen   = sel.options[sel.selectedIndex];
+    const type     = chosen ? chosen.dataset.type : '';
+    const section  = document.getElementById('pledge_section');
+    section.style.display = (type === 'special') ? 'block' : 'none';
+    if (type !== 'special') {
+        document.getElementById('pledge_id').value = '';
     }
 }
-document.addEventListener('DOMContentLoaded', toggleMemberField);
+
+function filterPledgesByMember() {
+    const memberId   = document.getElementById('member_id').value;
+    const pledgeSel  = document.getElementById('pledge_id');
+    const options    = pledgeSel.querySelectorAll('option');
+    options.forEach(opt => {
+        if (!opt.value) return; // keep the blank option always
+        opt.style.display = (!memberId || opt.dataset.member === memberId) ? '' : 'none';
+    });
+    // Reset selection if current choice is now hidden
+    const current = pledgeSel.options[pledgeSel.selectedIndex];
+    if (current && current.style.display === 'none') {
+        pledgeSel.value = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    toggleMemberField();
+    onCategoryChange();
+    document.getElementById('member_id').addEventListener('change', filterPledgesByMember);
+});
 </script>
 @endpush
 @endsection

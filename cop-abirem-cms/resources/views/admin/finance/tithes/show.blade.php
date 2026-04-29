@@ -46,6 +46,7 @@
         <!-- Details -->
         <div class="p-6">
             <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @if($tithe->member)
                 <div class="border-b pb-3">
                     <dt class="text-sm text-gray-500">Member</dt>
                     <dd class="mt-1 text-sm font-medium text-gray-900">
@@ -54,11 +55,32 @@
                         </a>
                     </dd>
                 </div>
-
                 <div class="border-b pb-3">
                     <dt class="text-sm text-gray-500">Member ID</dt>
                     <dd class="mt-1 text-sm font-medium text-gray-900">{{ $tithe->member->member_id }}</dd>
                 </div>
+                @else
+                <div class="border-b pb-3">
+                    <dt class="text-sm text-gray-500">Tithe Type</dt>
+                    <dd class="mt-1">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Session Tithe</span>
+                    </dd>
+                </div>
+                @if($tithe->attendanceSession)
+                <div class="border-b pb-3">
+                    <dt class="text-sm text-gray-500">Service</dt>
+                    <dd class="mt-1 text-sm font-medium text-gray-900">{{ $tithe->attendanceSession->serviceType->name ?? 'Service' }}</dd>
+                </div>
+                <div class="border-b pb-3">
+                    <dt class="text-sm text-gray-500">Service Date</dt>
+                    <dd class="mt-1 text-sm font-medium text-gray-900">{{ $tithe->attendanceSession->service_date->format('F d, Y') }}</dd>
+                </div>
+                @endif
+                <div class="border-b pb-3">
+                    <dt class="text-sm text-gray-500">Collection Note</dt>
+                    <dd class="mt-1 text-sm text-gray-500 italic">Bulk collection — not linked to individual member</dd>
+                </div>
+                @endif
 
                 <div class="border-b pb-3">
                     <dt class="text-sm text-gray-500">Month For</dt>
@@ -111,14 +133,25 @@
 
     <!-- Quick Actions -->
     <div class="mt-6 flex justify-between">
-        <a href="{{ route('admin.tithes.member-history', $tithe->member) }}" 
+        @if($tithe->member)
+        <a href="{{ route('admin.tithes.member-history', $tithe->member) }}"
            class="text-indigo-600 hover:text-indigo-900 text-sm">
             ← View {{ $tithe->member->first_name }}'s Tithe History
         </a>
-        <a href="{{ route('admin.tithes.create', ['member_id' => $tithe->member_id]) }}" 
+        <a href="{{ route('admin.tithes.create', ['member_id' => $tithe->member_id]) }}"
            class="text-indigo-600 hover:text-indigo-900 text-sm">
             Record Another Tithe for {{ $tithe->member->first_name }} →
         </a>
+        @else
+        <a href="{{ route('admin.tithes.index') }}"
+           class="text-indigo-600 hover:text-indigo-900 text-sm">
+            ← Back to All Tithes
+        </a>
+        <a href="{{ route('admin.tithes.session.create') }}"
+           class="text-indigo-600 hover:text-indigo-900 text-sm">
+            Record Another Session Tithe →
+        </a>
+        @endif
     </div>
 </div>
 @endsection

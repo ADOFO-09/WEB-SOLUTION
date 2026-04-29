@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasLedgerCorrections;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Offering extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasLedgerCorrections;
 
     protected $fillable = [
         'reference_number',
@@ -17,6 +18,7 @@ class Offering extends Model
         'financial_year_id',
         'income_category_id',
         'session_id',
+        'pledge_id',
         'amount',
         'payment_date',
         'payment_method',
@@ -24,12 +26,21 @@ class Offering extends Model
         'is_anonymous',
         'notes',
         'recorded_by',
+        'ledger_status',
+        'voided_by',
+        'voided_at',
+        'void_reason',
+        'adjusted_by_id',
+        'adjusts_entry_id',
+        'is_adjustment',
     ];
 
     protected $casts = [
         'payment_date' => 'date',
         'amount' => 'decimal:2',
         'is_anonymous' => 'boolean',
+        'voided_at' => 'datetime',
+        'is_adjustment' => 'boolean',
     ];
 
     // ==========================================
@@ -72,6 +83,11 @@ class Offering extends Model
     public function session(): BelongsTo
     {
         return $this->belongsTo(AttendanceSession::class, 'session_id');
+    }
+
+    public function pledge(): BelongsTo
+    {
+        return $this->belongsTo(Pledge::class);
     }
 
     public function recordedBy(): BelongsTo

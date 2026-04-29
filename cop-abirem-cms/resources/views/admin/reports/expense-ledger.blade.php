@@ -60,25 +60,34 @@
 
                     @foreach($entries as $i => $entry)
                     @php
-                        $rowTotal = 0;
+                        $rowTotal    = 0;
                         foreach($columns as $col) $rowTotal += $entry[$col];
-                        $isFirst  = $i === 0;
-                        $rowBg    = $isMulti ? '#fafafa' : 'white';
+                        $isFirst     = $i === 0;
+                        $isVoided    = ($entry['ledger_status'] ?? 'active') === 'voided';
+                        $isAdj       = (bool)($entry['is_adjustment'] ?? false);
+                        $rowBg       = $isVoided ? '#fff1f2' : ($isAdj ? '#eff6ff' : ($isMulti ? '#fafafa' : 'white'));
+                        $hoverBg     = $isVoided ? '#ffe4e6' : ($isAdj ? '#dbeafe' : '#fff5f5');
+                        $amountStyle = $isVoided ? 'text-decoration:line-through;color:#fca5a5;' : '';
                     @endphp
-                    <tr style="background:{{ $rowBg }};border-bottom:1px solid #f1f5f9;"
-                        onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background='{{ $rowBg }}'">
+                    <tr style="background:{{ $rowBg }};border-bottom:1px solid #f1f5f9;{{ $isVoided ? 'opacity:.7;' : '' }}"
+                        onmouseover="this.style.background='{{ $hoverBg }}'" onmouseout="this.style.background='{{ $rowBg }}'">
                         <td style="padding:.5rem .75rem;border-right:1px solid #e2e8f0;font-family:monospace;font-size:.75rem;white-space:nowrap;color:{{ $isFirst ? '#1e293b' : 'transparent' }};user-select:{{ $isFirst ? 'auto' : 'none' }};">
                             {{ $dateLabel }}
                         </td>
                         <td style="padding:.5rem .75rem;border-right:1px solid #e2e8f0;padding-left:{{ $isFirst ? '.75rem' : '1.5rem' }};">
                             {{ $entry['particular'] }}
+                            @if($isVoided)
+                                <span style="display:inline-block;padding:.1rem .3rem;background:#fee2e2;color:#b91c1c;font-size:.65rem;font-weight:700;border-radius:.2rem;margin-left:.3rem;">VOID</span>
+                            @elseif($isAdj)
+                                <span style="display:inline-block;padding:.1rem .3rem;background:#dbeafe;color:#1d4ed8;font-size:.65rem;font-weight:700;border-radius:.2rem;margin-left:.3rem;">+ADJ</span>
+                            @endif
                         </td>
                         @foreach($columns as $col)
-                        <td style="padding:.5rem .5rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;{{ $entry[$col] > 0 ? 'background:#fef2f2;' : '' }}">
+                        <td style="padding:.5rem .5rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;{{ $amountStyle }}{{ (!$isVoided && $entry[$col] > 0) ? 'background:#fef2f2;' : '' }}">
                             {{ $entry[$col] > 0 ? number_format($entry[$col], 2) : '-' }}
                         </td>
                         @endforeach
-                        <td style="padding:.5rem .75rem;text-align:right;font-family:monospace;font-weight:{{ $isMulti ? '400' : '600' }};color:{{ $isMulti ? '#94a3b8' : '#1e293b' }};">
+                        <td style="padding:.5rem .75rem;text-align:right;font-family:monospace;font-weight:{{ $isMulti ? '400' : '600' }};color:{{ $isVoided ? '#fca5a5' : ($isMulti ? '#94a3b8' : '#1e293b') }};{{ $isVoided ? 'text-decoration:line-through;' : '' }}">
                             {{ $isMulti ? '-' : number_format($rowTotal, 2) }}
                         </td>
                     </tr>

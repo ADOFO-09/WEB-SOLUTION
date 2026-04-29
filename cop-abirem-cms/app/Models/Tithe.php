@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasLedgerCorrections;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,7 +11,7 @@ use App\Models\IncomeCategory;
 
 class Tithe extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasLedgerCorrections;
 
     protected $fillable = [
         'reference_number',
@@ -28,6 +29,13 @@ class Tithe extends Model
         'notes',
         'sms_sent',
         'recorded_by',
+        'ledger_status',
+        'voided_by',
+        'voided_at',
+        'void_reason',
+        'adjusted_by_id',
+        'adjusts_entry_id',
+        'is_adjustment',
     ];
 
     protected $casts = [
@@ -35,6 +43,8 @@ class Tithe extends Model
         'month_for' => 'date',
         'amount' => 'decimal:2',
         'sms_sent' => 'boolean',
+        'voided_at' => 'datetime',
+        'is_adjustment' => 'boolean',
     ];
 
     // ==========================================

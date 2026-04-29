@@ -119,9 +119,9 @@ class Pledge extends Model
         return $query->where('status', 'active');
     }
 
-    public function scopeFulfilled($query)
+    public function scopeCompleted($query)
     {
-        return $query->where('status', 'fulfilled');
+        return $query->where('status', 'completed');
     }
 
     public function scopeOverdue($query)
@@ -210,7 +210,7 @@ class Pledge extends Model
     public function checkAndUpdateStatus(): void
     {
         if ($this->balance <= 0) {
-            $this->update(['status' => 'fulfilled']);
+            $this->update(['status' => 'completed']);
         }
     }
 
@@ -227,8 +227,8 @@ class Pledge extends Model
     // ==========================================
 
     public const STATUSES = [
-        'active' => 'Active',
-        'fulfilled' => 'Fulfilled',
+        'active'    => 'Active',
+        'completed' => 'Completed',
         'cancelled' => 'Cancelled',
         'defaulted' => 'Defaulted',
     ];

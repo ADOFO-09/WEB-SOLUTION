@@ -55,7 +55,7 @@
                     <select name="status" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option value="">All Status</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                        <option value="fulfilled" {{ request('status') == 'fulfilled' ? 'selected' : '' }}>Fulfilled</option>
+                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
                         <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                     </select>
                 </div>
@@ -142,7 +142,7 @@
                             @php
                                 $statusColors = [
                                     'active' => 'bg-blue-100 text-blue-800',
-                                    'fulfilled' => 'bg-green-100 text-green-800',
+                                    'completed' => 'bg-green-100 text-green-800',
                                     'cancelled' => 'bg-gray-100 text-gray-800',
                                     'defaulted' => 'bg-red-100 text-red-800',
                                 ];

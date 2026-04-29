@@ -444,7 +444,7 @@ class ReportController extends Controller implements HasMiddleware
             'total_pledged' => Pledge::sum('total_amount'),
             'total_paid' => Pledge::sum('amount_paid'),
             'active' => Pledge::where('status', 'active')->count(),
-            'fulfilled' => Pledge::where('status', 'fulfilled')->count(),
+            'fulfilled' => Pledge::where('status', 'completed')->count(),
             'overdue' => Pledge::where('status', 'active')
                 ->whereNotNull('due_date')
                 ->where('due_date', '<', now())

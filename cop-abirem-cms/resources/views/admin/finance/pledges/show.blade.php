@@ -33,7 +33,7 @@
                 @php
                     $statusColors = [
                         'active' => 'bg-blue-100 text-blue-800',
-                        'fulfilled' => 'bg-green-100 text-green-800',
+                        'completed' => 'bg-green-100 text-green-800',
                         'cancelled' => 'bg-gray-100 text-gray-800',
                     ];
                 @endphp

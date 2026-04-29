@@ -88,9 +88,16 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
             @forelse($donations as $donation)
-            <tr class="hover:bg-gray-50">
+            <tr class="{{ $donation->isVoided() ? 'bg-red-50 opacity-75' : ($donation->isAdjusted() ? 'bg-yellow-50' : 'hover:bg-gray-50') }}">
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
                     {{ $donation->receipt_number ?? $donation->reference_number }}
+                    @if($donation->isVoided())
+                        <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700">VOID</span>
+                    @elseif($donation->isAdjusted())
+                        <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-yellow-100 text-yellow-700">ADJ</span>
+                    @elseif($donation->isAdjustment())
+                        <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700">+ADJ</span>
+                    @endif
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     @if($donation->is_anonymous)
@@ -111,13 +118,13 @@
                     <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">In-Kind</span>
                     @endif
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td class="px-6 py-4 whitespace-nowrap text-sm {{ $donation->isVoided() ? 'text-red-300 line-through' : 'text-gray-900' }}">
                     @if($donation->donation_type == 'cash')
                     GH₵ {{ number_format($donation->amount, 2) }}
                     @else
                     {{ Str::limit($donation->in_kind_description, 30) }}
                     @if($donation->estimated_value)
-                    <div class="text-xs text-gray-500">Est: GH₵ {{ number_format($donation->estimated_value, 2) }}</div>
+                    <div class="text-xs {{ $donation->isVoided() ? 'text-red-300' : 'text-gray-500' }}">Est: GH₵ {{ number_format($donation->estimated_value, 2) }}</div>
                     @endif
                     @endif
                 </td>
@@ -131,9 +138,22 @@
                     <div class="flex justify-end space-x-2">
                         <a href="{{ route('admin.donations.show', $donation) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
                         @can('finance.edit')
+                        @if(!$donation->isVoided())
                         <a href="{{ route('admin.donations.edit', $donation) }}" class="text-yellow-600 hover:text-yellow-900">Edit</a>
+                        @endif
                         @endcan
                         <a href="{{ route('admin.donations.receipt', $donation) }}" class="text-green-600 hover:text-green-900" target="_blank">Receipt</a>
+                        @can('corrections.void')
+                        @if($donation->isActive())
+                        <x-void-entry-modal
+                            entryType="donation"
+                            :entryId="$donation->id"
+                            :reference="$donation->receipt_number ?? $donation->reference_number"
+                            :route="route('admin.finance.corrections.void.donation', $donation)" />
+                        @elseif($donation->isVoided())
+                        <a href="{{ route('admin.finance.corrections.history', ['donation', $donation->id]) }}" class="text-xs text-gray-400 hover:underline">History</a>
+                        @endif
+                        @endcan
                     </div>
                 </td>
             </tr>

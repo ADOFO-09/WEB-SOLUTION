@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasLedgerCorrections;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Donation extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasLedgerCorrections;
 
     protected $fillable = [
         'reference_number',
@@ -31,6 +32,13 @@ class Donation extends Model
         'sms_sent',
         'notes',
         'recorded_by',
+        'ledger_status',
+        'voided_by',
+        'voided_at',
+        'void_reason',
+        'adjusted_by_id',
+        'adjusts_entry_id',
+        'is_adjustment',
     ];
 
     protected $casts = [
@@ -39,6 +47,8 @@ class Donation extends Model
         'estimated_value' => 'decimal:2',
         'is_anonymous' => 'boolean',
         'sms_sent' => 'boolean',
+        'voided_at' => 'datetime',
+        'is_adjustment' => 'boolean',
     ];
 
     // ==========================================

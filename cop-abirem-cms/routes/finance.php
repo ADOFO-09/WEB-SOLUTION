@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DonationController;
 use App\Http\Controllers\Admin\PledgeController;
 use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\FinancialParticularController;
+use App\Http\Controllers\Admin\LedgerCorrectionController;
 use App\Models\ExpenseCategory;
 use App\Models\IncomeCategory;
 use Illuminate\Support\Facades\Route;
@@ -80,6 +81,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::get('/{pledge}/edit', [PledgeController::class, 'edit'])->name('edit');
         Route::put('/{pledge}', [PledgeController::class, 'update'])->name('update');
         Route::delete('/{pledge}', [PledgeController::class, 'destroy'])->name('destroy');
+        Route::get('/{pledge}/payment', fn($pledge) => redirect()->route('admin.pledges.show', $pledge))->name('record-payment.get');
         Route::post('/{pledge}/payment', [PledgeController::class, 'recordPayment'])->name('record-payment');
         Route::post('/{pledge}/cancel', [PledgeController::class, 'cancel'])->name('cancel');
     });
@@ -113,5 +115,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::post('/expense', [FinancialParticularController::class, 'storeExpense'])->name('store.expense');
         Route::delete('/expense/{category}', [FinancialParticularController::class, 'destroyExpense'])->name('destroy.expense');
         Route::post('/ajax', [FinancialParticularController::class, 'storeAjax'])->name('store.ajax');
+    });
+
+    // =========================================
+    // LEDGER CORRECTIONS & AUDIT
+    // =========================================
+    Route::prefix('finance/corrections')->name('finance.corrections.')->group(function () {
+        Route::get('/',                                       [LedgerCorrectionController::class, 'index'])->name('index');
+        Route::post('/tithe/{tithe}/void',                   [LedgerCorrectionController::class, 'voidTithe'])->name('void.tithe');
+        Route::post('/offering/{offering}/void',             [LedgerCorrectionController::class, 'voidOffering'])->name('void.offering');
+        Route::post('/donation/{donation}/void',             [LedgerCorrectionController::class, 'voidDonation'])->name('void.donation');
+        Route::post('/expense/{expense}/void',               [LedgerCorrectionController::class, 'voidExpense'])->name('void.expense');
+        Route::post('/{type}/{id}/restore',                  [LedgerCorrectionController::class, 'restore'])->name('restore');
+        Route::post('/{type}/{id}/adjust',                   [LedgerCorrectionController::class, 'createAdjustment'])->name('adjust');
+        Route::get('/{type}/{id}/history',                   [LedgerCorrectionController::class, 'auditHistory'])->name('history');
     });
 });

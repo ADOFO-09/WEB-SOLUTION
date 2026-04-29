@@ -140,8 +140,8 @@ class TitheController extends Controller implements HasMiddleware
      */
     public function show(Tithe $tithe)
     {
-        $tithe->load(['member', 'financialYear', 'recordedBy']);
-        
+        $tithe->load(['member', 'financialYear', 'recordedBy', 'attendanceSession.serviceType']);
+
         return view('admin.finance.tithes.show', compact('tithe'));
     }
 
@@ -220,8 +220,8 @@ class TitheController extends Controller implements HasMiddleware
      */
     public function printReceipt(Tithe $tithe)
     {
-        $tithe->load(['member', 'recordedBy']);
-        
+        $tithe->load(['member', 'recordedBy', 'attendanceSession.serviceType']);
+
         return view('admin.finance.tithes.receipt', compact('tithe'));
     }
 

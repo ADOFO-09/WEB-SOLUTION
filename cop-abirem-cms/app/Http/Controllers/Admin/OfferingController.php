@@ -7,6 +7,7 @@ use App\Models\Offering;
 use App\Models\Member;
 use App\Models\IncomeCategory;
 use App\Models\AttendanceSession;
+use App\Models\Pledge;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -104,11 +105,18 @@ class OfferingController extends Controller implements HasMiddleware
             ->limit(30)
             ->get();
 
-        $selectedSession = $request->has('session_id') 
-            ? AttendanceSession::find($request->session_id) 
+        $selectedSession = $request->has('session_id')
+            ? AttendanceSession::find($request->session_id)
             : null;
-        
-        return view('admin.finance.offerings.create', compact('members', 'categories', 'sessions', 'selectedSession'));
+
+        $pledges = Pledge::with('member')
+            ->whereIn('status', ['active'])
+            ->orderBy('pledge_date', 'desc')
+            ->get();
+
+        return view('admin.finance.offerings.create', compact(
+            'members', 'categories', 'sessions', 'selectedSession', 'pledges'
+        ));
     }
 
     /**
@@ -117,31 +125,41 @@ class OfferingController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'member_id' => 'nullable|exists:members,id',
+            'member_id'          => 'nullable|exists:members,id',
             'income_category_id' => 'required|exists:income_categories,id',
-            'session_id' => 'nullable|exists:attendance_sessions,id',
-            'amount' => 'required|numeric|min:0.01',
-            'payment_date' => 'required|date',
-            'payment_method' => 'required|in:cash,mobile_money,bank_transfer,cheque',
-            'payment_reference' => 'nullable|string|max:100',
-            'is_anonymous' => 'boolean',
-            'notes' => 'nullable|string|max:500',
+            'session_id'         => 'nullable|exists:attendance_sessions,id',
+            'pledge_id'          => 'nullable|exists:pledges,id',
+            'amount'             => 'required|numeric|min:0.01',
+            'payment_date'       => 'required|date',
+            'payment_method'     => 'required|in:cash,mobile_money,bank_transfer,cheque',
+            'payment_reference'  => 'nullable|string|max:100',
+            'is_anonymous'       => 'boolean',
+            'notes'              => 'nullable|string|max:500',
         ]);
 
         $validated['is_anonymous'] = $request->boolean('is_anonymous');
-        $validated['recorded_by'] = auth()->id();
+        $validated['recorded_by']  = auth()->id();
 
-        // If anonymous, clear member_id
         if ($validated['is_anonymous']) {
             $validated['member_id'] = null;
+            $validated['pledge_id'] = null;
         }
 
         $offering = Offering::create($validated);
 
+        // Update pledge amount paid when linked to a special offering
+        if ($offering->pledge_id) {
+            $pledge = Pledge::find($offering->pledge_id);
+            if ($pledge) {
+                $pledge->increment('amount_paid', (float) $offering->amount);
+                $pledge->checkAndUpdateStatus();
+            }
+        }
+
         if ($request->ajax()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Offering recorded successfully',
+                'success'  => true,
+                'message'  => 'Offering recorded successfully',
                 'offering' => $offering->load(['member', 'incomeCategory']),
             ]);
         }
@@ -171,8 +189,14 @@ class OfferingController extends Controller implements HasMiddleware
             ->orderBy('service_date', 'desc')
             ->limit(30)
             ->get();
-        
-        return view('admin.finance.offerings.edit', compact('offering', 'members', 'categories', 'sessions'));
+        $pledges = Pledge::with('member')
+            ->whereIn('status', ['active'])
+            ->orderBy('pledge_date', 'desc')
+            ->get();
+
+        return view('admin.finance.offerings.edit', compact(
+            'offering', 'members', 'categories', 'sessions', 'pledges'
+        ));
     }
 
     /**
@@ -181,24 +205,59 @@ class OfferingController extends Controller implements HasMiddleware
     public function update(Request $request, Offering $offering)
     {
         $validated = $request->validate([
-            'member_id' => 'nullable|exists:members,id',
+            'member_id'          => 'nullable|exists:members,id',
             'income_category_id' => 'required|exists:income_categories,id',
-            'session_id' => 'nullable|exists:attendance_sessions,id',
-            'amount' => 'required|numeric|min:0.01',
-            'payment_date' => 'required|date',
-            'payment_method' => 'required|in:cash,mobile_money,bank_transfer,cheque',
-            'payment_reference' => 'nullable|string|max:100',
-            'is_anonymous' => 'boolean',
-            'notes' => 'nullable|string|max:500',
+            'session_id'         => 'nullable|exists:attendance_sessions,id',
+            'pledge_id'          => 'nullable|exists:pledges,id',
+            'amount'             => 'required|numeric|min:0.01',
+            'payment_date'       => 'required|date',
+            'payment_method'     => 'required|in:cash,mobile_money,bank_transfer,cheque',
+            'payment_reference'  => 'nullable|string|max:100',
+            'is_anonymous'       => 'boolean',
+            'notes'              => 'nullable|string|max:500',
         ]);
 
         $validated['is_anonymous'] = $request->boolean('is_anonymous');
 
         if ($validated['is_anonymous']) {
             $validated['member_id'] = null;
+            $validated['pledge_id'] = null;
         }
 
+        $oldPledgeId = $offering->pledge_id;
+        $oldAmount   = (float) $offering->amount;
+
         $offering->update($validated);
+
+        // Recalculate pledge amounts when pledge link or amount changes
+        $newPledgeId = $offering->fresh()->pledge_id;
+
+        if ($oldPledgeId && $oldPledgeId !== $newPledgeId) {
+            // Pledge was removed or changed — reverse old pledge's amount
+            $oldPledge = Pledge::find($oldPledgeId);
+            if ($oldPledge) {
+                $oldPledge->decrement('amount_paid', $oldAmount);
+                $oldPledge->checkAndUpdateStatus();
+            }
+        }
+
+        if ($newPledgeId) {
+            $newPledge = Pledge::find($newPledgeId);
+            if ($newPledge) {
+                if ($oldPledgeId === $newPledgeId) {
+                    // Same pledge — adjust by the difference
+                    $diff = (float) $offering->fresh()->amount - $oldAmount;
+                    if ($diff != 0) {
+                        $newPledge->increment('amount_paid', $diff);
+                        $newPledge->checkAndUpdateStatus();
+                    }
+                } else {
+                    // New pledge linked — add full amount
+                    $newPledge->increment('amount_paid', (float) $offering->fresh()->amount);
+                    $newPledge->checkAndUpdateStatus();
+                }
+            }
+        }
 
         return redirect()->route('admin.offerings.show', $offering)
             ->with('success', 'Offering updated successfully.');

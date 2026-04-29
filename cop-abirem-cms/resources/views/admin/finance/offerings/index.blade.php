@@ -92,9 +92,16 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($offerings as $offering)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="{{ $offering->isVoided() ? 'bg-red-50 opacity-75' : ($offering->isAdjusted() ? 'bg-yellow-50' : 'hover:bg-gray-50') }}">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $offering->reference_number }}
+                            @if($offering->isVoided())
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700">VOID</span>
+                            @elseif($offering->isAdjusted())
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-yellow-100 text-yellow-700">ADJ</span>
+                            @elseif($offering->isAdjustment())
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700">+ADJ</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             @if($offering->is_anonymous)
@@ -108,14 +115,27 @@
                                 {{ $offering->incomeCategory->name ?? 'General' }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $offering->isVoided() ? 'text-red-300 line-through' : 'text-green-600' }}">
                             GH₵ {{ number_format($offering->amount, 2) }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ $offering->payment_date->format('M d, Y') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                            <a href="{{ route('admin.offerings.show', $offering) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('admin.offerings.show', $offering) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
+                                @can('corrections.void')
+                                @if($offering->isActive())
+                                <x-void-entry-modal
+                                    entryType="offering"
+                                    :entryId="$offering->id"
+                                    :reference="$offering->reference_number"
+                                    :route="route('admin.finance.corrections.void.offering', $offering)" />
+                                @elseif($offering->isVoided())
+                                <a href="{{ route('admin.finance.corrections.history', ['offering', $offering->id]) }}" class="text-xs text-gray-400 hover:underline">History</a>
+                                @endif
+                                @endcan
+                            </div>
                         </td>
                     </tr>
                     @empty

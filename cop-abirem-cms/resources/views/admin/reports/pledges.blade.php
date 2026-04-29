@@ -14,7 +14,7 @@
             <select name="status" onchange="this.form.submit()" class="rounded-md border-gray-300 text-sm">
                 <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Status</option>
                 <option value="active" {{ $status == 'active' ? 'selected' : '' }}>Active</option>
-                <option value="fulfilled" {{ $status == 'fulfilled' ? 'selected' : '' }}>Fulfilled</option>
+                <option value="completed" {{ $status == 'completed' ? 'selected' : '' }}>Completed</option>
                 <option value="cancelled" {{ $status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
             </select>
         </form>
@@ -80,7 +80,7 @@
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
                                 {{ $pledge->status == 'active' ? 'bg-blue-100 text-blue-800' : '' }}
-                                {{ $pledge->status == 'fulfilled' ? 'bg-green-100 text-green-800' : '' }}
+                                {{ $pledge->status == 'completed' ? 'bg-green-100 text-green-800' : '' }}
                                 {{ $pledge->status == 'cancelled' ? 'bg-red-100 text-red-800' : '' }}">
                                 {{ ucfirst($pledge->status) }}
                             </span>

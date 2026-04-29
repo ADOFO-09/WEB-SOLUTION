@@ -71,32 +71,40 @@
 
                     @foreach($entries as $i => $entry)
                     @php
-                        $rowTotal = $entry['tithe'] + $entry['offering'] + $entry['donation'] + $entry['special'];
-                        $isFirst  = $i === 0;
-                        // Slightly alternate row background within a group
-                        $rowBg = $isMulti ? '#fafafa' : 'white';
+                        $rowTotal    = $entry['tithe'] + $entry['offering'] + $entry['donation'] + $entry['special'];
+                        $isFirst     = $i === 0;
+                        $isVoided    = ($entry['ledger_status'] ?? 'active') === 'voided';
+                        $isAdj       = (bool)($entry['is_adjustment'] ?? false);
+                        $rowBg       = $isVoided ? '#fef2f2' : ($isAdj ? '#eff6ff' : ($isMulti ? '#fafafa' : 'white'));
+                        $hoverBg     = $isVoided ? '#fee2e2' : ($isAdj ? '#dbeafe' : '#f0f9ff');
+                        $amountStyle = $isVoided ? 'text-decoration:line-through;color:#fca5a5;' : '';
                     @endphp
-                    <tr style="background:{{ $rowBg }};border-bottom:1px solid #f1f5f9;"
-                        onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='{{ $rowBg }}'">
+                    <tr style="background:{{ $rowBg }};border-bottom:1px solid #f1f5f9;{{ $isVoided ? 'opacity:.7;' : '' }}"
+                        onmouseover="this.style.background='{{ $hoverBg }}'" onmouseout="this.style.background='{{ $rowBg }}'">
                         <td style="padding:.5rem 1rem;border-right:1px solid #e2e8f0;font-family:monospace;font-size:.75rem;white-space:nowrap;color:{{ $isFirst ? '#1e293b' : 'transparent' }};user-select:{{ $isFirst ? 'auto' : 'none' }};">
                             {{ $dateLabel }}
                         </td>
                         <td style="padding:.5rem 1rem;border-right:1px solid #e2e8f0;padding-left:{{ $isFirst ? '1rem' : '1.75rem' }};">
                             {{ $entry['particular'] }}
+                            @if($isVoided)
+                                <span style="display:inline-block;padding:.1rem .3rem;background:#fee2e2;color:#b91c1c;font-size:.65rem;font-weight:700;border-radius:.2rem;margin-left:.3rem;">VOID</span>
+                            @elseif($isAdj)
+                                <span style="display:inline-block;padding:.1rem .3rem;background:#dbeafe;color:#1d4ed8;font-size:.65rem;font-weight:700;border-radius:.2rem;margin-left:.3rem;">+ADJ</span>
+                            @endif
                         </td>
-                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;background:{{ $entry['tithe'] > 0 ? '#f0fdf4' : '' }}">
+                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;{{ $amountStyle }}background:{{ (!$isVoided && $entry['tithe'] > 0) ? '#f0fdf4' : ($isVoided ? '#fef2f2' : '') }}">
                             {{ $entry['tithe'] > 0 ? number_format($entry['tithe'], 2) : '-' }}
                         </td>
-                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;background:{{ $entry['offering'] > 0 ? '#eff6ff' : '' }}">
+                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;{{ $amountStyle }}background:{{ (!$isVoided && $entry['offering'] > 0) ? '#eff6ff' : ($isVoided ? '#fef2f2' : '') }}">
                             {{ $entry['offering'] > 0 ? number_format($entry['offering'], 2) : '-' }}
                         </td>
-                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;background:{{ $entry['donation'] > 0 ? '#faf5ff' : '' }}">
+                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;{{ $amountStyle }}background:{{ (!$isVoided && $entry['donation'] > 0) ? '#faf5ff' : ($isVoided ? '#fef2f2' : '') }}">
                             {{ $entry['donation'] > 0 ? number_format($entry['donation'], 2) : '-' }}
                         </td>
-                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;background:{{ $entry['special'] > 0 ? '#fffbeb' : '' }}">
+                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;{{ $amountStyle }}background:{{ (!$isVoided && $entry['special'] > 0) ? '#fffbeb' : ($isVoided ? '#fef2f2' : '') }}">
                             {{ $entry['special'] > 0 ? number_format($entry['special'], 2) : '-' }}
                         </td>
-                        <td style="padding:.5rem 1rem;text-align:right;font-family:monospace;font-weight:{{ $isMulti ? '400' : '600' }};color:{{ $isMulti ? '#94a3b8' : '#1e293b' }};">
+                        <td style="padding:.5rem 1rem;text-align:right;font-family:monospace;font-weight:{{ $isMulti ? '400' : '600' }};color:{{ $isVoided ? '#fca5a5' : ($isMulti ? '#94a3b8' : '#1e293b') }};{{ $isVoided ? 'text-decoration:line-through;' : '' }}">
                             {{ $isMulti ? '-' : number_format($rowTotal, 2) }}
                         </td>
                     </tr>

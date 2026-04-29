@@ -71,7 +71,7 @@ class PledgeController extends Controller implements HasMiddleware
             'total_paid' => Pledge::active()->sum('amount_paid'),
             'active_count' => Pledge::active()->count(),
             'overdue_count' => Pledge::overdue()->count(),
-            'fulfilled_count' => Pledge::fulfilled()->count(),
+            'fulfilled_count' => Pledge::completed()->count(),
         ];
 
         $projects = Project::active()->orderBy('name')->get();

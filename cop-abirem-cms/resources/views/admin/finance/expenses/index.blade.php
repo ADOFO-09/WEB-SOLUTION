@@ -104,8 +104,17 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($expenses as $expense)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $expense->reference_number }}</td>
+                    <tr class="{{ $expense->isVoided() ? 'bg-red-50 opacity-75' : ($expense->isAdjusted() ? 'bg-yellow-50' : 'hover:bg-gray-50') }}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ $expense->reference_number }}
+                            @if($expense->isVoided())
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700">VOID</span>
+                            @elseif($expense->isAdjusted())
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-yellow-100 text-yellow-700">ADJ</span>
+                            @elseif($expense->isAdjustment())
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700">+ADJ</span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ Str::limit($expense->description, 40) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -113,7 +122,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $expense->payee_name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">GH₵ {{ number_format($expense->amount, 2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $expense->isVoided() ? 'text-red-300 line-through' : 'text-red-600' }}">GH₵ {{ number_format($expense->amount, 2) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $expense->expense_date->format('M d, Y') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $expense->status_badge }}">
@@ -121,7 +130,20 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                            <a href="{{ route('admin.expenses.show', $expense) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('admin.expenses.show', $expense) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
+                                @can('corrections.void')
+                                @if($expense->isActive())
+                                <x-void-entry-modal
+                                    entryType="expense"
+                                    :entryId="$expense->id"
+                                    :reference="$expense->reference_number"
+                                    :route="route('admin.finance.corrections.void.expense', $expense)" />
+                                @elseif($expense->isVoided())
+                                <a href="{{ route('admin.finance.corrections.history', ['expense', $expense->id]) }}" class="text-xs text-gray-400 hover:underline">History</a>
+                                @endif
+                                @endcan
+                            </div>
                         </td>
                     </tr>
                     @empty
