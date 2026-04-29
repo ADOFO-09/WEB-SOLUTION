@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "iX/yMRUT0eQ=",
+  "success": true,
+  "projectFilePath": "C:\\xampp\\htdocs\\WEB-SOLUTION\\cop-abirem-cms\\zkfinger-bridge\\ZKFingerBridge.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\HP\\.nuget\\packages\\microsoft.netframework.referenceassemblies\\1.0.3\\microsoft.netframework.referenceassemblies.1.0.3.nupkg.sha512",
+    "C:\\Users\\HP\\.nuget\\packages\\microsoft.netframework.referenceassemblies.net48\\1.0.3\\microsoft.netframework.referenceassemblies.net48.1.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

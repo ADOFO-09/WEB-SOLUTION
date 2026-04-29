@@ -1,0 +1,8 @@
+is_global = true
+build_property.RootNamespace = ZKFingerBridge
+build_property.ProjectDir = C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.CsWinRTUseWindowsUIXamlProjections = false
+build_property.EffectiveAnalysisLevelStyle = 
+build_property.EnableCodeStyleSeverity = 

@@ -249,31 +249,43 @@ const ENROLLED_MEMBERS = @json($enrolledMembersJson);
 const CHECKED_IN = new Set(@json($checkedInIds));
 
 // ── WebSocket scanner bridge ───────────────────────────────────────────────
-// Connects to a locally-running fingerprint bridge server.
-// Protocol: send { action: "capture" } → receive { type: "capture_result", success: bool, template: string }
+// Connects to ZKFingerBridge running on ws://localhost:15896/fingerprint.
+// Protocol (station mode):
+//   → send { action: "start_identify", members: [{id, t1, t2}, ...] }
+//   ← receive { type: "ready", count: N }          (templates loaded)
+//   ← receive { type: "identify_result", matched: bool, member_id: N, score: N }
 let ws = null;
 let scanning = false;
+let bridgeConnected = false;
 
 function connectScanner() {
     try {
         ws = new WebSocket('ws://localhost:15896/fingerprint');
-        ws.onopen    = () => setPrompt('Place your finger on the scanner', '');
-        ws.onclose   = () => { ws = null; startSimulationMode(); };
-        ws.onerror   = () => { ws = null; startSimulationMode(); };
+        ws.onopen = () => {
+            bridgeConnected = true;
+            setPrompt('Place your finger on the scanner', '');
+            // Send all enrolled member templates to the bridge for SDK-based matching
+            ws.send(JSON.stringify({
+                action: 'start_identify',
+                members: ENROLLED_MEMBERS.map(m => ({ id: m.id, t1: m.t1, t2: m.t2 || null }))
+            }));
+        };
+        ws.onclose = () => { ws = null; bridgeConnected = false; startSimulationMode(); };
+        ws.onerror = () => { ws = null; bridgeConnected = false; startSimulationMode(); };
         ws.onmessage = (e) => {
             const d = JSON.parse(e.data);
-            if (d.type === 'capture_result') {
-                if (d.success) processTemplate(d.template);
-                else           onScanError('Scan failed. Try again.');
+            if (d.type === 'ready') {
+                setPrompt('Place your finger on the scanner', `${d.count} member fingerprints loaded`);
+            } else if (d.type === 'identify_result') {
+                handleIdentifyResult(d);
             }
         };
     } catch (_) { startSimulationMode(); }
 }
 
-// Simulation mode: auto-triggers every 6s using a random enrolled member template
-// In production with real hardware this loop is replaced by scanner events.
+// Simulation mode — randomly picks an enrolled member every 6 s
 function startSimulationMode() {
-    setPrompt('Place your finger on the scanner', '(Simulation mode — no scanner detected)');
+    setPrompt('Place your finger on the scanner', '(Simulation — no scanner bridge detected)');
     if (ENROLLED_MEMBERS.length === 0) return;
     triggerSimScan();
 }
@@ -282,63 +294,58 @@ function triggerSimScan() {
     if (scanning) return;
     setTimeout(() => {
         const m = ENROLLED_MEMBERS[Math.floor(Math.random() * ENROLLED_MEMBERS.length)];
-        if (m) processTemplate(m.t1, true);
+        if (m) handleIdentifyResult({ matched: true, member_id: m.id, score: 99 }, true);
     }, 4000);
 }
 
-// ── Fingerprint matching ───────────────────────────────────────────────────
-// Simple exact-match comparison (templates are stored verbatim from the scanner).
-// In production use the scanner SDK's compare() method for fuzzy matching.
-function matchTemplate(template) {
-    for (const m of ENROLLED_MEMBERS) {
-        if (m.t1 === template || (m.t2 && m.t2 === template)) {
-            return m;
-        }
-    }
-    return null;
-}
-
-async function processTemplate(template, isSim = false) {
+// ── Identification result handler ──────────────────────────────────────────
+async function handleIdentifyResult(d, isSim = false) {
     if (scanning) return;
     scanning = true;
     setRingState('scanning');
     setPrompt('Matching…', '');
 
-    await sleep(isSim ? 800 : 300);
+    await sleep(isSim ? 800 : 200);
 
-    const matched = matchTemplate(template);
-
-    if (!matched) {
+    if (!d.matched) {
         onScanError('Fingerprint not recognised. Please try again.');
         scanning = false;
         return;
     }
 
-    if (CHECKED_IN.has(matched.id)) {
-        showResult('warning', matched, 'Already checked in today');
+    const member = ENROLLED_MEMBERS.find(m => m.id === d.member_id);
+    if (!member) {
+        onScanError('Member not found. Please try again.');
         scanning = false;
-        resetAfter(3000);
         return;
     }
 
-    // Send to server
+    if (CHECKED_IN.has(member.id)) {
+        showResult('warning', member, 'Already checked in today');
+        scanning = false;
+        resetAfter(3000);
+        if (!bridgeConnected) triggerSimScan();
+        return;
+    }
+
+    // Record attendance on server
     try {
         const res = await fetch(VERIFY_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN, Accept: 'application/json' },
-            body: JSON.stringify({ session_id: SESSION_ID, member_id: matched.id }),
+            body: JSON.stringify({ session_id: SESSION_ID, member_id: member.id }),
         });
         const json = await res.json();
 
         if (json.success) {
-            CHECKED_IN.add(matched.id);
+            CHECKED_IN.add(member.id);
             document.getElementById('total-count').textContent = json.total_count;
-            showResult('success', matched, 'Checked in · ' + json.check_in_time);
-            addLog(matched.name, json.check_in_time);
+            showResult('success', member, 'Checked in · ' + json.check_in_time);
+            addLog(member.name, json.check_in_time);
             setRingState('success');
         } else if (json.already_in) {
-            showResult('warning', matched, 'Already checked in today');
-            CHECKED_IN.add(matched.id);
+            showResult('warning', member, 'Already checked in today');
+            CHECKED_IN.add(member.id);
         } else {
             onScanError(json.message || 'Could not record attendance.');
         }
@@ -348,6 +355,7 @@ async function processTemplate(template, isSim = false) {
 
     scanning = false;
     resetAfter(3000);
+    if (!bridgeConnected) triggerSimScan();
 }
 
 // ── UI helpers ─────────────────────────────────────────────────────────────
@@ -394,9 +402,8 @@ function onScanError(msg) {
 function resetAfter(ms) {
     setTimeout(() => {
         setRingState('');
-        setPrompt('Place your finger on the scanner', ws ? '' : '(Simulation mode — no scanner detected)');
+        setPrompt('Place your finger on the scanner', bridgeConnected ? '' : '(Simulation — no scanner bridge detected)');
         document.getElementById('result-flash').className = 'result-flash';
-        if (!ws) triggerSimScan();
     }, ms);
 }
 

@@ -1,0 +1,64 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\xampp\\htdocs\\WEB-SOLUTION\\cop-abirem-cms\\zkfinger-bridge\\ZKFingerBridge.csproj": {}
+  },
+  "projects": {
+    "C:\\xampp\\htdocs\\WEB-SOLUTION\\cop-abirem-cms\\zkfinger-bridge\\ZKFingerBridge.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\xampp\\htdocs\\WEB-SOLUTION\\cop-abirem-cms\\zkfinger-bridge\\ZKFingerBridge.csproj",
+        "projectName": "ZKFingerBridge",
+        "projectPath": "C:\\xampp\\htdocs\\WEB-SOLUTION\\cop-abirem-cms\\zkfinger-bridge\\ZKFingerBridge.csproj",
+        "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
+        "outputPath": "C:\\xampp\\htdocs\\WEB-SOLUTION\\cop-abirem-cms\\zkfinger-bridge\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net48"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net48": {
+            "targetAlias": "net48",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.200"
+      },
+      "frameworks": {
+        "net48": {
+          "targetAlias": "net48",
+          "dependencies": {
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.3, )",
+              "autoReferenced": true
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.203\\RuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "win-x86": {
+          "#import": []
+        }
+      }
+    }
+  }
+}
