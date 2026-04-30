@@ -204,7 +204,11 @@ class Donation extends Model
 
     public static function getProjectTotal($projectId): float
     {
-        return self::byProject($projectId)->sum('amount');
+        return self::byProject($projectId)
+            ->where(function ($q) {
+                $q->where('ledger_status', 'active')->orWhereNull('ledger_status');
+            })
+            ->sum('amount');
     }
 
     // ==========================================

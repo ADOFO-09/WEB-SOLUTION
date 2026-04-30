@@ -42,6 +42,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::post('/{session}/toggle-qr', [AttendanceController::class, 'toggleQr'])->name('toggle-qr');
         // Biometric attendance station
         Route::get('/{session}/biometric', [BiometricAttendanceController::class, 'showStation'])->name('biometric');
+        Route::get('/{session}/biometric/members', [BiometricAttendanceController::class, 'getEnrolledMembers'])->name('biometric.members');
         Route::post('/biometric/verify', [BiometricAttendanceController::class, 'verify'])->name('biometric.verify');
     });
 

@@ -59,6 +59,36 @@ class BiometricAttendanceController extends Controller
     }
 
     /**
+     * Return enrolled members + checked-in IDs for a session (for the inline scanner panel).
+     */
+    public function getEnrolledMembers(AttendanceSession $session)
+    {
+        $members = Member::where('biometric_enrolled', true)
+            ->whereNotNull('fingerprint_template_1')
+            ->where('membership_status', 'active')
+            ->select('id', 'first_name', 'last_name', 'photo_path',
+                     'fingerprint_template_1', 'fingerprint_template_2')
+            ->get()
+            ->map(fn($m) => [
+                'id'    => $m->id,
+                'name'  => $m->first_name . ' ' . $m->last_name,
+                'photo' => $m->photo_path ? asset('storage/' . $m->photo_path) : null,
+                't1'    => $m->fingerprint_template_1,
+                't2'    => $m->fingerprint_template_2,
+            ])
+            ->values();
+
+        $checkedInIds = AttendanceRecord::where('session_id', $session->id)
+            ->whereNotNull('member_id')
+            ->pluck('member_id');
+
+        return response()->json([
+            'members'        => $members,
+            'checked_in_ids' => $checkedInIds,
+        ]);
+    }
+
+    /**
      * Record attendance after client-side fingerprint match.
      * Receives session_id + member_id (matched on client), records the attendance.
      */
@@ -93,7 +123,8 @@ class BiometricAttendanceController extends Controller
             ]);
         }
 
-        AttendanceRecord::create([
+        /** @var AttendanceRecord $record */
+        $record = AttendanceRecord::create([
             'session_id'         => $session->id,
             'member_id'          => $member->id,
             'check_in_time'      => now(),
@@ -111,6 +142,7 @@ class BiometricAttendanceController extends Controller
         return response()->json([
             'success'      => true,
             'message'      => 'Attendance recorded.',
+            'record_id'    => $record->id,
             'member_name'  => $member->full_name,
             'member_id'    => $member->member_id,
             'photo_url'    => $photoUrl,

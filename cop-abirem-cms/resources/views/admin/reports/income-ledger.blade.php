@@ -37,6 +37,7 @@
                         <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#14532d;width:120px;">TITHE</th>
                         <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#1e3a8a;width:120px;">OFFERING</th>
                         <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#4c1d95;width:120px;">DONATION</th>
+                        <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#164e63;width:120px;">PLEDGE</th>
                         <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#78350f;width:120px;">SPECIAL</th>
                         <th style="padding:.75rem 1rem;text-align:right;width:130px;">TOTAL</th>
                     </tr>
@@ -48,6 +49,7 @@
                     <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;font-style:italic;">
                         <td style="padding:.625rem 1rem;border-right:1px solid #e2e8f0;"></td>
                         <td style="padding:.625rem 1rem;border-right:1px solid #e2e8f0;font-weight:600;color:#475569;">Balance B/F</td>
+                        <td style="padding:.625rem 1rem;border-right:1px solid #e2e8f0;"></td>
                         <td style="padding:.625rem 1rem;border-right:1px solid #e2e8f0;"></td>
                         <td style="padding:.625rem 1rem;border-right:1px solid #e2e8f0;"></td>
                         <td style="padding:.625rem 1rem;border-right:1px solid #e2e8f0;"></td>
@@ -64,14 +66,15 @@
                         $dayTithe    = $entries->sum('tithe');
                         $dayOffering = $entries->sum('offering');
                         $dayDonation = $entries->sum('donation');
+                        $dayPledge   = $entries->sum('pledge');
                         $daySpecial  = $entries->sum('special');
-                        $dayTotal    = $dayTithe + $dayOffering + $dayDonation + $daySpecial;
+                        $dayTotal    = $dayTithe + $dayOffering + $dayDonation + $dayPledge + $daySpecial;
                         $dateLabel   = \Carbon\Carbon::parse($dateKey)->format('d/m');
                     @endphp
 
                     @foreach($entries as $i => $entry)
                     @php
-                        $rowTotal    = $entry['tithe'] + $entry['offering'] + $entry['donation'] + $entry['special'];
+                        $rowTotal    = $entry['tithe'] + $entry['offering'] + $entry['donation'] + ($entry['pledge'] ?? 0) + $entry['special'];
                         $isFirst     = $i === 0;
                         $isVoided    = ($entry['ledger_status'] ?? 'active') === 'voided';
                         $isAdj       = (bool)($entry['is_adjustment'] ?? false);
@@ -101,6 +104,9 @@
                         <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;{{ $amountStyle }}background:{{ (!$isVoided && $entry['donation'] > 0) ? '#faf5ff' : ($isVoided ? '#fef2f2' : '') }}">
                             {{ $entry['donation'] > 0 ? number_format($entry['donation'], 2) : '-' }}
                         </td>
+                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;{{ $amountStyle }}background:{{ (!$isVoided && ($entry['pledge'] ?? 0) > 0) ? '#ecfeff' : ($isVoided ? '#fef2f2' : '') }}">
+                            {{ ($entry['pledge'] ?? 0) > 0 ? number_format($entry['pledge'], 2) : '-' }}
+                        </td>
                         <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #e2e8f0;font-family:monospace;{{ $amountStyle }}background:{{ (!$isVoided && $entry['special'] > 0) ? '#fffbeb' : ($isVoided ? '#fef2f2' : '') }}">
                             {{ $entry['special'] > 0 ? number_format($entry['special'], 2) : '-' }}
                         </td>
@@ -126,6 +132,9 @@
                         <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #bae6fd;font-family:monospace;font-weight:600;font-size:.8rem;color:#6d28d9;">
                             {{ $dayDonation > 0 ? number_format($dayDonation, 2) : '-' }}
                         </td>
+                        <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #bae6fd;font-family:monospace;font-weight:600;font-size:.8rem;color:#0e7490;">
+                            {{ $dayPledge > 0 ? number_format($dayPledge, 2) : '-' }}
+                        </td>
                         <td style="padding:.5rem 1rem;text-align:right;border-right:1px solid #bae6fd;font-family:monospace;font-weight:600;font-size:.8rem;color:#b45309;">
                             {{ $daySpecial > 0 ? number_format($daySpecial, 2) : '-' }}
                         </td>
@@ -137,7 +146,7 @@
 
                     @empty
                     <tr>
-                        <td colspan="7" style="padding:3rem;text-align:center;color:#64748b;">
+                        <td colspan="8" style="padding:3rem;text-align:center;color:#64748b;">
                             No income entries for {{ \Carbon\Carbon::createFromDate($year, $month, 1)->format('F Y') }}.
                         </td>
                     </tr>
@@ -151,12 +160,13 @@
                         <td style="padding:.875rem 1rem;text-align:right;border-right:1px solid #2d4f7c;font-family:monospace;background:#14532d;">{{ number_format($totals['tithe'], 2) }}</td>
                         <td style="padding:.875rem 1rem;text-align:right;border-right:1px solid #2d4f7c;font-family:monospace;background:#1e3a8a;">{{ number_format($totals['offering'], 2) }}</td>
                         <td style="padding:.875rem 1rem;text-align:right;border-right:1px solid #2d4f7c;font-family:monospace;background:#4c1d95;">{{ number_format($totals['donation'], 2) }}</td>
+                        <td style="padding:.875rem 1rem;text-align:right;border-right:1px solid #2d4f7c;font-family:monospace;background:#164e63;">{{ number_format($totals['pledge'], 2) }}</td>
                         <td style="padding:.875rem 1rem;text-align:right;border-right:1px solid #2d4f7c;font-family:monospace;background:#78350f;">{{ number_format($totals['special'], 2) }}</td>
                         <td style="padding:.875rem 1rem;text-align:right;font-family:monospace;font-size:1rem;">{{ number_format($totals['grand_total'], 2) }}</td>
                     </tr>
                     <tr style="background:#bbf7d0;font-weight:700;border-top:1px solid #86efac;">
                         <td style="padding:.75rem 1rem;border-right:1px solid #86efac;" colspan="2">BALANCE C/F</td>
-                        <td style="padding:.75rem 1rem;" colspan="4"></td>
+                        <td style="padding:.75rem 1rem;" colspan="5"></td>
                         <td style="padding:.75rem 1rem;text-align:right;font-family:monospace;font-size:1rem;color:#166534;">{{ number_format($carriedForward, 2) }}</td>
                     </tr>
                 </tfoot>
@@ -165,7 +175,7 @@
     </div>
 
     {{-- Summary Cards --}}
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;">
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:1rem;">
         <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:.75rem;padding:1rem;text-align:center;">
             <div style="font-size:1.25rem;font-weight:700;color:#15803d;">GH₵{{ number_format($totals['tithe'], 2) }}</div>
             <div style="font-size:.75rem;color:#16a34a;">Tithes</div>
@@ -177,6 +187,10 @@
         <div style="background:#faf5ff;border:1px solid #c4b5fd;border-radius:.75rem;padding:1rem;text-align:center;">
             <div style="font-size:1.25rem;font-weight:700;color:#6d28d9;">GH₵{{ number_format($totals['donation'], 2) }}</div>
             <div style="font-size:.75rem;color:#7c3aed;">Donations</div>
+        </div>
+        <div style="background:#ecfeff;border:1px solid #a5f3fc;border-radius:.75rem;padding:1rem;text-align:center;">
+            <div style="font-size:1.25rem;font-weight:700;color:#0e7490;">GH₵{{ number_format($totals['pledge'], 2) }}</div>
+            <div style="font-size:.75rem;color:#0891b2;">Pledges</div>
         </div>
         <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:.75rem;padding:1rem;text-align:center;">
             <div style="font-size:1.25rem;font-weight:700;color:#b45309;">GH₵{{ number_format($totals['special'], 2) }}</div>

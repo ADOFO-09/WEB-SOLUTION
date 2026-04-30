@@ -74,6 +74,7 @@
 
 <!-- Donations Table -->
 <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
             <tr>
@@ -138,20 +139,32 @@
                     <div class="flex justify-end space-x-2">
                         <a href="{{ route('admin.donations.show', $donation) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
                         @can('finance.edit')
-                        @if(!$donation->isVoided())
+                        @if($donation->isActive() && !$donation->isAdjustment())
                         <a href="{{ route('admin.donations.edit', $donation) }}" class="text-yellow-600 hover:text-yellow-900">Edit</a>
                         @endif
                         @endcan
                         <a href="{{ route('admin.donations.receipt', $donation) }}" class="text-green-600 hover:text-green-900" target="_blank">Receipt</a>
                         @can('corrections.void')
+                        @if($donation->isActive() && !$donation->isAdjustment())
+                        <x-adjust-entry-modal
+                            entryType="donation"
+                            :entryId="$donation->id"
+                            :reference="$donation->receipt_number ?? $donation->reference_number"
+                            :currentAmount="$donation->amount ?? 0"
+                            :route="route('admin.finance.corrections.adjust', ['donation', $donation->id])" />
+                        @endif
                         @if($donation->isActive())
                         <x-void-entry-modal
                             entryType="donation"
                             :entryId="$donation->id"
                             :reference="$donation->receipt_number ?? $donation->reference_number"
                             :route="route('admin.finance.corrections.void.donation', $donation)" />
-                        @elseif($donation->isVoided())
+                        @endif
+                        @if($donation->isVoided() || $donation->isAdjusted() || $donation->isAdjustment())
                         <a href="{{ route('admin.finance.corrections.history', ['donation', $donation->id]) }}" class="text-xs text-gray-400 hover:underline">History</a>
+                        @endif
+                        @if($donation->isAdjusted() && $donation->adjusted_by_id)
+                        <a href="{{ route('admin.donations.show', $donation->adjusted_by_id) }}" class="text-xs text-blue-500 hover:underline">View Adj</a>
                         @endif
                         @endcan
                     </div>
@@ -166,7 +179,8 @@
             @endforelse
         </tbody>
     </table>
-    
+    </div>{{-- end overflow-x-auto --}}
+
     @if($donations->hasPages())
     <div class="px-6 py-4 border-t">
         {{ $donations->links() }}

@@ -68,12 +68,16 @@ class DonationController extends Controller implements HasMiddleware
         $query->orderBy('payment_date', 'desc');
         $donations = $query->paginate(20)->withQueryString();
 
-        // Statistics
+        // Statistics — only count effective (non-voided, non-superseded) entries
+        $effective = fn($q) => $q->where(function ($sub) {
+            $sub->where('ledger_status', 'active')->orWhereNull('ledger_status');
+        });
+
         $stats = [
-            'total_amount' => Donation::thisYear()->cash()->sum('amount'),
-            'this_month' => Donation::thisMonth()->cash()->sum('amount'),
-            'total_count' => Donation::thisYear()->count(),
-            'in_kind_count' => Donation::thisYear()->inKind()->count(),
+            'total_amount'  => Donation::thisYear()->cash()->where($effective)->sum('amount'),
+            'this_month'    => Donation::thisMonth()->cash()->where($effective)->sum('amount'),
+            'total_count'   => Donation::thisYear()->where($effective)->count(),
+            'in_kind_count' => Donation::thisYear()->inKind()->where($effective)->count(),
         ];
 
         $projects = Project::active()->orderBy('name')->get();

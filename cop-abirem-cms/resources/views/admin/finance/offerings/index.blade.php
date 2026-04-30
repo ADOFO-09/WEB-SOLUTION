@@ -125,14 +125,26 @@
                             <div class="flex items-center justify-end gap-2">
                                 <a href="{{ route('admin.offerings.show', $offering) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
                                 @can('corrections.void')
+                                @if($offering->isActive() && !$offering->isAdjustment())
+                                <x-adjust-entry-modal
+                                    entryType="offering"
+                                    :entryId="$offering->id"
+                                    :reference="$offering->reference_number"
+                                    :currentAmount="$offering->amount"
+                                    :route="route('admin.finance.corrections.adjust', ['offering', $offering->id])" />
+                                @endif
                                 @if($offering->isActive())
                                 <x-void-entry-modal
                                     entryType="offering"
                                     :entryId="$offering->id"
                                     :reference="$offering->reference_number"
                                     :route="route('admin.finance.corrections.void.offering', $offering)" />
-                                @elseif($offering->isVoided())
+                                @endif
+                                @if($offering->isVoided() || $offering->isAdjusted() || $offering->isAdjustment())
                                 <a href="{{ route('admin.finance.corrections.history', ['offering', $offering->id]) }}" class="text-xs text-gray-400 hover:underline">History</a>
+                                @endif
+                                @if($offering->isAdjusted() && $offering->adjusted_by_id)
+                                <a href="{{ route('admin.offerings.show', $offering->adjusted_by_id) }}" class="text-xs text-blue-500 hover:underline">View Adj</a>
                                 @endif
                                 @endcan
                             </div>

@@ -41,7 +41,7 @@ class ExpenseLedgerController extends Controller
             ->orderBy('expense_date')
             ->get();
 
-        $ledgerEntries = $expenses->map(function ($expense) {
+        $ledgerEntries = $expenses->filter(fn($e) => !$e->isAdjusted())->map(function ($expense) {
             $catName = $expense->expenseCategory?->name ?? 'Miscellaneous';
             $col     = self::CATEGORY_MAP[$catName] ?? 'others';
             $voided  = $expense->isVoided();

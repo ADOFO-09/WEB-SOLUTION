@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Donation;
 use App\Models\Offering;
+use App\Models\PledgePayment;
 use App\Models\Tithe;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -34,9 +35,15 @@ class IncomeLedgerController extends Controller
             ->orderBy('payment_date')
             ->get();
 
+        $pledgePayments = PledgePayment::with(['pledge.member'])
+            ->whereBetween('payment_date', [$start, $end])
+            ->orderBy('payment_date')
+            ->get();
+
         $ledgerEntries = collect();
 
         foreach ($tithes as $tithe) {
+            if ($tithe->isAdjusted()) continue; // superseded — replacement +ADJ entry carries the correct amount
             $voided = $tithe->isVoided();
             $ledgerEntries->push([
                 'date'          => $tithe->payment_date,
@@ -44,6 +51,7 @@ class IncomeLedgerController extends Controller
                 'tithe'         => $voided ? 0.0 : (float) $tithe->amount,
                 'offering'      => 0.0,
                 'donation'      => 0.0,
+                'pledge'        => 0.0,
                 'special'       => 0.0,
                 'reference'     => $tithe->receipt_number ?? $tithe->reference_number,
                 'ledger_status' => $tithe->ledger_status ?? 'active',
@@ -52,6 +60,7 @@ class IncomeLedgerController extends Controller
         }
 
         foreach ($offerings as $offering) {
+            if ($offering->isAdjusted()) continue;
             $voided    = $offering->isVoided();
             $type      = $offering->incomeCategory?->type ?? 'offering';
             $isSpecial = $type === 'special';
@@ -61,6 +70,7 @@ class IncomeLedgerController extends Controller
                 'tithe'         => 0.0,
                 'offering'      => (!$voided && !$isSpecial) ? (float) $offering->amount : 0.0,
                 'donation'      => 0.0,
+                'pledge'        => 0.0,
                 'special'       => (!$voided && $isSpecial) ? (float) $offering->amount : 0.0,
                 'reference'     => $offering->reference_number,
                 'ledger_status' => $offering->ledger_status ?? 'active',
@@ -69,6 +79,7 @@ class IncomeLedgerController extends Controller
         }
 
         foreach ($donations as $donation) {
+            if ($donation->isAdjusted()) continue;
             $voided = $donation->isVoided();
             $ledgerEntries->push([
                 'date'          => $donation->payment_date,
@@ -76,10 +87,29 @@ class IncomeLedgerController extends Controller
                 'tithe'         => 0.0,
                 'offering'      => 0.0,
                 'donation'      => $voided ? 0.0 : (float) $donation->amount,
+                'pledge'        => 0.0,
                 'special'       => 0.0,
                 'reference'     => $donation->reference_number,
                 'ledger_status' => $donation->ledger_status ?? 'active',
                 'is_adjustment' => (bool) $donation->is_adjustment,
+            ]);
+        }
+
+        foreach ($pledgePayments as $payment) {
+            $pledge     = $payment->pledge;
+            $particular = ($pledge->purpose ?? 'Pledge Payment')
+                        . ($pledge->member ? ' — ' . $pledge->member->full_name : '');
+            $ledgerEntries->push([
+                'date'          => $payment->payment_date,
+                'particular'    => $particular,
+                'tithe'         => 0.0,
+                'offering'      => 0.0,
+                'donation'      => 0.0,
+                'pledge'        => (float) $payment->amount,
+                'special'       => 0.0,
+                'reference'     => $payment->receipt_number ?? $payment->reference_number,
+                'ledger_status' => 'active',
+                'is_adjustment' => false,
             ]);
         }
 
@@ -92,10 +122,11 @@ class IncomeLedgerController extends Controller
             'tithe'       => $ledgerEntries->sum('tithe'),
             'offering'    => $ledgerEntries->sum('offering'),
             'donation'    => $ledgerEntries->sum('donation'),
+            'pledge'      => $ledgerEntries->sum('pledge'),
             'special'     => $ledgerEntries->sum('special'),
             'grand_total' => 0.0,
         ];
-        $totals['grand_total'] = $totals['tithe'] + $totals['offering'] + $totals['donation'] + $totals['special'];
+        $totals['grand_total'] = $totals['tithe'] + $totals['offering'] + $totals['donation'] + $totals['pledge'] + $totals['special'];
 
         $broughtForward = $this->getTotalBefore($start);
         $carriedForward = $broughtForward + $totals['grand_total'];
@@ -113,10 +144,16 @@ class IncomeLedgerController extends Controller
 
     private function getTotalBefore(Carbon $date): float
     {
-        $tithes    = Tithe::where('payment_date', '<', $date->toDateString())->sum('amount');
-        $offerings = Offering::where('payment_date', '<', $date->toDateString())->sum('amount');
-        $donations = Donation::where('payment_date', '<', $date->toDateString())->sum('amount');
+        // Only count entries that are effectively active (not voided, not superseded by an adjustment)
+        $activeOnly = fn($q) => $q->where(function ($sub) {
+            $sub->where('ledger_status', 'active')->orWhereNull('ledger_status');
+        });
 
-        return (float) $tithes + (float) $offerings + (float) $donations;
+        $tithes        = Tithe::where('payment_date', '<', $date->toDateString())->where($activeOnly)->sum('amount');
+        $offerings     = Offering::where('payment_date', '<', $date->toDateString())->where($activeOnly)->sum('amount');
+        $donations     = Donation::where('payment_date', '<', $date->toDateString())->where($activeOnly)->sum('amount');
+        $pledgePayments = PledgePayment::where('payment_date', '<', $date->toDateString())->sum('amount');
+
+        return (float) $tithes + (float) $offerings + (float) $donations + (float) $pledgePayments;
     }
 }

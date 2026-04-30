@@ -171,14 +171,26 @@
                                 <a href="{{ route('admin.tithes.show', $tithe) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
                                 <a href="{{ route('admin.tithes.receipt', $tithe) }}" class="text-green-600 hover:text-green-900">Receipt</a>
                                 @can('corrections.void')
+                                @if($tithe->isActive() && !$tithe->isAdjustment())
+                                <x-adjust-entry-modal
+                                    entryType="tithe"
+                                    :entryId="$tithe->id"
+                                    :reference="$tithe->receipt_number ?? $tithe->reference_number"
+                                    :currentAmount="$tithe->amount"
+                                    :route="route('admin.finance.corrections.adjust', ['tithe', $tithe->id])" />
+                                @endif
                                 @if($tithe->isActive())
                                 <x-void-entry-modal
                                     entryType="tithe"
                                     :entryId="$tithe->id"
                                     :reference="$tithe->receipt_number ?? $tithe->reference_number"
                                     :route="route('admin.finance.corrections.void.tithe', $tithe)" />
-                                @elseif($tithe->isVoided())
+                                @endif
+                                @if($tithe->isVoided() || $tithe->isAdjusted() || $tithe->isAdjustment())
                                 <a href="{{ route('admin.finance.corrections.history', ['tithe', $tithe->id]) }}" class="text-xs text-gray-500 hover:underline">History</a>
+                                @endif
+                                @if($tithe->isAdjusted() && $tithe->adjusted_by_id)
+                                <a href="{{ route('admin.tithes.show', $tithe->adjusted_by_id) }}" class="text-xs text-blue-500 hover:underline">View Adj</a>
                                 @endif
                                 @endcan
                             </div>

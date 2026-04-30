@@ -133,14 +133,26 @@
                             <div class="flex items-center justify-end gap-2">
                                 <a href="{{ route('admin.expenses.show', $expense) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
                                 @can('corrections.void')
+                                @if($expense->isActive() && !$expense->isAdjustment())
+                                <x-adjust-entry-modal
+                                    entryType="expense"
+                                    :entryId="$expense->id"
+                                    :reference="$expense->reference_number"
+                                    :currentAmount="$expense->amount"
+                                    :route="route('admin.finance.corrections.adjust', ['expense', $expense->id])" />
+                                @endif
                                 @if($expense->isActive())
                                 <x-void-entry-modal
                                     entryType="expense"
                                     :entryId="$expense->id"
                                     :reference="$expense->reference_number"
                                     :route="route('admin.finance.corrections.void.expense', $expense)" />
-                                @elseif($expense->isVoided())
+                                @endif
+                                @if($expense->isVoided() || $expense->isAdjusted() || $expense->isAdjustment())
                                 <a href="{{ route('admin.finance.corrections.history', ['expense', $expense->id]) }}" class="text-xs text-gray-400 hover:underline">History</a>
+                                @endif
+                                @if($expense->isAdjusted() && $expense->adjusted_by_id)
+                                <a href="{{ route('admin.expenses.show', $expense->adjusted_by_id) }}" class="text-xs text-blue-500 hover:underline">View Adj</a>
                                 @endif
                                 @endcan
                             </div>
