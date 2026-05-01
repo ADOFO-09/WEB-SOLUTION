@@ -1,35 +1,21 @@
-<style>
-    .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 260px; background: linear-gradient(180deg, #1e3a5f 0%, #0f172a 100%); overflow-y: auto; z-index: 50; }
-    .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .sidebar-logo { display: flex; align-items: center; }
-    .sidebar-logo-icon { width: 40px; height: 40px; background: #3b82f6; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-    .sidebar-logo-text { margin-left: 12px; }
-    .sidebar-logo-title { color: white; font-weight: 700; font-size: 1.1rem; }
-    .sidebar-logo-subtitle { color: rgba(255,255,255,0.6); font-size: 0.75rem; }
-    .nav-section { padding: 0.5rem 1rem; }
-    .nav-section-title { color: rgba(255,255,255,0.4); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.75rem 0.75rem 0.5rem; font-weight: 600; }
-    .nav-link { display: flex; align-items: center; padding: 0.65rem 0.75rem; border-radius: 8px; color: rgba(255,255,255,0.7); text-decoration: none; transition: all 0.2s; margin-bottom: 2px; font-size: 0.875rem; }
-    .nav-link:hover { background: rgba(255,255,255,0.1); color: white; }
-    .nav-link.active { background: rgba(59, 130, 246, 0.3); color: white; border-left: 3px solid #3b82f6; }
-    .nav-link svg { width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0; }
-</style>
-
-<aside class="sidebar" :class="{ 'open': sidebarOpen }" @click="if(window.innerWidth < 1024) sidebarOpen = false">
-    <div class="sidebar-header">
-        <div class="sidebar-logo">
-            <div class="sidebar-logo-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="white" style="width: 24px; height: 24px;">
+<aside class="sidebar" :class="{ 'open': sidebarOpen }">
+    <!-- Header -->
+    <div class="sidebar-logo">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div style="width:38px;height:38px;background:linear-gradient(135deg,#d4af37,#b8962e);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(212,175,55,0.4);">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="white" style="width:20px;height:20px;">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
                 </svg>
             </div>
-            <div class="sidebar-logo-text">
-                <div class="sidebar-logo-title">COP Abirem</div>
-                <div class="sidebar-logo-subtitle">Church Management</div>
+            <div>
+                <div style="color:#fff;font-weight:700;font-size:1rem;line-height:1.2;letter-spacing:-0.01em;">COP Abirem</div>
+                <div style="color:rgba(255,255,255,0.5);font-size:0.675rem;text-transform:uppercase;letter-spacing:0.08em;margin-top:1px;">Church Management</div>
             </div>
         </div>
     </div>
 
-    <nav style="padding-bottom: 6rem;">
+    <!-- Close overlay on mobile when nav item clicked -->
+    <nav class="sidebar-nav" @click="if(window.innerWidth < 1024) sidebarOpen = false" style="padding-bottom: 2rem;">
         <!-- Dashboard - All roles can see -->
         @if(auth()->user()->hasPermission('dashboard.view'))
         <div class="nav-section">
@@ -237,5 +223,18 @@
         @endif
 
     </nav>
+
+    <!-- Sidebar Footer -->
+    <div style="padding:1rem;border-top:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.1);">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" style="display:flex;align-items:center;gap:0.625rem;width:100%;padding:0.5rem 0.75rem;border-radius:8px;background:rgba(239,68,68,0.12);color:rgba(255,100,100,0.9);border:1px solid rgba(239,68,68,0.2);font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.22)'" onmouseout="this.style.background='rgba(239,68,68,0.12)'">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;flex-shrink:0;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                </svg>
+                Sign Out
+            </button>
+        </form>
+    </div>
 
 </aside>

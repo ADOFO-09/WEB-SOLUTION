@@ -16,7 +16,7 @@
 </div>
 
 <!-- Quick Stats Row -->
-<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
     <!-- Total Members -->
     <div class="stat-card">
         <div class="stat-card-icon" style="background: #dbeafe;">
@@ -71,9 +71,9 @@
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Main Content -->
-    <div>
+    <div class="lg:col-span-2">
         <!-- Attendance Stats -->
         <div class="card mb-6">
             <div class="card-header">

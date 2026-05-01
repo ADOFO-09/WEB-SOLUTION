@@ -31,15 +31,15 @@
         <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:.875rem;">
                 <thead>
-                    <tr style="background:#1e3a5f;color:white;">
-                        <th style="padding:.75rem 1rem;text-align:left;border-right:1px solid #2d4f7c;width:70px;">DATE</th>
-                        <th style="padding:.75rem 1rem;text-align:left;border-right:1px solid #2d4f7c;">PARTICULARS</th>
-                        <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#14532d;width:120px;">TITHE</th>
-                        <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#1e3a8a;width:120px;">OFFERING</th>
-                        <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#4c1d95;width:120px;">DONATION</th>
-                        <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#164e63;width:120px;">PLEDGE</th>
-                        <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#78350f;width:120px;">SPECIAL</th>
-                        <th style="padding:.75rem 1rem;text-align:right;width:130px;">TOTAL</th>
+                    <tr style="background:#1e3a5f;color:#fff;">
+                        <th style="padding:.75rem 1rem;text-align:left;border-right:1px solid #2d4f7c;width:70px;color:#fff;">DATE</th>
+                        <th style="padding:.75rem 1rem;text-align:left;border-right:1px solid #2d4f7c;color:#fff;">PARTICULARS</th>
+                        <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#14532d;width:120px;color:#fff;font-size:.7rem;letter-spacing:.08em;">TITHE</th>
+                        <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#1e3a8a;width:120px;color:#fff;font-size:.7rem;letter-spacing:.08em;">OFFERING</th>
+                        <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#4c1d95;width:120px;color:#fff;font-size:.7rem;letter-spacing:.08em;">DONATION</th>
+                        <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#164e63;width:120px;color:#fff;font-size:.7rem;letter-spacing:.08em;">PLEDGE</th>
+                        <th style="padding:.75rem 1rem;text-align:right;border-right:1px solid #2d4f7c;background:#78350f;width:120px;color:#fff;font-size:.7rem;letter-spacing:.08em;">SPECIAL</th>
+                        <th style="padding:.75rem 1rem;text-align:right;width:130px;color:#fff;">TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>

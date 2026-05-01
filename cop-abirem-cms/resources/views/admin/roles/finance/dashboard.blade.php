@@ -11,7 +11,7 @@
 <!-- Today's Summary -->
 <div style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; color: white;">
     <h2 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; opacity: 0.9;">Today's Collections</h2>
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
             <div style="font-size: 1.75rem; font-weight: 700;">GH₵{{ number_format($todayStats['tithes'], 2) }}</div>
             <div style="font-size: 0.75rem; opacity: 0.7;">Tithes</div>
@@ -32,7 +32,7 @@
 </div>
 
 <!-- Quick Stats Row -->
-<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
     <!-- This Week -->
     <div class="stat-card">
         <div class="stat-card-icon" style="background: #dbeafe;">
@@ -84,7 +84,7 @@
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <!-- Quick Entry: Session Tithe -->
     <div class="card">
         <div class="card-header">
@@ -130,7 +130,7 @@
                         Determines the label shown in the Income Ledger (e.g. "1st Sunday Tithe")
                     </p>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="grid grid-cols-2 gap-4">
                     <div class="form-group">
                         <label class="form-label">Total Amount (GH₵)</label>
                         <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required
@@ -182,7 +182,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="grid grid-cols-2 gap-4">
                     <div class="form-group">
                         <label class="form-label">Amount (GH₵)</label>
                         <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required placeholder="0.00">
@@ -216,7 +216,7 @@
     <div class="card-body">
         <form action="{{ route('admin.finance.quick-expense') }}" method="POST">
             @csrf
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="form-group">
                     <label class="form-label">Expense Category</label>
                     <select name="expense_category_id" class="form-select" required>
@@ -242,7 +242,7 @@
                            placeholder="Brief description of expense" value="{{ old('description') }}">
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="form-group">
                     <label class="form-label">Amount (GH₵)</label>
                     <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required
@@ -273,9 +273,9 @@
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Main Content -->
-    <div>
+    <div class="lg:col-span-2">
         <!-- Recent Transactions -->
         <div class="card mb-6">
             <div class="card-header">
@@ -418,21 +418,4 @@
     </div>
 </div>
 
-<style>
-@media (max-width: 1024px) {
-    div[style*="grid-template-columns: repeat(4, 1fr)"] {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-    div[style*="grid-template-columns: 2fr 1fr"],
-    div[style*="grid-template-columns: 1fr 1fr"] {
-        grid-template-columns: 1fr !important;
-    }
-}
-@media (max-width: 640px) {
-    div[style*="grid-template-columns: repeat(4, 1fr)"],
-    div[style*="grid-template-columns: repeat(2, 1fr)"] {
-        grid-template-columns: 1fr !important;
-    }
-}
-</style>
 @endsection

@@ -9,7 +9,7 @@
 </div>
 
 <!-- Quick Stats Row -->
-<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
     <!-- Total Members -->
     <div class="stat-card">
         <div class="stat-card-icon" style="background: #dbeafe;">
@@ -67,9 +67,9 @@
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Main Content Column -->
-    <div>
+    <div class="lg:col-span-2">
         <!-- Pending Expense Approvals -->
         @if($pendingExpenses->count() > 0)
         <div class="card mb-6">
@@ -121,7 +121,7 @@
                 <span style="color: #64748b; font-size: 0.875rem;">{{ now()->format('F Y') }}</span>
             </div>
             <div class="card-body">
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div style="text-align: center; padding: 1rem; background: #f0fdf4; border-radius: 0.5rem;">
                         <div style="font-size: 1.25rem; font-weight: 700; color: #166534;">GH₵{{ number_format($financeStats['tithes'], 2) }}</div>
                         <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Tithes</div>

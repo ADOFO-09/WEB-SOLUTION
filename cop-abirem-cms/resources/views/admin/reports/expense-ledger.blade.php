@@ -31,17 +31,17 @@
         <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:.8rem;">
                 <thead>
-                    <tr style="background:#7f1d1d;color:white;">
-                        <th style="padding:.75rem .75rem;text-align:left;border-right:1px solid #991b1b;width:70px;">DATE</th>
-                        <th style="padding:.75rem .75rem;text-align:left;border-right:1px solid #991b1b;">PARTICULARS</th>
-                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;">TRANSPORT</th>
-                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;">UTILITIES</th>
-                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;">WELFARE</th>
-                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;">CLEANING</th>
-                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;">MAINT.</th>
-                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;">REMIT.</th>
-                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;">OTHERS</th>
-                        <th style="padding:.75rem .75rem;text-align:right;width:100px;">TOTAL</th>
+                    <tr style="background:#7f1d1d;color:#fff;">
+                        <th style="padding:.75rem .75rem;text-align:left;border-right:1px solid #991b1b;width:70px;color:#fff;">DATE</th>
+                        <th style="padding:.75rem .75rem;text-align:left;border-right:1px solid #991b1b;color:#fff;">PARTICULARS</th>
+                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;color:#fff;font-size:.7rem;letter-spacing:.08em;">TRANSPORT</th>
+                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;color:#fff;font-size:.7rem;letter-spacing:.08em;">UTILITIES</th>
+                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;color:#fff;font-size:.7rem;letter-spacing:.08em;">WELFARE</th>
+                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;color:#fff;font-size:.7rem;letter-spacing:.08em;">CLEANING</th>
+                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;color:#fff;font-size:.7rem;letter-spacing:.08em;">MAINT.</th>
+                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;color:#fff;font-size:.7rem;letter-spacing:.08em;">REMIT.</th>
+                        <th style="padding:.75rem .5rem;text-align:right;border-right:1px solid #991b1b;width:90px;color:#fff;font-size:.7rem;letter-spacing:.08em;">OTHERS</th>
+                        <th style="padding:.75rem .75rem;text-align:right;width:100px;color:#fff;">TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>

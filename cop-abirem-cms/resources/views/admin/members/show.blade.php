@@ -57,7 +57,7 @@
     <div class="lg:col-span-1 space-y-6">
         <!-- Profile Card -->
         <div class="bg-white rounded-lg shadow overflow-hidden">
-            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 h-24"></div>
+            <div class="h-24" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8a 60%, #d4af37 100%);"></div>
             <div class="px-6 pb-6">
                 <div class="-mt-12 flex justify-center">
                     @if($member->photo_path)
@@ -65,8 +65,8 @@
                              src="{{ asset('storage/' . $member->photo_path) }}" 
                              alt="{{ $member->full_name }}">
                     @else
-                        <div class="h-24 w-24 rounded-full border-4 border-white bg-indigo-100 flex items-center justify-center shadow-lg">
-                            <span class="text-indigo-600 font-bold text-2xl">
+                        <div class="h-24 w-24 rounded-full border-4 border-white flex items-center justify-center shadow-lg" style="background:linear-gradient(135deg,#1e3a5f,#2d5a8a);">
+                            <span class="text-white font-bold text-2xl">
                                 {{ substr($member->first_name, 0, 1) }}{{ substr($member->last_name, 0, 1) }}
                             </span>
                         </div>
