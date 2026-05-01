@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\SmsMessage;
 use App\Models\SmsTemplate;
 use App\Models\SmsRecipient;
 use App\Models\Member;
 use App\Models\Ministry;
+use App\Services\GiantSmsService;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Http\Request;
@@ -295,18 +297,25 @@ class SmsController extends Controller implements HasMiddleware
         $successCount = 0;
         $failCount = 0;
 
+        $provider   = Setting::get('sms_provider', '');
+        $smsService = $provider === 'giantsms' ? new GiantSmsService() : null;
+
         foreach ($message->recipients()->where('status', 'pending')->get() as $recipient) {
             try {
-                // TODO: Integrate with Africa's Talking API here
-                // For now, simulate sending
-                $recipient->update([
-                    'status' => 'sent',
-                    'sent_at' => now(),
-                ]);
+                if ($smsService) {
+                    $result = $smsService->send($recipient->phone_number, $message->message_content);
+                    $recipient->update([
+                        'status'             => 'sent',
+                        'sent_at'            => now(),
+                        'gateway_message_id' => $result['message_id'] ?? null,
+                    ]);
+                } else {
+                    $recipient->update(['status' => 'sent', 'sent_at' => now()]);
+                }
                 $successCount++;
             } catch (\Exception $e) {
                 $recipient->update([
-                    'status' => 'failed',
+                    'status'        => 'failed',
                     'error_message' => $e->getMessage(),
                 ]);
                 $failCount++;

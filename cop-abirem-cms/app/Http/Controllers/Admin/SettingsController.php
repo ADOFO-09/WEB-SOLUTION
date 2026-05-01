@@ -109,7 +109,7 @@ class SettingsController extends Controller
     public function updateSms(Request $request)
     {
         $validated = $request->validate([
-            'sms_provider' => 'required|string|in:arkesel,hubtel,mnotify,twilio',
+            'sms_provider' => 'required|string|in:arkesel,hubtel,mnotify,twilio,giantsms',
             'sms_api_key' => 'nullable|string|max:255',
             'sms_api_secret' => 'nullable|string|max:255',
             'sms_sender_id' => 'required|string|max:11',

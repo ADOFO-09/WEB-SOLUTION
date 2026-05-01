@@ -23,13 +23,14 @@
                     <h3 class="text-lg font-medium text-gray-900">SMS Provider Configuration</h3>
                     <p class="text-sm text-gray-500">Configure your SMS gateway settings.</p>
                 </div>
-                <div class="p-6 space-y-6">
+                <div class="p-6 space-y-6" x-data="{ provider: '{{ old('sms_provider', $settings['sms_provider'] ?? '') }}' }">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label for="sms_provider" class="block text-sm font-medium text-gray-700">SMS Provider *</label>
-                            <select name="sms_provider" id="sms_provider" required
+                            <select name="sms_provider" id="sms_provider" required x-model="provider"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <option value="arkesel" {{ ($settings['sms_provider'] ?? '') == 'arkesel' ? 'selected' : '' }}>Arkesel</option>
+                                <option value="giantsms" {{ ($settings['sms_provider'] ?? '') == 'giantsms' ? 'selected' : '' }}>GiantSMS</option>
                                 <option value="hubtel" {{ ($settings['sms_provider'] ?? '') == 'hubtel' ? 'selected' : '' }}>Hubtel</option>
                                 <option value="mnotify" {{ ($settings['sms_provider'] ?? '') == 'mnotify' ? 'selected' : '' }}>mNotify</option>
                                 <option value="twilio" {{ ($settings['sms_provider'] ?? '') == 'twilio' ? 'selected' : '' }}>Twilio</option>
@@ -38,25 +39,36 @@
 
                         <div>
                             <label for="sms_sender_id" class="block text-sm font-medium text-gray-700">Sender ID *</label>
-                            <input type="text" name="sms_sender_id" id="sms_sender_id" 
+                            <input type="text" name="sms_sender_id" id="sms_sender_id"
                                    value="{{ old('sms_sender_id', $settings['sms_sender_id'] ?? '') }}" required maxlength="11"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             <p class="mt-1 text-xs text-gray-500">Maximum 11 characters</p>
                         </div>
 
                         <div>
-                            <label for="sms_api_key" class="block text-sm font-medium text-gray-700">API Key</label>
-                            <input type="password" name="sms_api_key" id="sms_api_key" 
+                            <label for="sms_api_key" class="block text-sm font-medium text-gray-700"
+                                   x-text="provider === 'giantsms' ? 'Username' : 'API Key'"></label>
+                            <input type="password" name="sms_api_key" id="sms_api_key"
                                    value="{{ old('sms_api_key', $settings['sms_api_key'] ?? '') }}"
+                                   :placeholder="provider === 'giantsms' ? 'GiantSMS username' : ''"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
 
                         <div>
-                            <label for="sms_api_secret" class="block text-sm font-medium text-gray-700">API Secret</label>
-                            <input type="password" name="sms_api_secret" id="sms_api_secret" 
+                            <label for="sms_api_secret" class="block text-sm font-medium text-gray-700"
+                                   x-text="provider === 'giantsms' ? 'Password' : 'API Secret'"></label>
+                            <input type="password" name="sms_api_secret" id="sms_api_secret"
                                    value="{{ old('sms_api_secret', $settings['sms_api_secret'] ?? '') }}"
+                                   :placeholder="provider === 'giantsms' ? 'GiantSMS password' : ''"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
+                    </div>
+
+                    <div x-show="provider === 'giantsms'" x-cloak
+                         style="background:#eff6ff;border:1px solid #93c5fd;border-radius:.5rem;padding:.75rem 1rem;">
+                        <p style="font-size:.8rem;color:#1d4ed8;margin:0;">
+                            <strong>GiantSMS credentials:</strong> enter your GiantSMS account username above and your account password below. Your Sender ID must be registered with GiantSMS.
+                        </p>
                     </div>
 
                     <div>

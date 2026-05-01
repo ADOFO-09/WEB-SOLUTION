@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ZKFingerBridge")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5a67a92059ec9b5f1c66a494f56dce24cb7a1729")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b63e99eed11675df28c63db492e06b530be383f6")]
 [assembly: System.Reflection.AssemblyProductAttribute("ZKFingerBridge")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ZKFingerBridge")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
