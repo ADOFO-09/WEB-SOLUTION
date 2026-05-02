@@ -149,7 +149,7 @@
                                 <option value="sms">SMS</option>
                                 <option value="email">Email</option>
                                 <option value="visit">Home Visit</option>
-                                <option value="in_person">In Person</option>
+                                <option value="whatsapp">WhatsApp</option>
                             </select>
                         </div>
                         <div>
@@ -158,23 +158,30 @@
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <option value="reached">Reached</option>
                                 <option value="no_answer">No Answer</option>
+                                <option value="callback">Callback Requested</option>
                                 <option value="interested">Interested</option>
                                 <option value="not_interested">Not Interested</option>
-                                <option value="callback_requested">Callback Requested</option>
-                                <option value="wrong_number">Wrong Number</option>
                             </select>
                         </div>
                         <div class="md:col-span-1 flex items-end">
-                            <button type="submit" 
+                            <button type="submit"
                                     class="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
                                 Add Log
                             </button>
                         </div>
                     </div>
-                    <div class="mt-4">
-                        <label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
-                        <textarea name="notes" id="notes" rows="2"
-                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
+                            <textarea name="notes" id="notes" rows="2"
+                                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                        </div>
+                        <div>
+                            <label for="next_follow_up_date" class="block text-sm font-medium text-gray-700">Next Follow-up Date</label>
+                            <input type="date" name="next_follow_up_date" id="next_follow_up_date"
+                                   min="{{ now()->toDateString() }}"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
                     </div>
                 </form>
             </div>
@@ -223,36 +230,86 @@
 
         <!-- Visit History -->
         <div class="bg-white rounded-lg shadow">
-            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <div class="px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-medium text-gray-900">Visit History</h3>
-                @if(!$visitor->isConverted())
+            </div>
+
+            @if(!$visitor->isConverted())
+            <!-- Record Visit Form -->
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                <p class="text-sm font-medium text-gray-700 mb-3">Record a New Visit</p>
                 <form action="{{ route('admin.visitors.record-visit', $visitor) }}" method="POST">
                     @csrf
-                    <button type="submit" class="text-sm text-indigo-600 hover:text-indigo-900">
-                        + Record Visit
-                    </button>
-                </form>
-                @endif
-            </div>
-            @if($visitor->visits->count() > 0)
-            <ul class="divide-y divide-gray-200">
-                @foreach($visitor->visits as $visit)
-                <li class="px-6 py-4 flex justify-between items-center">
-                    <div>
-                        <p class="text-sm font-medium text-gray-900">{{ $visit->visit_date->format('l, F d, Y') }}</p>
-                        @if($visit->session)
-                        <p class="text-sm text-gray-500">{{ $visit->session->serviceType->name ?? 'Service' }}</p>
-                        @endif
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label for="visit_date" class="block text-xs font-medium text-gray-600">Visit Date</label>
+                            <input type="date" name="visit_date" id="visit_date"
+                                   value="{{ date('Y-m-d') }}"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label for="service_type_id" class="block text-xs font-medium text-gray-600">Service Type</label>
+                            <select name="service_type_id" id="service_type_id"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">— Select (optional) —</option>
+                                @foreach($serviceTypes as $type)
+                                    <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit"
+                                    class="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                                Record Visit
+                            </button>
+                        </div>
                     </div>
-                    @if($visit->notes)
-                    <p class="text-sm text-gray-500">{{ $visit->notes }}</p>
-                    @endif
-                </li>
-                @endforeach
-            </ul>
+                    <div class="mt-3">
+                        <label for="visit_notes" class="block text-xs font-medium text-gray-600">Notes (optional)</label>
+                        <input type="text" name="notes" id="visit_notes" placeholder="Any notes about this visit..."
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                </form>
+            </div>
+            @endif
+
+            @if($visitor->visits->count() > 0)
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($visitor->visits as $visit)
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ $visit->visit_date->format('M d, Y') }}
+                                <span class="block text-xs text-gray-400">{{ $visit->visit_date->format('l') }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                @if($visit->serviceType)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                        {{ $visit->serviceType->name }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-400">—</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                {{ $visit->notes ?? '—' }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
             @else
             <div class="px-6 py-12 text-center">
-                <p class="text-gray-500">No visit records.</p>
+                <p class="text-gray-500">No visit records yet.</p>
             </div>
             @endif
         </div>

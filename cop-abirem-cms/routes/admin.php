@@ -41,4 +41,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::get('/password', [ProfileController::class, 'password'])->name('password');
         Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
     });
+
+    // =========================================
+    // FORCED FIRST-LOGIN PASSWORD CHANGE
+    // (AdminAccess middleware carves this out so the redirect doesn't loop)
+    // =========================================
+    Route::get('/password/change', [ProfileController::class, 'forceChangePassword'])->name('password.change');
+    Route::post('/password/change', [ProfileController::class, 'storeForceChangePassword'])->name('password.change.submit');
 });

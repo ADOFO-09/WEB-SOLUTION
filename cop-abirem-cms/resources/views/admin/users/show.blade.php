@@ -156,7 +156,7 @@
         <!-- Recent Activity -->
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
-            
+
             @if($user->activityLogs && $user->activityLogs->count() > 0)
             <div class="space-y-3">
                 @foreach($user->activityLogs as $log)
@@ -171,6 +171,44 @@
             </div>
             @else
             <p class="text-gray-500 text-center py-4">No recent activity recorded.</p>
+            @endif
+        </div>
+
+        <!-- Login History -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-base font-semibold text-gray-900">Login History</h3>
+            </div>
+            @if($loginHistory->count())
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-100 text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date / Time</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Browser</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach($loginHistory as $entry)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-gray-700 whitespace-nowrap">{{ $entry->login_at->format('M d, Y H:i') }}</td>
+                            <td class="px-4 py-3 font-mono text-xs text-gray-600">{{ $entry->ip_address ?? '—' }}</td>
+                            <td class="px-4 py-3 text-gray-600">{{ $entry->browser }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                                    {{ $entry->status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ ucfirst($entry->status) }}
+                                </span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <p class="px-6 py-8 text-center text-sm text-gray-400">No login history available.</p>
             @endif
         </div>
     </div>

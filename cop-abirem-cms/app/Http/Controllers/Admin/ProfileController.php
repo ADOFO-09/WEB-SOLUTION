@@ -82,4 +82,30 @@ class ProfileController extends Controller implements HasMiddleware
         return redirect()->route('admin.profile.show')
             ->with('success', 'Password changed successfully.');
     }
+
+    /**
+     * Show the forced first-login password change form.
+     */
+    public function forceChangePassword()
+    {
+        return view('admin.profile.force-change-password');
+    }
+
+    /**
+     * Handle the forced password change submission.
+     */
+    public function storeForceChangePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'password' => ['required', 'confirmed', Password::min(8)],
+        ]);
+
+        auth()->user()->update([
+            'password'            => Hash::make($validated['password']),
+            'must_change_password' => false,
+        ]);
+
+        return redirect()->intended(route('admin.dashboard'))
+            ->with('success', 'Password updated. Welcome!');
+    }
 }

@@ -12,8 +12,8 @@ class VisitorVisit extends Model
 
     protected $fillable = [
         'visitor_id',
-        'session_id',
         'visit_date',
+        'service_type_id',
         'notes',
     ];
 
@@ -30,9 +30,9 @@ class VisitorVisit extends Model
         return $this->belongsTo(Visitor::class);
     }
 
-    public function session(): BelongsTo
+    public function serviceType(): BelongsTo
     {
-        return $this->belongsTo(AttendanceSession::class, 'session_id');
+        return $this->belongsTo(ServiceType::class);
     }
 
     // ==========================================
@@ -44,8 +44,8 @@ class VisitorVisit extends Model
         return $query->whereDate('visit_date', $date);
     }
 
-    public function scopeBySession($query, $sessionId)
+    public function scopeByServiceType($query, $serviceTypeId)
     {
-        return $query->where('session_id', $sessionId);
+        return $query->where('service_type_id', $serviceTypeId);
     }
 }

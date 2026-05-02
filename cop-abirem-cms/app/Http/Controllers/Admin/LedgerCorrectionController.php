@@ -49,6 +49,17 @@ class LedgerCorrectionController extends Controller
         $request->validate(['reason' => 'required|min:10|max:500']);
         if ($tithe->isVoided()) return back()->with('error', 'This entry is already voided.');
         $tithe->voidEntry($request->reason);
+        LedgerAuditLog::create([
+            'entry_type'   => 'tithe',
+            'entry_id'     => $tithe->id,
+            'action'       => 'voided',
+            'old_values'   => json_encode(['ledger_status' => 'active']),
+            'new_values'   => json_encode(['ledger_status' => 'voided', 'void_reason' => $request->reason]),
+            'reason'       => $request->reason,
+            'performed_by' => auth()->id(),
+            'ip_address'   => request()->ip(),
+            'user_agent'   => request()->userAgent(),
+        ]);
         return back()->with('success', "Tithe {$tithe->receipt_number} voided successfully.");
     }
 
@@ -57,6 +68,17 @@ class LedgerCorrectionController extends Controller
         $request->validate(['reason' => 'required|min:10|max:500']);
         if ($offering->isVoided()) return back()->with('error', 'This entry is already voided.');
         $offering->voidEntry($request->reason);
+        LedgerAuditLog::create([
+            'entry_type'   => 'offering',
+            'entry_id'     => $offering->id,
+            'action'       => 'voided',
+            'old_values'   => json_encode(['ledger_status' => 'active']),
+            'new_values'   => json_encode(['ledger_status' => 'voided', 'void_reason' => $request->reason]),
+            'reason'       => $request->reason,
+            'performed_by' => auth()->id(),
+            'ip_address'   => request()->ip(),
+            'user_agent'   => request()->userAgent(),
+        ]);
         return back()->with('success', "Offering {$offering->reference_number} voided successfully.");
     }
 
@@ -65,6 +87,17 @@ class LedgerCorrectionController extends Controller
         $request->validate(['reason' => 'required|min:10|max:500']);
         if ($donation->isVoided()) return back()->with('error', 'This entry is already voided.');
         $donation->voidEntry($request->reason);
+        LedgerAuditLog::create([
+            'entry_type'   => 'donation',
+            'entry_id'     => $donation->id,
+            'action'       => 'voided',
+            'old_values'   => json_encode(['ledger_status' => 'active']),
+            'new_values'   => json_encode(['ledger_status' => 'voided', 'void_reason' => $request->reason]),
+            'reason'       => $request->reason,
+            'performed_by' => auth()->id(),
+            'ip_address'   => request()->ip(),
+            'user_agent'   => request()->userAgent(),
+        ]);
         return back()->with('success', "Donation {$donation->reference_number} voided successfully.");
     }
 
@@ -73,6 +106,17 @@ class LedgerCorrectionController extends Controller
         $request->validate(['reason' => 'required|min:10|max:500']);
         if ($expense->isVoided()) return back()->with('error', 'This entry is already voided.');
         $expense->voidEntry($request->reason);
+        LedgerAuditLog::create([
+            'entry_type'   => 'expense',
+            'entry_id'     => $expense->id,
+            'action'       => 'voided',
+            'old_values'   => json_encode(['ledger_status' => 'active']),
+            'new_values'   => json_encode(['ledger_status' => 'voided', 'void_reason' => $request->reason]),
+            'reason'       => $request->reason,
+            'performed_by' => auth()->id(),
+            'ip_address'   => request()->ip(),
+            'user_agent'   => request()->userAgent(),
+        ]);
         return back()->with('success', "Expense {$expense->reference_number} voided successfully.");
     }
 
@@ -86,6 +130,17 @@ class LedgerCorrectionController extends Controller
         if (!$entry) return back()->with('error', 'Entry not found.');
         if (!$entry->isVoided()) return back()->with('error', 'This entry is not voided.');
         $entry->restoreEntry();
+        LedgerAuditLog::create([
+            'entry_type'   => $type,
+            'entry_id'     => $id,
+            'action'       => 'restored',
+            'old_values'   => json_encode(['ledger_status' => 'voided']),
+            'new_values'   => json_encode(['ledger_status' => 'active']),
+            'reason'       => $request->reason ?? null,
+            'performed_by' => auth()->id(),
+            'ip_address'   => request()->ip(),
+            'user_agent'   => request()->userAgent(),
+        ]);
         return back()->with('success', ucfirst($type) . ' entry restored to active successfully.');
     }
 
@@ -111,7 +166,19 @@ class LedgerCorrectionController extends Controller
             $dateField  => $request->payment_date ?? $entry->getAttribute($dateField),
         ]);
 
+        $oldAmount = $entry->amount;
         $adjustment = $entry->createAdjustment($newData, $request->reason);
+        LedgerAuditLog::create([
+            'entry_type'   => $type,
+            'entry_id'     => $id,
+            'action'       => 'adjusted',
+            'old_values'   => json_encode(['amount' => $oldAmount, 'ledger_status' => 'active']),
+            'new_values'   => json_encode(['amount' => $request->amount, 'ledger_status' => 'adjusted', 'adjustment_ref' => $adjustment->reference_number]),
+            'reason'       => $request->reason,
+            'performed_by' => auth()->id(),
+            'ip_address'   => request()->ip(),
+            'user_agent'   => request()->userAgent(),
+        ]);
 
         return back()->with('success', "Adjustment entry created (Ref: {$adjustment->reference_number}).");
     }
@@ -130,7 +197,12 @@ class LedgerCorrectionController extends Controller
             ->latest()
             ->get();
 
-        return view('admin.finance.corrections.audit-history', compact('entry', 'type', 'id', 'logs'));
+        $auditLogs = LedgerAuditLog::where('entry_type', $type)
+            ->where('entry_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('admin.finance.corrections.audit-history', compact('entry', 'type', 'id', 'logs', 'auditLogs'));
     }
 
     // ==========================================

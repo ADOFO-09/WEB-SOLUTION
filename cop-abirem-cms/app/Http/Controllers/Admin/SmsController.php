@@ -120,7 +120,7 @@ class SmsController extends Controller implements HasMiddleware
         foreach ($recipients as $recipient) {
             $message->recipients()->create([
                 'member_id' => $recipient['member_id'] ?? null,
-                'phone' => $recipient['phone'],
+                'phone_number' => $recipient['phone'],
                 'recipient_name' => $recipient['name'] ?? null,
                 'status' => 'pending',
             ]);

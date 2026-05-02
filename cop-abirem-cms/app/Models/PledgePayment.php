@@ -20,6 +20,7 @@ class PledgePayment extends Model
         'receipt_number',
         'notes',
         'recorded_by',
+        'sms_sent',
     ];
 
     protected $casts = [

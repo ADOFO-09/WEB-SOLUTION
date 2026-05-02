@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\LoginHistory;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Member;
@@ -123,7 +124,12 @@ class UserController extends Controller implements HasMiddleware
             $q->latest()->take(10);
         }]);
 
-        return view('admin.users.show', compact('user'));
+        $loginHistory = LoginHistory::where('user_id', $user->id)
+            ->orderByDesc('login_at')
+            ->limit(10)
+            ->get();
+
+        return view('admin.users.show', compact('user', 'loginHistory'));
     }
 
     /**

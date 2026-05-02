@@ -7,6 +7,7 @@ use App\Models\Visitor;
 use App\Models\Member;
 use App\Models\Ministry;
 use App\Models\FollowUpLog;
+use App\Models\ServiceType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -133,11 +134,13 @@ class VisitorController extends Controller implements HasMiddleware
             'referredBy',
             'convertedToMember',
             'createdBy',
-            'visits' => fn($q) => $q->with('session.serviceType')->latest('visit_date'),
+            'visits' => fn($q) => $q->with('serviceType')->latest('visit_date'),
             'followUpLogs' => fn($q) => $q->with('contactedBy')->latest('contact_date'),
         ]);
 
-        return view('admin.visitors.show', compact('visitor'));
+        $serviceTypes = ServiceType::where('is_active', true)->orderBy('name')->get();
+
+        return view('admin.visitors.show', compact('visitor', 'serviceTypes'));
     }
 
     /**
@@ -195,30 +198,28 @@ class VisitorController extends Controller implements HasMiddleware
     public function addFollowUp(Request $request, Visitor $visitor)
     {
         $validated = $request->validate([
-            'contact_method' => 'required|in:phone,sms,email,visit,in_person',
-            'outcome' => 'required|in:reached,no_answer,interested,not_interested,callback_requested,wrong_number',
-            'notes' => 'nullable|string|max:1000',
-            'next_action' => 'nullable|string|max:255',
-            'next_action_date' => 'nullable|date|after_or_equal:today',
+            'contact_method'     => 'required|in:phone,sms,email,visit,whatsapp',
+            'outcome'            => 'required|in:reached,no_answer,callback,interested,not_interested',
+            'notes'              => 'nullable|string|max:1000',
+            'next_follow_up_date' => 'nullable|date|after_or_equal:today',
         ]);
 
-        $visitor->addFollowUpLog(
-            $validated['contact_method'],
-            $validated['outcome'],
-            $validated['notes'],
-            auth()->id()
-        );
+        $visitor->followUpLogs()->create([
+            'contact_date'       => now(),
+            'contact_method'     => $validated['contact_method'],
+            'outcome'            => $validated['outcome'],
+            'notes'              => $validated['notes'] ?? null,
+            'next_follow_up_date' => $validated['next_follow_up_date'] ?? null,
+            'contacted_by'       => auth()->id(),
+        ]);
 
         // Update follow-up status based on outcome
         $newStatus = match ($validated['outcome']) {
             'not_interested' => 'not_interested',
-            'interested' => 'in_progress',
-            default => $visitor->follow_up_status,
+            'interested'     => 'in_progress',
+            'reached'        => $visitor->follow_up_status === 'pending' ? 'in_progress' : $visitor->follow_up_status,
+            default          => $visitor->follow_up_status,
         };
-
-        if ($validated['outcome'] === 'reached' && $visitor->follow_up_status === 'pending') {
-            $newStatus = 'in_progress';
-        }
 
         $visitor->update(['follow_up_status' => $newStatus]);
 
@@ -288,11 +289,16 @@ class VisitorController extends Controller implements HasMiddleware
     public function recordVisit(Request $request, Visitor $visitor)
     {
         $validated = $request->validate([
-            'session_id' => 'nullable|exists:attendance_sessions,id',
-            'notes' => 'nullable|string|max:500',
+            'service_type_id' => 'nullable|exists:service_types,id',
+            'visit_date'      => 'nullable|date',
+            'notes'           => 'nullable|string|max:500',
         ]);
 
-        $visitor->recordVisit($validated['session_id'] ?? null, $validated['notes'] ?? null);
+        $visitor->visits()->create([
+            'visit_date'      => $validated['visit_date'] ?? now()->toDateString(),
+            'service_type_id' => $validated['service_type_id'] ?? null,
+            'notes'           => $validated['notes'] ?? null,
+        ]);
 
         return back()->with('success', 'Visit recorded successfully.');
     }

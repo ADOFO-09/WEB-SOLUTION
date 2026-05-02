@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\Backup;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -225,6 +226,16 @@ class SettingsController extends Controller
 
             // Log the backup
             ActivityLog::log('backup_created', null, null, ['filename' => $filename]);
+
+            Backup::create([
+                'filename'   => $filename,
+                'file_path'  => $path,
+                'file_size'  => file_exists($path) ? filesize($path) : 0,
+                'type'       => 'manual',
+                'status'     => 'completed',
+                'created_by' => auth()->id(),
+                'created_at' => now(),
+            ]);
 
             return back()->with('success', "Backup created successfully: {$filename}");
 

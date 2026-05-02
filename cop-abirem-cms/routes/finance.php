@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\PledgeController;
 use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\FinancialParticularController;
 use App\Http\Controllers\Admin\LedgerCorrectionController;
+use App\Http\Controllers\Admin\FinancialYearController;
+use App\Http\Controllers\Admin\ProjectController;
 use App\Models\ExpenseCategory;
 use App\Models\IncomeCategory;
 use Illuminate\Support\Facades\Route;
@@ -129,5 +131,32 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::post('/{type}/{id}/restore',                  [LedgerCorrectionController::class, 'restore'])->name('restore');
         Route::post('/{type}/{id}/adjust',                   [LedgerCorrectionController::class, 'createAdjustment'])->name('adjust');
         Route::get('/{type}/{id}/history',                   [LedgerCorrectionController::class, 'auditHistory'])->name('history');
+    });
+
+    // =========================================
+    // FINANCIAL YEARS
+    // =========================================
+    Route::prefix('finance/years')->name('finance.years.')->group(function () {
+        Route::get('/',                              [FinancialYearController::class, 'index'])->name('index');
+        Route::get('/create',                        [FinancialYearController::class, 'create'])->name('create');
+        Route::post('/',                             [FinancialYearController::class, 'store'])->name('store');
+        Route::get('/{financialYear}/edit',          [FinancialYearController::class, 'edit'])->name('edit');
+        Route::put('/{financialYear}',               [FinancialYearController::class, 'update'])->name('update');
+        Route::post('/{financialYear}/activate',     [FinancialYearController::class, 'activate'])->name('activate');
+        Route::post('/{financialYear}/close',        [FinancialYearController::class, 'close'])->name('close');
+        Route::delete('/{financialYear}',            [FinancialYearController::class, 'destroy'])->name('destroy');
+    });
+
+    // =========================================
+    // PROJECTS
+    // =========================================
+    Route::prefix('finance/projects')->name('finance.projects.')->group(function () {
+        Route::get('/',                  [ProjectController::class, 'index'])->name('index');
+        Route::get('/create',            [ProjectController::class, 'create'])->name('create');
+        Route::post('/',                 [ProjectController::class, 'store'])->name('store');
+        Route::get('/{project}',         [ProjectController::class, 'show'])->name('show');
+        Route::get('/{project}/edit',    [ProjectController::class, 'edit'])->name('edit');
+        Route::put('/{project}',         [ProjectController::class, 'update'])->name('update');
+        Route::delete('/{project}',      [ProjectController::class, 'destroy'])->name('destroy');
     });
 });

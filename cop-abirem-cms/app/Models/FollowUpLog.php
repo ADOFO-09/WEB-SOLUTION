@@ -16,14 +16,13 @@ class FollowUpLog extends Model
         'contact_method',
         'outcome',
         'notes',
-        'next_action',
-        'next_action_date',
+        'next_follow_up_date',
         'contacted_by',
     ];
 
     protected $casts = [
         'contact_date' => 'datetime',
-        'next_action_date' => 'date',
+        'next_follow_up_date' => 'date',
     ];
 
     // ==========================================
@@ -56,8 +55,8 @@ class FollowUpLog extends Model
 
     public function scopePendingActions($query)
     {
-        return $query->whereNotNull('next_action_date')
-                     ->where('next_action_date', '<=', now()->toDateString());
+        return $query->whereNotNull('next_follow_up_date')
+                     ->where('next_follow_up_date', '<=', now()->toDateString());
     }
 
     // ==========================================
@@ -65,19 +64,18 @@ class FollowUpLog extends Model
     // ==========================================
 
     public const CONTACT_METHODS = [
-        'phone' => 'Phone Call',
-        'sms' => 'SMS',
-        'email' => 'Email',
-        'visit' => 'Home Visit',
-        'in_person' => 'In Person',
+        'phone'    => 'Phone Call',
+        'sms'      => 'SMS',
+        'email'    => 'Email',
+        'visit'    => 'Home Visit',
+        'whatsapp' => 'WhatsApp',
     ];
 
     public const OUTCOMES = [
-        'reached' => 'Reached',
-        'no_answer' => 'No Answer',
-        'interested' => 'Interested',
+        'reached'        => 'Reached',
+        'no_answer'      => 'No Answer',
+        'callback'       => 'Callback Requested',
+        'interested'     => 'Interested',
         'not_interested' => 'Not Interested',
-        'callback_requested' => 'Callback Requested',
-        'wrong_number' => 'Wrong Number',
     ];
 }

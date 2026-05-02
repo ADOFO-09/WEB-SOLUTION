@@ -146,12 +146,12 @@ class Visitor extends Model
         return !$this->isConverted() && $this->follow_up_status !== 'not_interested';
     }
 
-    public function recordVisit(int $sessionId = null, string $notes = null): VisitorVisit
+    public function recordVisit(int $serviceTypeId = null, string $notes = null): VisitorVisit
     {
         return $this->visits()->create([
-            'session_id' => $sessionId,
-            'visit_date' => now()->toDateString(),
-            'notes' => $notes,
+            'service_type_id' => $serviceTypeId,
+            'visit_date'      => now()->toDateString(),
+            'notes'           => $notes,
         ]);
     }
 

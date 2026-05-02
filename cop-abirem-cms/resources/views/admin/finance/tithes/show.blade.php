@@ -113,6 +113,22 @@
                     <dt class="text-sm text-gray-500">Recorded By</dt>
                     <dd class="mt-1 text-sm font-medium text-gray-900">{{ $tithe->recordedBy->name ?? 'System' }}</dd>
                 </div>
+
+                <div class="border-b pb-3">
+                    <dt class="text-sm text-gray-500">SMS Notification</dt>
+                    <dd class="mt-1">
+                        @if($tithe->sms_sent)
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            Sent
+                        </span>
+                        @else
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            Not sent
+                        </span>
+                        @endif
+                    </dd>
+                </div>
             </dl>
 
             @if($tithe->notes)

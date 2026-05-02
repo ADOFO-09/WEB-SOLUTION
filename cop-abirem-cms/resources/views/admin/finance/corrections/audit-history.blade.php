@@ -65,12 +65,13 @@
     @endif
 
     {{-- Timeline --}}
+    @php $displayLogs = $logs->isNotEmpty() ? $logs : ($auditLogs ?? collect()); @endphp
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="font-semibold text-gray-900">Change Timeline ({{ $logs->count() }} events)</h2>
+            <h2 class="font-semibold text-gray-900">Change Timeline ({{ $displayLogs->count() }} events)</h2>
         </div>
 
-        @forelse($logs as $log)
+        @forelse($displayLogs as $log)
         <div class="border-b border-gray-100 px-6 py-4 last:border-0 hover:bg-gray-50">
             <div class="flex items-start gap-4">
                 <div class="mt-0.5 flex-shrink-0">
@@ -113,6 +114,21 @@
                         @endforeach
                     </div>
                     @endif
+                    @endif
+
+                    @if($log->old_values && $log->new_values && in_array($log->action, ['voided', 'adjusted', 'restored']))
+                    <div class="mt-2 space-y-1">
+                        @foreach($log->new_values as $field => $newVal)
+                        @if(isset($log->old_values[$field]) && $log->old_values[$field] != $newVal)
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="font-medium text-gray-500 capitalize">{{ str_replace('_', ' ', $field) }}</span>
+                            <span class="text-red-500 line-through">{{ $log->old_values[$field] }}</span>
+                            <span class="text-gray-400">&rarr;</span>
+                            <span class="text-green-600">{{ $newVal }}</span>
+                        </div>
+                        @endif
+                        @endforeach
+                    </div>
                     @endif
 
                     @if($log->ip_address)

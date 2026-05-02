@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(php artisan tinker '--execute= *)",
-      "Bash(php artisan *)"
+      "Bash(php artisan *)",
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root -h 127.0.0.1 -P 3306 cop_abirem_cms -e \"SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT, COLUMN_KEY, EXTRA FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='cop_abirem_cms' ORDER BY TABLE_NAME, ORDINAL_POSITION;\" 2>$null)"
     ]
   }
 }

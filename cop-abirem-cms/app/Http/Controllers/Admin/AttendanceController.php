@@ -194,7 +194,7 @@ class AttendanceController extends Controller implements HasMiddleware
                     $session->records()->create([
                         'member_id' => $memberId,
                         'check_in_time' => now(),
-                        'check_in_method' => 'manual',
+                        'attendance_method' => 'manual',
                         'marked_by' => auth()->id(),
                     ]);
                     $addedCount++;
@@ -210,7 +210,7 @@ class AttendanceController extends Controller implements HasMiddleware
                     $session->records()->create([
                         'visitor_id' => $visitorId,
                         'check_in_time' => now(),
-                        'check_in_method' => 'manual',
+                        'attendance_method' => 'manual',
                         'marked_by' => auth()->id(),
                     ]);
                     $addedCount++;
@@ -219,9 +219,12 @@ class AttendanceController extends Controller implements HasMiddleware
         }
 
         // Update session totals
+        $totalMembers = $session->records()->whereNotNull('member_id')->count();
+        $totalVisitors = $session->records()->whereNotNull('visitor_id')->count();
         $session->update([
-            'total_members' => $session->records()->whereNotNull('member_id')->count(),
-            'total_visitors' => $session->records()->whereNotNull('visitor_id')->count(),
+            'total_members'    => $totalMembers,
+            'total_visitors'   => $totalVisitors,
+            'total_attendance' => $totalMembers + $totalVisitors,
         ]);
 
         return back()->with('success', "{$addedCount} attendance record(s) added.");
@@ -281,7 +284,7 @@ class AttendanceController extends Controller implements HasMiddleware
         $session->records()->create([
             'member_id' => $member->id,
             'check_in_time' => now(),
-            'check_in_method' => 'qr_scan',
+            'attendance_method' => 'qr_code',
             'marked_by' => auth()->id(),
         ]);
 
@@ -308,10 +311,13 @@ class AttendanceController extends Controller implements HasMiddleware
         }
 
         $session->update([
-            'status' => 'closed',
-            'end_time' => now()->format('H:i:s'),
-            'total_members' => $session->records()->whereNotNull('member_id')->count(),
-            'total_visitors' => $session->records()->whereNotNull('visitor_id')->count(),
+            'status'           => 'closed',
+            'end_time'         => now()->format('H:i:s'),
+            'total_members'    => $session->records()->whereNotNull('member_id')->count(),
+            'total_visitors'   => $session->records()->whereNotNull('visitor_id')->count(),
+            'total_attendance' => $session->records()->count(),
+            'closed_by'        => auth()->id(),
+            'closed_at'        => now(),
         ]);
 
         return redirect()->route('admin.attendance.show', $session)
@@ -393,7 +399,7 @@ class AttendanceController extends Controller implements HasMiddleware
         $record = $session->records()->create([
             'member_id' => $validated['member_id'],
             'check_in_time' => now(),
-            'check_in_method' => 'manual',
+            'attendance_method' => 'manual',
             'marked_by' => auth()->id(),
         ]);
 
@@ -446,7 +452,7 @@ class AttendanceController extends Controller implements HasMiddleware
         $record = $session->records()->create([
             'visitor_id' => $validated['visitor_id'],
             'check_in_time' => now(),
-            'check_in_method' => 'manual',
+            'attendance_method' => 'manual',
             'marked_by' => auth()->id(),
         ]);
 

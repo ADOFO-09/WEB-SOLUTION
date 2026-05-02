@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\StaffPositionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -39,6 +40,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         // User actions
         Route::post('/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
         Route::post('/{user}/reset-password', [UserController::class, 'resetPassword'])->name('reset-password');
+    });
+
+    // =========================================
+    // STAFF POSITIONS
+    // =========================================
+    Route::prefix('staff-positions')->name('staff-positions.')->group(function () {
+        Route::get('/',                              [StaffPositionController::class, 'index'])->name('index');
+        Route::get('/{role}/assign',                 [StaffPositionController::class, 'assignForm'])->name('assign');
+        Route::post('/{role}/assign',                [StaffPositionController::class, 'assign'])->name('assign.submit');
     });
 
     // =========================================
