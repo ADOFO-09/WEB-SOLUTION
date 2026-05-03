@@ -95,20 +95,21 @@
         }
         
         .logo-icon {
-            width: 50px;
-            height: 50px;
-            background: var(--accent);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid rgba(212, 175, 55, 0.6);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background: var(--white);
+            flex-shrink: 0;
         }
-        
-        .logo-icon svg {
-            width: 30px;
-            height: 30px;
-            fill: var(--primary-dark);
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
         
         .logo-text h1 {
@@ -150,16 +151,6 @@
             border-color: var(--white);
         }
         
-        .nav-links .register-btn {
-            background: var(--accent);
-            color: var(--primary-dark);
-        }
-        
-        .nav-links .register-btn:hover {
-            background: var(--accent-light);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
-        }
         
         /* Main Content */
         .main {
@@ -380,10 +371,6 @@
                 display: none;
             }
             
-            .nav-links .register-btn {
-                display: none;
-            }
-            
             .hero h2 {
                 font-size: 2.2rem;
             }
@@ -407,9 +394,7 @@
     <header class="header">
         <div class="logo">            
             <div class="logo-icon">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18l6.9 3.45L12 11.09 5.1 7.64 12 4.18zM4 8.82l7 3.5v7.36l-7-3.5V8.82zm16 7.36l-7 3.5v-7.36l7-3.5v7.36z"/>
-                </svg>
+                <img src="{{ asset('images/cop-logo.png') }}" alt="COP Abirem">
             </div>
 
             <div class="logo-text">
@@ -418,18 +403,13 @@
             </div>
         </div>
         
-        @if (Route::has('login'))
         <nav class="nav-links">
             @auth
                 <a href="{{ url('/dashboard') }}" class="login-btn">Dashboard</a>
             @else
                 <a href="{{ route('login') }}" class="login-btn">Sign In</a>
-                @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="register-btn">Get Started</a>
-                @endif
             @endauth
         </nav>
-        @endif
     </header>
     
     <main class="main">

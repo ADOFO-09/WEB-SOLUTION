@@ -82,6 +82,7 @@ class PermissionSeeder extends Seeder
 
             // Finance - General
             ['name' => 'View Finance Dashboard', 'slug' => 'finance.view', 'module' => 'finance', 'description' => 'View financial dashboard and summaries'],
+            ['name' => 'Manage Finance Setup', 'slug' => 'finance.manage', 'module' => 'finance', 'description' => 'Manage financial years and projects'],
             ['name' => 'Issue Receipts', 'slug' => 'finance.receipts', 'module' => 'finance', 'description' => 'Issue and print receipts'],
             ['name' => 'View Finance Summary Only', 'slug' => 'finance.summary_only', 'module' => 'finance', 'description' => 'View financial summaries (read-only)'],
 

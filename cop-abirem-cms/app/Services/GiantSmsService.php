@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class GiantSmsService
 {
@@ -29,6 +28,8 @@ class GiantSmsService
      */
     public function send(string $to, string $message): array
     {
+        $to = $this->normalizePhone($to);
+
         $response = Http::withBasicAuth($this->username, $this->password)
             ->timeout(15)
             ->post(self::BASE_URL . '/send', [
@@ -39,7 +40,7 @@ class GiantSmsService
 
         $data = $response->json() ?? [];
 
-        if (!$response->successful() || ($data['status'] ?? '') === 'error') {
+        if (!$response->successful() || ($data['status'] ?? false) === false) {
             throw new \RuntimeException($data['message'] ?? "GiantSMS HTTP {$response->status()}");
         }
 
@@ -55,6 +56,8 @@ class GiantSmsService
      */
     public function sendBulk(array $recipients, string $message): array
     {
+        $recipients = array_map([$this, 'normalizePhone'], $recipients);
+
         $response = Http::withBasicAuth($this->username, $this->password)
             ->timeout(30)
             ->post(self::BASE_URL . '/send', [
@@ -65,7 +68,7 @@ class GiantSmsService
 
         $data = $response->json() ?? [];
 
-        if (!$response->successful() || ($data['status'] ?? '') === 'error') {
+        if (!$response->successful() || ($data['status'] ?? false) === false) {
             throw new \RuntimeException($data['message'] ?? "GiantSMS HTTP {$response->status()}");
         }
 
@@ -74,25 +77,60 @@ class GiantSmsService
 
     /**
      * Fetch the account SMS balance.
+     *
+     * Returns ['balance' => float, 'raw' => array] so the caller can
+     * surface the raw API payload if parsing fails.
+     *
+     * @throws \RuntimeException on HTTP or API error
      */
-    public function getBalance(): float
+    public function getBalance(): array
     {
-        try {
-            $response = Http::timeout(10)
-                ->get(self::BASE_URL . '/balance', [
-                    'username' => $this->username,
-                    'password' => $this->password,
-                ]);
+        $response = Http::withBasicAuth($this->username, $this->password)
+            ->timeout(10)
+            ->get(self::BASE_URL . '/balance');
 
-            $data = $response->json() ?? [];
+        $data = $response->json() ?? [];
 
-            if ($response->successful() && ($data['status'] ?? '') !== 'error') {
-                return (float) ($data['balance'] ?? 0);
-            }
-        } catch (\Exception $e) {
-            Log::warning('GiantSMS balance check failed: ' . $e->getMessage());
+        if (!$response->successful() || ($data['status'] ?? false) === false) {
+            throw new \RuntimeException("GiantSMS balance check failed (HTTP {$response->status()})");
         }
 
-        return 0.0;
+        // GiantSMS returns the credit count in the "message" field.
+        return [
+            'balance' => (float) ($data['message'] ?? 0),
+            'raw'     => $data,
+        ];
+    }
+
+    /**
+     * Validate that credentials are configured and non-empty.
+     */
+    public function isConfigured(): bool
+    {
+        return !empty($this->username) && !empty($this->password) && !empty($this->senderId);
+    }
+
+    /**
+     * Normalise a Ghanaian phone number to international format (233XXXXXXXXX).
+     * Accepts: 024XXXXXXX, +233XXXXXXXXX, 233XXXXXXXXX, 0XXXXXXXXX
+     */
+    public function normalizePhone(string $phone): string
+    {
+        $phone = preg_replace('/\D/', '', $phone); // strip non-digits
+
+        if (str_starts_with($phone, '233') && \strlen($phone) === 12) {
+            return $phone;
+        }
+
+        if (str_starts_with($phone, '0') && \strlen($phone) === 10) {
+            return '233' . substr($phone, 1);
+        }
+
+        // Already looks like international without country code prefix
+        if (\strlen($phone) === 9) {
+            return '233' . $phone;
+        }
+
+        return $phone; // return as-is if format is unrecognised
     }
 }

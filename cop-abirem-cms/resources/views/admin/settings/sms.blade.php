@@ -12,7 +12,34 @@
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
     @include('admin.settings.partials.nav')
 
-    <div class="lg:col-span-3">
+    <div class="lg:col-span-3 space-y-6">
+
+        {{-- Test / Balance result banners --}}
+        @if(session('sms_test_success'))
+        <div class="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
+            <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {{ session('sms_test_success') }}
+        </div>
+        @endif
+        @if(session('sms_test_error'))
+        <div class="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
+            <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {{ session('sms_test_error') }}
+        </div>
+        @endif
+        @if(session('sms_balance'))
+        <div class="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-sm">
+            <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span><strong>Account Balance:</strong> {{ session('sms_balance') }} SMS credits</span>
+        </div>
+        @endif
+        @if(session('sms_balance_error'))
+        <div class="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
+            <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {{ session('sms_balance_error') }}
+        </div>
+        @endif
+
         <form action="{{ route('admin.settings.sms.update') }}" method="POST">
             @csrf
             @method('PUT')
@@ -74,12 +101,21 @@
                     <div>
                         <label for="sms_balance_threshold" class="block text-sm font-medium text-gray-700">Low Balance Alert Threshold</label>
                         <div class="mt-1 flex items-center">
-                            <input type="number" name="sms_balance_threshold" id="sms_balance_threshold" 
+                            <input type="number" name="sms_balance_threshold" id="sms_balance_threshold"
                                    value="{{ old('sms_balance_threshold', $settings['sms_balance_threshold'] ?? '100') }}"
                                    min="0"
                                    class="block w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             <span class="ml-2 text-gray-500">SMS credits</span>
                         </div>
+                    </div>
+
+                    <div>
+                        <label for="sms_topup_url" class="block text-sm font-medium text-gray-700">Top-up URL</label>
+                        <input type="url" name="sms_topup_url" id="sms_topup_url"
+                               value="{{ old('sms_topup_url', $settings['sms_topup_url'] ?? '') }}"
+                               placeholder="https://giantsms.com/..."
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <p class="mt-1 text-xs text-gray-500">Paste your provider's billing or top-up page URL. The low-balance alert will link directly to it.</p>
                     </div>
                 </div>
             </div>
@@ -126,11 +162,75 @@
             </div>
 
             <div class="flex justify-end">
-                <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                    Save Changes
+                <button type="submit" class="px-6 py-2 text-white rounded-lg" style="background:#1e3a5f;">
+                    Save Settings
                 </button>
             </div>
         </form>
+
+        {{-- ── Test Connection & Balance ── --}}
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Test &amp; Verify</h3>
+                <p class="text-sm text-gray-500">Save your settings first, then use these tools to confirm the integration is working.</p>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                {{-- Send Test SMS --}}
+                <div class="border border-gray-200 rounded-lg p-5">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:#e0f2fe;">
+                            <svg class="w-5 h-5" style="color:#0284c7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900 text-sm">Send Test SMS</h4>
+                            <p class="text-xs text-gray-500">Sends a test message to verify your credentials</p>
+                        </div>
+                    </div>
+                    <form action="{{ route('admin.settings.sms.test') }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="test_phone" class="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input type="text" name="test_phone" id="test_phone"
+                                   value="{{ old('test_phone') }}"
+                                   placeholder="e.g. 0244123456"
+                                   class="block w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            @error('test_phone')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                            <p class="text-xs text-gray-400 mt-1">Ghana format: 024XXXXXXX or +233XXXXXXXXX</p>
+                        </div>
+                        <button type="submit" class="w-full py-2 text-sm font-medium text-white rounded-md" style="background:#1e3a5f;">
+                            Send Test Message
+                        </button>
+                    </form>
+                </div>
+
+                {{-- Check Balance --}}
+                <div class="border border-gray-200 rounded-lg p-5">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:#f0fdf4;">
+                            <svg class="w-5 h-5" style="color:#16a34a;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900 text-sm">Check SMS Balance</h4>
+                            <p class="text-xs text-gray-500">Fetch your current credit balance from GiantSMS</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Queries the GiantSMS API to show how many SMS credits remain in your account.
+                    </p>
+                    <form action="{{ route('admin.settings.sms.balance') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="w-full py-2 text-sm font-medium rounded-md border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-colors">
+                            Check Balance
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 </div>
 @endsection

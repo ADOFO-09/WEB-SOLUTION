@@ -63,7 +63,9 @@ class SmsController extends Controller implements HasMiddleware
             'drafts' => SmsMessage::where('status', 'draft')->count(),
         ];
 
-        return view('admin.sms.index', compact('messages', 'stats'));
+        $balanceAlert = $this->buildBalanceAlert();
+
+        return view('admin.sms.index', compact('messages', 'stats', 'balanceAlert'));
     }
 
     public function show(SmsMessage $smsMessage)
@@ -85,12 +87,14 @@ class SmsController extends Controller implements HasMiddleware
         $templates = SmsTemplate::where('is_active', true)->orderBy('name')->get();
         $ministries = Ministry::where('is_active', true)->orderBy('name')->get();
         $memberCount = Member::where('membership_status', 'active')->whereNotNull('phone_primary')->count();
-        
-        $selectedTemplate = $request->has('template_id') 
-            ? SmsTemplate::find($request->template_id) 
+
+        $selectedTemplate = $request->has('template_id')
+            ? SmsTemplate::find($request->template_id)
             : null;
 
-        return view('admin.sms.compose', compact('templates', 'ministries', 'memberCount', 'selectedTemplate'));
+        $balanceAlert = $this->buildBalanceAlert();
+
+        return view('admin.sms.compose', compact('templates', 'ministries', 'memberCount', 'selectedTemplate', 'balanceAlert'));
     }
 
     public function store(Request $request)
@@ -235,6 +239,34 @@ class SmsController extends Controller implements HasMiddleware
     // PRIVATE HELPERS
     // ==========================================
 
+    /**
+     * Build the low-balance alert payload for SMS views.
+     * Returns null when no balance data has been cached yet, or when balance is above threshold.
+     */
+    private function buildBalanceAlert(): ?array
+    {
+        $lastBalance = Setting::get('sms_last_balance');
+
+        if ($lastBalance === null || $lastBalance === '') {
+            return null;
+        }
+
+        $balance   = (float) $lastBalance;
+        $threshold = (int) Setting::get('sms_balance_threshold', 0);
+        $checkedAt = Setting::get('sms_last_balance_at');
+
+        if ($threshold <= 0 || $balance > $threshold) {
+            return null;
+        }
+
+        return [
+            'balance'    => $balance,
+            'threshold'  => $threshold,
+            'checked_at' => $checkedAt,
+            'topup_url'  => Setting::get('sms_topup_url') ?: null,
+        ];
+    }
+
     private function resolveRecipients(array $data): array
     {
         $recipients = [];
@@ -324,8 +356,29 @@ class SmsController extends Controller implements HasMiddleware
 
         $message->update([
             'successful_count' => $successCount,
-            'failed_count' => $failCount,
-            'status' => $failCount === 0 ? 'sent' : ($successCount === 0 ? 'failed' : 'partially_sent'),
+            'failed_count'     => $failCount,
+            'status'           => $failCount === 0 ? 'sent' : ($successCount === 0 ? 'failed' : 'partially_sent'),
         ]);
+
+        $this->cacheBalanceAfterSend($smsService);
+    }
+
+    /**
+     * After a send, silently refresh the cached balance so low-balance
+     * warnings on the SMS pages reflect the current credit level.
+     */
+    private function cacheBalanceAfterSend(?GiantSmsService $smsService): void
+    {
+        if (!$smsService) {
+            return;
+        }
+
+        try {
+            ['balance' => $balance] = $smsService->getBalance();
+            Setting::set('sms_last_balance', (string) $balance, 'sms');
+            Setting::set('sms_last_balance_at', now()->toDateTimeString(), 'sms');
+        } catch (\Exception) {
+            // Non-critical — ignore balance check failures silently
+        }
     }
 }

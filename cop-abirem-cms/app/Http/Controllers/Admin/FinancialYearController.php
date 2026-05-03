@@ -5,9 +5,19 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\FinancialYear;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class FinancialYearController extends Controller
+class FinancialYearController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:finance.view',   only: ['index']),
+            new Middleware('permission:finance.manage', only: ['create', 'store', 'edit', 'update', 'activate', 'close', 'destroy']),
+        ];
+    }
+
     /**
      * Display a listing of all financial years.
      */

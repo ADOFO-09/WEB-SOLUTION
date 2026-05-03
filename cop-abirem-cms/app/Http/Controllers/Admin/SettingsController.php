@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Backup;
 use App\Models\Setting;
+use App\Services\GiantSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Carbon\Carbon;
@@ -115,6 +115,7 @@ class SettingsController extends Controller
             'sms_api_secret' => 'nullable|string|max:255',
             'sms_sender_id' => 'required|string|max:11',
             'sms_balance_threshold' => 'nullable|integer|min:0',
+            'sms_topup_url' => 'nullable|url|max:500',
             'enable_sms_notifications' => 'boolean',
             'sms_birthday_enabled' => 'boolean',
             'sms_birthday_template' => 'nullable|string|max:500',
@@ -128,6 +129,64 @@ class SettingsController extends Controller
         }
 
         return back()->with('success', 'SMS settings updated successfully.');
+    }
+
+    /**
+     * Send a test SMS to verify the configured provider credentials.
+     */
+    public function testSms(Request $request)
+    {
+        $request->validate([
+            'test_phone' => 'required|string|max:20',
+        ]);
+
+        $provider = Setting::get('sms_provider', '');
+
+        if ($provider !== 'giantsms') {
+            return back()->with('sms_test_error', 'Only GiantSMS is supported at this time.');
+        }
+
+        $service = new GiantSmsService();
+
+        if (!$service->isConfigured()) {
+            return back()->with('sms_test_error', 'SMS credentials are not configured. Save your settings first.');
+        }
+
+        $phone = $service->normalizePhone($request->input('test_phone'));
+
+        try {
+            $service->send($phone, 'Test message from COP Abirem CMS. Your SMS integration is working correctly.');
+            return back()->with('sms_test_success', "Test SMS sent successfully to {$phone}.");
+        } catch (\Exception $e) {
+            return back()->with('sms_test_error', 'Send failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Check the current SMS account balance.
+     */
+    public function checkSmsBalance()
+    {
+        $provider = Setting::get('sms_provider', '');
+
+        if ($provider !== 'giantsms') {
+            return back()->with('sms_balance_error', 'Balance check is only supported for GiantSMS.');
+        }
+
+        $service = new GiantSmsService();
+
+        if (!$service->isConfigured()) {
+            return back()->with('sms_balance_error', 'SMS credentials are not configured.');
+        }
+
+        try {
+            ['balance' => $balance] = $service->getBalance();
+            Setting::set('sms_last_balance', (string) $balance, 'sms');
+            Setting::set('sms_last_balance_at', now()->toDateTimeString(), 'sms');
+            return back()->with('sms_balance', number_format($balance, 2));
+        } catch (\Exception $e) {
+            return back()->with('sms_balance_error', 'Balance check failed: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -190,7 +249,7 @@ class SettingsController extends Controller
     /**
      * Create a new database backup.
      */
-    public function createBackup(Request $request)
+    public function createBackup()
     {
         try {
             $filename = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
@@ -208,7 +267,7 @@ class SettingsController extends Controller
             $password = config('database.connections.mysql.password');
 
             // Create backup using mysqldump
-            $command = sprintf(
+            $command = \sprintf(
                 'mysqldump --host=%s --user=%s --password=%s %s > %s',
                 escapeshellarg($host),
                 escapeshellarg($username),
@@ -277,7 +336,7 @@ class SettingsController extends Controller
     /**
      * Restore from a backup file.
      */
-    public function restoreBackup(Request $request, $filename)
+    public function restoreBackup($filename)
     {
         $path = storage_path('app/backups/' . $filename);
 
@@ -293,7 +352,7 @@ class SettingsController extends Controller
             $password = config('database.connections.mysql.password');
 
             // Restore using mysql command
-            $command = sprintf(
+            $command = \sprintf(
                 'mysql --host=%s --user=%s --password=%s %s < %s',
                 escapeshellarg($host),
                 escapeshellarg($username),
@@ -349,7 +408,7 @@ class SettingsController extends Controller
     {
         $units = ['B', 'KB', 'MB', 'GB'];
         $i = 0;
-        while ($bytes >= 1024 && $i < count($units) - 1) {
+        while ($bytes >= 1024 && $i < \count($units) - 1) {
             $bytes /= 1024;
             $i++;
         }
@@ -381,7 +440,7 @@ class SettingsController extends Controller
             $rows = DB::table($tableName)->get();
             foreach ($rows as $row) {
                 $values = collect((array) $row)->map(function ($value) {
-                    if (is_null($value)) return 'NULL';
+                    if (\is_null($value)) return 'NULL';
                     return "'" . addslashes($value) . "'";
                 })->implode(', ');
                 

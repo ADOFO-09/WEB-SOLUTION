@@ -20,6 +20,30 @@
 @endsection
 
 @section('content')
+    {{-- Low Balance Alert --}}
+    @if($balanceAlert)
+    <div class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 flex items-start gap-3">
+        <svg class="w-5 h-5 text-amber-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+        <div class="flex-1">
+            <p class="text-sm font-semibold text-amber-800">Low SMS Balance</p>
+            <p class="text-sm text-amber-700 mt-0.5">
+                Your current SMS credit is <strong>{{ number_format($balanceAlert['balance'], 0) }}</strong>,
+                which is at or below your alert threshold of <strong>{{ number_format($balanceAlert['threshold']) }}</strong>.
+                @if($balanceAlert['checked_at'])
+                    <span class="text-amber-600 text-xs">(checked {{ \Carbon\Carbon::parse($balanceAlert['checked_at'])->diffForHumans() }})</span>
+                @endif
+            </p>
+        </div>
+        <a href="{{ $balanceAlert['topup_url'] ?? route('admin.settings.sms') }}"
+           @if($balanceAlert['topup_url'] ?? false) target="_blank" rel="noopener noreferrer" @endif
+           class="shrink-0 text-xs font-medium text-amber-700 underline hover:text-amber-900">
+            {{ ($balanceAlert['topup_url'] ?? false) ? 'Top up now' : 'SMS Settings' }}
+        </a>
+    </div>
+    @endif
+
     <!-- Statistics -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <div class="bg-white rounded-lg shadow p-4">

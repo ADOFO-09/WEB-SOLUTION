@@ -85,6 +85,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         // SMS Settings
         Route::get('/sms', [SettingsController::class, 'sms'])->name('sms');
         Route::put('/sms', [SettingsController::class, 'updateSms'])->name('sms.update');
+        Route::post('/sms/test', [SettingsController::class, 'testSms'])->name('sms.test');
+        Route::post('/sms/balance', [SettingsController::class, 'checkSmsBalance'])->name('sms.balance');
 
         // System Settings
         Route::get('/system', [SettingsController::class, 'system'])->name('system');

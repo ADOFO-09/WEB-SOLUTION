@@ -143,7 +143,7 @@ class RolePermissionSeeder extends Seeder
             'donations.view', 'donations.create', 'donations.edit', 'donations.delete',
             'pledges.view', 'pledges.create', 'pledges.edit', 'pledges.delete', 'pledges.payments',
             'expenses.view', 'expenses.create', 'expenses.edit',
-            'finance.view', 'finance.receipts',
+            'finance.view', 'finance.manage', 'finance.receipts',
             'receipts.view', 'receipts.issue', 'receipts.print',
 
             // Reports — financial only
