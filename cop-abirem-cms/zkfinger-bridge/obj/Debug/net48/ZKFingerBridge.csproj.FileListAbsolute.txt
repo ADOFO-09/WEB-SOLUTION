@@ -1,0 +1,11 @@
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\bin\Debug\net48\ZKFingerBridge.exe.config
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\bin\Debug\net48\ZKFingerBridge.exe
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\bin\Debug\net48\ZKFingerBridge.pdb
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\obj\Debug\net48\ZKFingerBridge.csproj.AssemblyReference.cache
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\obj\Debug\net48\ZKFingerBridge.GeneratedMSBuildEditorConfig.editorconfig
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\obj\Debug\net48\ZKFingerBridge.AssemblyInfoInputs.cache
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\obj\Debug\net48\ZKFingerBridge.AssemblyInfo.cs
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\obj\Debug\net48\ZKFingerBridge.csproj.CoreCompileInputs.cache
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\obj\Debug\net48\ZKFingerBridge.sourcelink.json
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\obj\Debug\net48\ZKFingerBridge.exe
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\obj\Debug\net48\ZKFingerBridge.pdb

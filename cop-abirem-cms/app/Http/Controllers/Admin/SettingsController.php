@@ -10,7 +10,9 @@ use App\Services\GiantSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class SettingsController extends Controller
@@ -124,6 +126,15 @@ class SettingsController extends Controller
         $validated['enable_sms_notifications'] = $request->boolean('enable_sms_notifications');
         $validated['sms_birthday_enabled'] = $request->boolean('sms_birthday_enabled');
 
+        // Encrypt credentials before storing; skip if blank (preserve existing value)
+        foreach (['sms_api_key', 'sms_api_secret'] as $credKey) {
+            if (empty($validated[$credKey])) {
+                unset($validated[$credKey]);
+            } else {
+                $validated[$credKey] = Crypt::encryptString($validated[$credKey]);
+            }
+        }
+
         foreach ($validated as $key => $value) {
             Setting::set($key, $value, 'sms');
         }
@@ -158,7 +169,8 @@ class SettingsController extends Controller
             $service->send($phone, 'Test message from COP Abirem CMS. Your SMS integration is working correctly.');
             return back()->with('sms_test_success', "Test SMS sent successfully to {$phone}.");
         } catch (\Exception $e) {
-            return back()->with('sms_test_error', 'Send failed: ' . $e->getMessage());
+            Log::error('SMS test send failed: ' . $e->getMessage());
+            return back()->with('sms_test_error', 'Send failed. Please check your SMS settings and try again.');
         }
     }
 
@@ -185,7 +197,8 @@ class SettingsController extends Controller
             Setting::set('sms_last_balance_at', now()->toDateTimeString(), 'sms');
             return back()->with('sms_balance', number_format($balance, 2));
         } catch (\Exception $e) {
-            return back()->with('sms_balance_error', 'Balance check failed: ' . $e->getMessage());
+            Log::error('SMS balance check failed: ' . $e->getMessage());
+            return back()->with('sms_balance_error', 'Balance check failed. Please verify your SMS credentials.');
         }
     }
 
@@ -266,17 +279,23 @@ class SettingsController extends Controller
             $username = config('database.connections.mysql.username');
             $password = config('database.connections.mysql.password');
 
-            // Create backup using mysqldump
-            $command = \sprintf(
-                'mysqldump --host=%s --user=%s --password=%s %s > %s',
+            // Write credentials to a temp file so the password never appears
+            // in the process list (--password on the CLI is visible via /proc).
+            $cnfFile = tempnam(sys_get_temp_dir(), 'mysqldump_cnf_');
+            file_put_contents($cnfFile, "[client]\npassword=" . $password . "\n");
+            chmod($cnfFile, 0600);
+
+            $command = sprintf(
+                'mysqldump --defaults-extra-file=%s --host=%s --user=%s %s > %s',
+                escapeshellarg($cnfFile),
                 escapeshellarg($host),
                 escapeshellarg($username),
-                escapeshellarg($password),
                 escapeshellarg($database),
                 escapeshellarg($path)
             );
 
             exec($command, $output, $returnVar);
+            unlink($cnfFile);
 
             if ($returnVar !== 0) {
                 // Fallback: Create a simple SQL export
@@ -299,7 +318,8 @@ class SettingsController extends Controller
             return back()->with('success', "Backup created successfully: {$filename}");
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Backup failed: ' . $e->getMessage());
+            Log::error('Database backup failed: ' . $e->getMessage());
+            return back()->with('error', 'Backup failed. Please try again or check server logs.');
         }
     }
 
@@ -373,7 +393,8 @@ class SettingsController extends Controller
             return back()->with('success', 'Database restored successfully from backup.');
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Restore failed: ' . $e->getMessage());
+            Log::error('Database restore failed: ' . $e->getMessage());
+            return back()->with('error', 'Restore failed. Please try again or check server logs.');
         }
     }
 
@@ -464,7 +485,8 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Application cache cleared successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to clear cache: ' . $e->getMessage());
+            Log::error('Failed to clear cache: ' . $e->getMessage());
+            return back()->with('error', 'Failed to clear cache. Please try again.');
         }
     }
 
@@ -480,7 +502,8 @@ class SettingsController extends Controller
 
             return back()->with('success', 'Application optimized successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to optimize: ' . $e->getMessage());
+            Log::error('Failed to optimize application: ' . $e->getMessage());
+            return back()->with('error', 'Failed to optimize. Please try again.');
         }
     }
 }

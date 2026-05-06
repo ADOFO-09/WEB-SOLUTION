@@ -230,10 +230,16 @@ class ZKFingerBridge
                 int r2 = ZKFPM_DBIdentify(dbHandle, tmp, cbTmp, out fid, out score);
                 if (fid >= 1_000_000) fid -= 1_000_000;  // resolve t2 offset
 
-                string json = (r2 == 0)
-                    ? $"{{\"type\":\"identify_result\",\"matched\":true,\"member_id\":{fid},\"score\":{score}}}"
-                    : "{\"type\":\"identify_result\",\"matched\":false}";
-                _ = SendAsync(ws, json);
+                if (r2 == 0)
+                {
+                    Console.WriteLine($"[IDENTIFY] MATCHED: member_id={fid} score={score}");
+                    _ = SendAsync(ws, $"{{\"type\":\"identify_result\",\"matched\":true,\"member_id\":{fid},\"score\":{score}}}");
+                }
+                else
+                {
+                    Console.WriteLine($"[IDENTIFY] NO MATCH: ret={r2} scan_size={cbTmp}");
+                    _ = SendAsync(ws, "{\"type\":\"identify_result\",\"matched\":false}");
+                }
             }
 
             Thread.Sleep(200);
@@ -343,26 +349,70 @@ class ZKFingerBridge
     static int LoadMembers(string json)
     {
         int count = 0;
+        int failed = 0;
+        // Track which member IDs are already loaded so a second template (t2) gets the +1M offset
+        var seenIds = new System.Collections.Generic.HashSet<uint>();
+
         foreach (Match obj in Regex.Matches(json, @"\{[^{}]*\}"))
         {
             string o = obj.Value;
-            var idM = Regex.Match(o, @"""id""\s*:\s*(\d+)");
-            var t1M = Regex.Match(o, @"""t1""\s*:\s*""([A-Za-z0-9+/=]+)""");
-            var t2M = Regex.Match(o, @"""t2""\s*:\s*""([A-Za-z0-9+/=]+)""");
-            if (!idM.Success) continue;
 
-            uint id = uint.Parse(idM.Groups[1].Value);
+            // Protocol A (biometric-station): { "id": N, "t1": "...", "t2": "..." }
+            // Protocol B (mark):              { "member_id": N, "template": "..." }
+            var idM  = Regex.Match(o, @"""id""\s*:\s*(\d+)");
+            var midM = Regex.Match(o, @"""member_id""\s*:\s*(\d+)");
+            var t1M  = Regex.Match(o, @"""t1""\s*:\s*""([A-Za-z0-9+/=]+)""");
+            var t2M  = Regex.Match(o, @"""t2""\s*:\s*""([A-Za-z0-9+/=]+)""");
+            var tmM  = Regex.Match(o, @"""template""\s*:\s*""([A-Za-z0-9+/=]+)""");
+
+            var resolvedId = idM.Success ? idM : midM;
+            if (!resolvedId.Success) continue;
+
+            uint id = uint.Parse(resolvedId.Groups[1].Value);
+
+            // Protocol A — explicit t1 field
             if (t1M.Success)
             {
                 (byte[] b, int s) = Base64ToBlob(t1M.Groups[1].Value);
-                if (s > 0) { ZKFPM_DBAdd(dbHandle, id, b, (uint)s); count++; }
+                if (s > 0)
+                {
+                    int r = ZKFPM_DBAdd(dbHandle, id, b, (uint)s);
+                    if (r == 0) { count++; seenIds.Add(id); }
+                    else { failed++; Console.Error.WriteLine($"[WARN] ZKFPM_DBAdd failed id={id} t1: ret={r} size={s}"); }
+                }
+                else { Console.Error.WriteLine($"[WARN] Base64ToBlob failed id={id} t1 b64_len={t1M.Groups[1].Value.Length}"); }
             }
+
+            // Protocol A — explicit t2 field (stored at id + 1M to avoid FID collision)
             if (t2M.Success)
             {
                 (byte[] b, int s) = Base64ToBlob(t2M.Groups[1].Value);
-                if (s > 0) { ZKFPM_DBAdd(dbHandle, id + 1_000_000, b, (uint)s); count++; }
+                if (s > 0)
+                {
+                    int r = ZKFPM_DBAdd(dbHandle, id + 1_000_000, b, (uint)s);
+                    if (r == 0) { count++; }
+                    else { failed++; Console.Error.WriteLine($"[WARN] ZKFPM_DBAdd failed id={id} t2: ret={r} size={s}"); }
+                }
+                else { Console.Error.WriteLine($"[WARN] Base64ToBlob failed id={id} t2 b64_len={t2M.Groups[1].Value.Length}"); }
+            }
+
+            // Protocol B — flat "template" field; second entry for same member gets +1M offset
+            if (tmM.Success)
+            {
+                uint fid = seenIds.Contains(id) ? id + 1_000_000 : id;
+                (byte[] b, int s) = Base64ToBlob(tmM.Groups[1].Value);
+                if (s > 0)
+                {
+                    int r = ZKFPM_DBAdd(dbHandle, fid, b, (uint)s);
+                    if (r == 0) { count++; seenIds.Add(id); }
+                    else { failed++; Console.Error.WriteLine($"[WARN] ZKFPM_DBAdd failed id={id} template: ret={r} size={s}"); }
+                }
+                else { Console.Error.WriteLine($"[WARN] Base64ToBlob failed id={id} template b64_len={tmM.Groups[1].Value.Length}"); }
             }
         }
+
+        if (failed > 0)
+            Console.Error.WriteLine($"[WARN] LoadMembers: {count} loaded, {failed} failed");
         return count;
     }
 

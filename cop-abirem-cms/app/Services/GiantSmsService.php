@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 
 class GiantSmsService
@@ -15,9 +16,21 @@ class GiantSmsService
 
     public function __construct()
     {
-        $this->username = Setting::get('sms_api_key', '');
-        $this->password = Setting::get('sms_api_secret', '');
+        $this->username = $this->decrypt(Setting::get('sms_api_key', ''));
+        $this->password = $this->decrypt(Setting::get('sms_api_secret', ''));
         $this->senderId = Setting::get('sms_sender_id', '');
+    }
+
+    private function decrypt(string $value): string
+    {
+        if (empty($value)) {
+            return $value;
+        }
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Exception) {
+            return $value; // plain-text fallback for values not yet encrypted
+        }
     }
 
     /**
@@ -28,20 +41,37 @@ class GiantSmsService
      */
     public function send(string $to, string $message): array
     {
-        $to = $this->normalizePhone($to);
+        $to      = $this->normalizePhone($to);
+        $message = $this->normalizeMessage($message);
 
-        $response = Http::withBasicAuth($this->username, $this->password)
+        $payload = [
+            'username' => $this->username,
+            'password' => $this->password,
+            'from'     => $this->senderId,
+            'to'       => $to,
+            'msg'      => $message,
+        ];
+
+        \Illuminate\Support\Facades\Log::debug('GiantSMS single send', [
+            'to'           => $to,
+            'message_len'  => \strlen($message),
+            'sender_id'    => $this->senderId,
+        ]);
+
+        $response = Http::asForm()
             ->timeout(15)
-            ->post(self::BASE_URL . '/send', [
-                'from' => $this->senderId,
-                'to'   => $to,
-                'msg'  => $message,
-            ]);
+            ->post(self::BASE_URL . '/send', $payload);
 
         $data = $response->json() ?? [];
 
-        if (!$response->successful() || ($data['status'] ?? false) === false) {
-            throw new \RuntimeException($data['message'] ?? "GiantSMS HTTP {$response->status()}");
+        \Illuminate\Support\Facades\Log::debug('GiantSMS single response', [
+            'status' => $response->status(),
+            'body'   => $data,
+        ]);
+
+        if (!$response->successful() || (isset($data['status']) && $data['status'] === false)) {
+            $err = $data['message'] ?? ('GiantSMS HTTP ' . $response->status() . ': ' . $response->body());
+            throw new \RuntimeException($err);
         }
 
         return $data;
@@ -57,19 +87,36 @@ class GiantSmsService
     public function sendBulk(array $recipients, string $message): array
     {
         $recipients = array_map([$this, 'normalizePhone'], $recipients);
+        $message    = $this->normalizeMessage($message);
 
-        $response = Http::withBasicAuth($this->username, $this->password)
+        $payload = [
+            'username' => $this->username,
+            'password' => $this->password,
+            'from'     => $this->senderId,
+            'to'       => implode(',', $recipients),
+            'msg'      => $message,
+        ];
+
+        \Illuminate\Support\Facades\Log::debug('GiantSMS bulk send', [
+            'recipients'  => \count($recipients),
+            'message_len' => \strlen($message),
+            'sender_id'   => $this->senderId,
+        ]);
+
+        $response = Http::asForm()
             ->timeout(30)
-            ->post(self::BASE_URL . '/send', [
-                'from'       => $this->senderId,
-                'recipients' => $recipients,
-                'msg'        => $message,
-            ]);
+            ->post(self::BASE_URL . '/send', $payload);
 
         $data = $response->json() ?? [];
 
-        if (!$response->successful() || ($data['status'] ?? false) === false) {
-            throw new \RuntimeException($data['message'] ?? "GiantSMS HTTP {$response->status()}");
+        \Illuminate\Support\Facades\Log::debug('GiantSMS bulk response', [
+            'status' => $response->status(),
+            'body'   => $data,
+        ]);
+
+        if (!$response->successful() || (isset($data['status']) && $data['status'] === false)) {
+            $err = $data['message'] ?? ('GiantSMS HTTP ' . $response->status() . ': ' . $response->body());
+            throw new \RuntimeException($err);
         }
 
         return $data;
@@ -108,6 +155,12 @@ class GiantSmsService
     public function isConfigured(): bool
     {
         return !empty($this->username) && !empty($this->password) && !empty($this->senderId);
+    }
+
+    private function normalizeMessage(string $message): string
+    {
+        $message = str_replace(["\r\n", "\r"], "\n", $message);
+        return trim($message);
     }
 
     /**

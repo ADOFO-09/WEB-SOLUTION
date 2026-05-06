@@ -46,6 +46,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::get('/{member}/biometric', [BiometricController::class, 'showEnrollment'])->name('biometric');
         Route::post('/{member}/biometric/enroll', [BiometricController::class, 'enroll'])->name('biometric.enroll');
         Route::delete('/{member}/biometric', [BiometricController::class, 'remove'])->name('biometric.remove');
+
+        // Authenticated photo download (private disk)
+        Route::get('/{member}/photo', [MemberController::class, 'photo'])->name('photo');
     });
 
     // =========================================

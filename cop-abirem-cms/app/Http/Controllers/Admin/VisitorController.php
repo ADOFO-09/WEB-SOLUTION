@@ -10,6 +10,7 @@ use App\Models\FollowUpLog;
 use App\Models\ServiceType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
@@ -68,9 +69,11 @@ class VisitorController extends Controller implements HasMiddleware
             $query->where('first_visit_date', '<=', $request->date_to);
         }
 
-        // Sorting
-        $sortField = $request->get('sort', 'first_visit_date');
-        $sortDirection = $request->get('direction', 'desc');
+        // Sorting — whitelist columns to prevent column injection
+        $allowedSorts = ['first_name', 'last_name', 'first_visit_date', 'created_at', 'follow_up_status'];
+        $allowedDirections = ['asc', 'desc'];
+        $sortField     = in_array($request->get('sort'), $allowedSorts) ? $request->get('sort') : 'first_visit_date';
+        $sortDirection = in_array($request->get('direction'), $allowedDirections) ? $request->get('direction') : 'desc';
         $query->orderBy($sortField, $sortDirection);
 
         $visitors = $query->paginate(15)->withQueryString();
@@ -278,8 +281,9 @@ class VisitorController extends Controller implements HasMiddleware
                 ->with('success', 'Visitor successfully converted to member.');
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Failed to convert visitor: ' . $e->getMessage());
             return back()->withInput()
-                ->with('error', 'Failed to convert visitor: ' . $e->getMessage());
+                ->with('error', 'Failed to convert visitor. Please try again.');
         }
     }
 

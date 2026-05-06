@@ -8,6 +8,7 @@ use App\Models\Ministry;
 use App\Models\FamilyRelationship;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -63,9 +64,11 @@ class MemberController extends Controller implements HasMiddleware
             $query->byMaritalStatus($request->marital_status);
         }
 
-        // Sorting
-        $sortField = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
+        // Sorting — whitelist columns to prevent column injection
+        $allowedSorts = ['first_name', 'last_name', 'date_joined', 'created_at', 'membership_status', 'gender'];
+        $allowedDirections = ['asc', 'desc'];
+        $sortField     = in_array($request->get('sort'), $allowedSorts) ? $request->get('sort') : 'created_at';
+        $sortDirection = in_array($request->get('direction'), $allowedDirections) ? $request->get('direction') : 'desc';
         $query->orderBy($sortField, $sortDirection);
 
         $members = $query->paginate(15)->withQueryString();
@@ -137,7 +140,7 @@ class MemberController extends Controller implements HasMiddleware
         try {
             // Handle photo upload
             if ($request->hasFile('photo')) {
-                $validated['photo_path'] = $request->file('photo')->store('members/photos', 'public');
+                $validated['photo_path'] = $request->file('photo')->store('members/photos', 'local');
             }
 
             // Handle biometric enrollment during creation
@@ -178,8 +181,9 @@ class MemberController extends Controller implements HasMiddleware
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Failed to register member: ' . $e->getMessage());
             return back()->withInput()
-                ->with('error', 'Failed to register member: ' . $e->getMessage());
+                ->with('error', 'Failed to register member. Please try again.');
         }
     }
 
@@ -263,9 +267,9 @@ class MemberController extends Controller implements HasMiddleware
             if ($request->hasFile('photo')) {
                 // Delete old photo
                 if ($member->photo_path) {
-                    Storage::disk('public')->delete($member->photo_path);
+                    Storage::disk('local')->delete($member->photo_path);
                 }
-                $validated['photo_path'] = $request->file('photo')->store('members/photos', 'public');
+                $validated['photo_path'] = $request->file('photo')->store('members/photos', 'local');
             }
 
             $validated['updated_by'] = auth()->id();
@@ -307,8 +311,9 @@ class MemberController extends Controller implements HasMiddleware
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Failed to update member: ' . $e->getMessage());
             return back()->withInput()
-                ->with('error', 'Failed to update member: ' . $e->getMessage());
+                ->with('error', 'Failed to update member. Please try again.');
         }
     }
 
@@ -322,7 +327,8 @@ class MemberController extends Controller implements HasMiddleware
             return redirect()->route('admin.members.index')
                 ->with('success', 'Member deleted successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to delete member: ' . $e->getMessage());
+            Log::error('Failed to delete member: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete member. Please try again.');
         }
     }
 
@@ -502,5 +508,20 @@ class MemberController extends Controller implements HasMiddleware
             ->get();
 
         return view('admin.members.family', compact('member', 'availableMembers'));
+    }
+
+    /**
+     * Serve member photo from private disk (authenticated).
+     */
+    public function photo(Member $member)
+    {
+        if (!$member->photo_path || !Storage::disk('local')->exists($member->photo_path)) {
+            abort(404);
+        }
+
+        return response()->file(
+            Storage::disk('local')->path($member->photo_path),
+            ['Cache-Control' => 'private, max-age=3600']
+        );
     }
 }

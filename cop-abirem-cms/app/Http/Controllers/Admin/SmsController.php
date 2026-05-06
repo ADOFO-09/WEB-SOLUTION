@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\SmsMessage;
 use App\Models\SmsTemplate;
-use App\Models\SmsRecipient;
 use App\Models\Member;
 use App\Models\Ministry;
 use App\Services\GiantSmsService;
@@ -327,7 +326,7 @@ class SmsController extends Controller implements HasMiddleware
         ]);
 
         $successCount = 0;
-        $failCount = 0;
+        $failCount    = 0;
 
         $provider   = Setting::get('sms_provider', '');
         $smsService = $provider === 'giantsms' ? new GiantSmsService() : null;

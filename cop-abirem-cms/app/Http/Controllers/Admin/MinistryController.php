@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ministry;
 use App\Models\Member;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -161,7 +162,8 @@ class MinistryController extends Controller implements HasMiddleware
             return redirect()->route('admin.ministries.index')
                 ->with('success', 'Ministry deleted successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to delete ministry: ' . $e->getMessage());
+            Log::error('Failed to delete ministry: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete ministry. Please try again.');
         }
     }
 

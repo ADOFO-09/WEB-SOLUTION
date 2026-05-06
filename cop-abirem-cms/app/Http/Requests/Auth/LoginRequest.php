@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\LoginHistory;
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -43,6 +45,17 @@ class LoginRequest extends FormRequest
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
+
+            $user = User::where('email', $this->string('email'))->first();
+            if ($user) {
+                LoginHistory::create([
+                    'user_id'        => $user->id,
+                    'ip_address'     => $this->ip(),
+                    'user_agent'     => $this->userAgent(),
+                    'status'         => 'failed',
+                    'failure_reason' => 'Invalid credentials',
+                ]);
+            }
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),

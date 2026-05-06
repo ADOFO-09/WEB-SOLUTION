@@ -26,7 +26,7 @@ class User extends Authenticatable
         'is_active',
         'last_login_at',
         'last_login_ip',
-        'must_change_password',
+        // must_change_password intentionally excluded — set only via explicit assignment
     ];
 
     /**

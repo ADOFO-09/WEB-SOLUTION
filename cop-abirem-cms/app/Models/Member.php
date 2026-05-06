@@ -53,11 +53,13 @@ class Member extends Model
     ];
 
     protected $casts = [
-        'date_of_birth'       => 'date',
-        'date_joined'         => 'date',
-        'baptism_date'        => 'date',
-        'biometric_enrolled'  => 'boolean',
-        'biometric_enrolled_at' => 'datetime',
+        'date_of_birth'          => 'date',
+        'date_joined'            => 'date',
+        'baptism_date'           => 'date',
+        'biometric_enrolled'     => 'boolean',
+        'biometric_enrolled_at'  => 'datetime',
+        'fingerprint_template_1' => 'encrypted',
+        'fingerprint_template_2' => 'encrypted',
     ];
 
     protected $appends = ['full_name', 'age'];
@@ -85,7 +87,7 @@ class Member extends Model
     public function getPhotoUrlAttribute(): string
     {
         if ($this->photo_path) {
-            return asset('storage/' . $this->photo_path);
+            return route('admin.members.photo', $this->id);
         }
         return asset('images/default-avatar.png');
     }
