@@ -8,6 +8,7 @@ use App\Models\LoginHistory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\RoleHelper;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -59,30 +60,6 @@ class AuthenticatedSessionController extends Controller
      */
     protected function redirectPathForRole(): string
     {
-        $user = auth()->user();
-        $roleSlug = $user->role->slug ?? null;
-
-        switch ($roleSlug) {
-            case 'admin':
-                return route('admin.dashboard');
-
-            case 'elder':
-                return route('admin.elder.dashboard');
-
-            case 'secretary':
-                return route('admin.dashboard');
-
-            case 'finance':
-                return route('admin.finance.dashboard');
-
-            case 'ministry_leader':
-                return route('admin.ministry.dashboard');
-
-            case 'member':
-                return route('member.dashboard');
-
-            default:
-                return route('admin.dashboard');
-        }
+        return RoleHelper::getDashboardUrl(auth()->user());
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\MinistryController;
 use App\Http\Controllers\Admin\Roles\ElderDashboardController;
 use App\Http\Controllers\Admin\Roles\FinanceDashboardController;
 use App\Http\Controllers\Admin\Roles\MinistryDashboardController;
@@ -16,6 +17,12 @@ use App\Http\Controllers\Admin\Roles\SecretaryDashboardController;
 
 Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->group(function () {
     
+    // ==========================================
+    // MINISTRIES
+    // ==========================================
+    Route::resource('ministries', MinistryController::class);
+    Route::match(['get', 'post', 'delete'], 'ministries/{ministry}/members', [MinistryController::class, 'members'])->name('ministries.members');
+
     // ==========================================
     // PRESIDING ELDER ROUTES
     // ==========================================

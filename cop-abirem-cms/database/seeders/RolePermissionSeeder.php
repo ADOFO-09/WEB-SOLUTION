@@ -78,8 +78,8 @@ class RolePermissionSeeder extends Seeder
             'sms.view', 'sms.send', 'sms.bulk', 'sms.templates',
             'announcements.view', 'announcements.manage',
 
-            // Ministries — view all
-            'ministries.view',
+            // Ministries — full CRUD
+            'ministries.view', 'ministries.create', 'ministries.edit', 'ministries.delete',
 
             // Reports — full
             'reports.view', 'reports.generate', 'reports.export',
@@ -118,8 +118,8 @@ class RolePermissionSeeder extends Seeder
             'sms.view', 'sms.send', 'sms.bulk', 'sms.templates',
             'announcements.view',
 
-            // Ministries — view only
-            'ministries.view',
+            // Ministries — create & edit, no delete
+            'ministries.view', 'ministries.create', 'ministries.edit',
 
             // Reports — membership & attendance
             'reports.view', 'reports.generate', 'reports.export',

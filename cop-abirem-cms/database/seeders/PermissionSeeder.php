@@ -149,6 +149,9 @@ class PermissionSeeder extends Seeder
 
             // Ministries
             ['name' => 'View All Ministries', 'slug' => 'ministries.view', 'module' => 'ministries', 'description' => 'View all ministry groups'],
+            ['name' => 'Create Ministries', 'slug' => 'ministries.create', 'module' => 'ministries', 'description' => 'Create new ministry groups'],
+            ['name' => 'Edit Ministries', 'slug' => 'ministries.edit', 'module' => 'ministries', 'description' => 'Edit ministry groups and manage their members'],
+            ['name' => 'Delete Ministries', 'slug' => 'ministries.delete', 'module' => 'ministries', 'description' => 'Delete ministry groups'],
             ['name' => 'Manage Ministries', 'slug' => 'ministries.manage', 'module' => 'ministries', 'description' => 'Create, edit, delete ministry groups'],
 
             // Ministry Leader — own ministry only
