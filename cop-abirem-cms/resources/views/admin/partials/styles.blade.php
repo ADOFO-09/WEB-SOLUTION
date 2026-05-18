@@ -946,7 +946,7 @@
     @media print {
         .sidebar,
         .top-nav,
-        .page-header .btn,
+        .page-header,
         .mobile-menu-btn,
         [x-data],
         nav[aria-label="pagination"] {
@@ -955,6 +955,7 @@
 
         .main-content {
             margin-left: 0 !important;
+            min-height: 0 !important;
         }
 
         .content-area {

@@ -44,8 +44,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
 
         // Biometric enrollment
         Route::get('/{member}/biometric', [BiometricController::class, 'showEnrollment'])->name('biometric');
+        Route::get('/{member}/biometric/enrolled-templates', [BiometricController::class, 'enrolledTemplates'])->name('biometric.enrolled-templates');
         Route::post('/{member}/biometric/enroll', [BiometricController::class, 'enroll'])->name('biometric.enroll');
         Route::delete('/{member}/biometric', [BiometricController::class, 'remove'])->name('biometric.remove');
+
+        // Bridge installer download (admin only)
+        Route::get('/biometric/download-bridge', [BiometricController::class, 'downloadBridge'])->name('biometric.download-bridge');
 
         // Authenticated photo download (private disk)
         Route::get('/{member}/photo', [MemberController::class, 'photo'])->name('photo');

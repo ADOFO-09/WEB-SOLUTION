@@ -32,6 +32,94 @@ class ExpenseLedgerController extends Controller
         $month = (int) $request->get('month', now()->month);
         $year  = (int) $request->get('year', now()->year);
 
+        $data    = $this->buildLedger($month, $year);
+        $months  = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $months[$m] = Carbon::createFromDate($year, $m, 1)->format('F');
+        }
+
+        return view('admin.reports.expense-ledger', array_merge($data, compact('month', 'year', 'months')));
+    }
+
+    public function export(Request $request)
+    {
+        $month = (int) $request->get('month', now()->month);
+        $year  = (int) $request->get('year', now()->year);
+        $label = \Carbon\Carbon::createFromDate($year, $month, 1)->format('F_Y');
+
+        $data     = $this->buildLedger($month, $year);
+        $columns  = ['transport', 'utilities', 'welfare', 'cleaning', 'maintenance', 'remittance', 'others'];
+        $colLabels = ['TRANSPORT', 'UTILITIES', 'WELFARE', 'CLEANING', 'MAINT.', 'REMIT.', 'OTHERS'];
+
+        $filename = "Expense_Ledger_{$label}.csv";
+        $headers  = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($data, $columns, $colLabels, $month, $year) {
+            $fh = fopen('php://output', 'w');
+            fprintf($fh, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM for Excel
+
+            $monthLabel = \Carbon\Carbon::createFromDate($year, $month, 1)->format('F Y');
+            fputcsv($fh, ["COP ABIREM — Expense Ledger — {$monthLabel}"]);
+            fputcsv($fh, []);
+
+            fputcsv($fh, array_merge(['DATE', 'PARTICULARS'], $colLabels, ['TOTAL']));
+
+            foreach ($data['groupedEntries'] as $dateKey => $entries) {
+                $count   = $entries->count();
+                $isMulti = $count > 1;
+                $dateLabel = \Carbon\Carbon::parse($dateKey)->format('d/m/Y');
+
+                foreach ($entries as $i => $entry) {
+                    $rowTotal = 0;
+                    foreach ($columns as $col) $rowTotal += $entry[$col];
+                    $isVoided = ($entry['ledger_status'] ?? 'active') === 'voided';
+                    $particular = $entry['particular'];
+                    if ($isVoided) $particular .= ' [VOID]';
+                    if ($entry['is_adjustment']) $particular .= ' [ADJ]';
+
+                    $row = [$i === 0 ? $dateLabel : '', $particular];
+                    foreach ($columns as $col) {
+                        $row[] = $entry[$col] > 0 ? number_format($entry[$col], 2) : '';
+                    }
+                    $row[] = $isMulti ? '' : number_format($rowTotal, 2);
+                    fputcsv($fh, $row);
+                }
+
+                if ($isMulti) {
+                    $dayCols = [];
+                    foreach ($columns as $col) {
+                        $dayCols[$col] = $entries->sum($col);
+                    }
+                    $dayTotal = array_sum($dayCols);
+                    $row = ['', 'Day Total'];
+                    foreach ($columns as $col) {
+                        $row[] = $dayCols[$col] > 0 ? number_format($dayCols[$col], 2) : '';
+                    }
+                    $row[] = number_format($dayTotal, 2);
+                    fputcsv($fh, $row);
+                }
+            }
+
+            $t = $data['totals'];
+            fputcsv($fh, []);
+            $row = ['', 'MONTHLY TOTAL'];
+            foreach ($columns as $col) {
+                $row[] = number_format($t[$col], 2);
+            }
+            $row[] = number_format($t['grand_total'], 2);
+            fputcsv($fh, $row);
+
+            fclose($fh);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function buildLedger(int $month, int $year): array
+    {
         $start = Carbon::createFromDate($year, $month, 1)->startOfMonth();
         $end   = Carbon::createFromDate($year, $month, 1)->endOfMonth();
 
@@ -61,7 +149,6 @@ class ExpenseLedgerController extends Controller
             ];
         });
 
-        // Sort then group by date
         $groupedEntries = $ledgerEntries
             ->sortBy('date')
             ->groupBy(fn($e) => Carbon::parse($e['date'])->format('Y-m-d'));
@@ -73,13 +160,6 @@ class ExpenseLedgerController extends Controller
         }
         $totals['grand_total'] = array_sum($totals);
 
-        $months = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $months[$m] = Carbon::createFromDate($year, $m, 1)->format('F');
-        }
-
-        return view('admin.reports.expense-ledger', compact(
-            'groupedEntries', 'totals', 'month', 'year', 'months', 'columns'
-        ));
+        return compact('groupedEntries', 'totals', 'columns');
     }
 }

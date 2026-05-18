@@ -237,8 +237,11 @@ class ZKFingerBridge
                 }
                 else
                 {
-                    Console.WriteLine($"[IDENTIFY] NO MATCH: ret={r2} scan_size={cbTmp}");
-                    _ = SendAsync(ws, "{\"type\":\"identify_result\",\"matched\":false}");
+                    // No match = fingerprint is unique. Return the template so the
+                    // enrollment page can save it without requiring a second scan.
+                    string b64 = BlobToBase64(copy, cbTmp);
+                    Console.WriteLine($"[IDENTIFY] NO MATCH (unique): ret={r2} scan_size={cbTmp}");
+                    _ = SendAsync(ws, $"{{\"type\":\"identify_result\",\"matched\":false,\"template\":\"{b64}\"}}");
                 }
             }
 

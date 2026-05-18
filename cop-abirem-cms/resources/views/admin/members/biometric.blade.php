@@ -114,9 +114,42 @@
             </button>
         </div>
 
-        {{-- Bridge connection notice --}}
+        {{-- Bridge connection notice (replaced dynamically by JS) --}}
         <div id="test-mode-notice" class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700 mb-4">
-            <strong>Connecting to scanner bridge…</strong> Make sure <code>run-bridge.bat</code> is running as Administrator.
+            <strong>Connecting to scanner bridge…</strong> Please wait.
+        </div>
+
+        {{-- Not-installed notice (shown when bridge cannot connect) --}}
+        <div id="bridge-not-installed" class="hidden mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div class="flex-1">
+                    <p class="text-sm font-semibold text-blue-800">Scanner bridge not detected on this computer</p>
+                    <p class="text-sm text-blue-700 mt-1">
+                        The fingerprint scanner bridge needs to be installed once on this computer.
+                        Download the setup package, extract it, and run <strong>install-service.bat</strong> as Administrator.
+                        After that, it starts automatically every time this computer boots — no further action needed.
+                    </p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <a href="{{ route('admin.members.biometric.download-bridge') }}"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Download Bridge Setup
+                        </a>
+                        <button onclick="retryBridgeConnect()"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-blue-300 text-blue-700 text-xs font-semibold rounded-lg hover:bg-blue-100 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            I've installed it — Retry
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         {{-- Saving indicator (shown while saving) --}}
@@ -167,13 +200,28 @@
 </div>
 
 <script>
-const ENROLL_URL = "{{ route('admin.members.biometric.enroll', $member) }}";
-const CSRF_TOKEN = "{{ csrf_token() }}";
+const ENROLL_URL            = "{{ route('admin.members.biometric.enroll', $member) }}";
+const ENROLLED_TEMPLATES_URL = "{{ route('admin.members.biometric.enrolled-templates', $member) }}";
+const CSRF_TOKEN            = "{{ csrf_token() }}";
 
 let capturedTemplate = null;
-let ws = null;
-let bridgeConnected = false;
-let saving = false;
+let ws               = null;
+let bridgeConnected  = false;
+let saving           = false;
+let otherMembers     = [];   // enrolled members (excluding this one) — for duplicate check
+let usingIdentify    = false; // true when bridge is in start_identify mode
+
+// ── Boot: load other members, then connect bridge ─────────────────────────
+async function init() {
+    try {
+        const res  = await fetch(ENROLLED_TEMPLATES_URL, { headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        otherMembers = data.members || [];
+    } catch (_) {
+        otherMembers = [];
+    }
+    connectBridge();
+}
 
 // ── WebSocket bridge ───────────────────────────────────────────────────────
 function connectBridge() {
@@ -184,30 +232,62 @@ function connectBridge() {
             bridgeConnected = true;
             document.getElementById('test-mode-notice').style.display = 'none';
             document.getElementById('btn-retry').style.display = 'none';
-            // Auto-start capture immediately — user just needs to place finger
-            startCapture();
+
+            if (otherMembers.length > 0) {
+                // Run identify first — catches duplicates AND returns the template on no-match
+                usingIdentify = true;
+                ws.send(JSON.stringify({
+                    action: 'start_identify',
+                    members: otherMembers.map(m => ({ id: m.id, t1: m.t1, t2: m.t2 || null }))
+                }));
+                setStatus('Place your finger on the scanner', 'Checking for duplicate fingerprints…', 'scan');
+            } else {
+                // No other enrolled members — straight capture
+                usingIdentify = false;
+                startCapture();
+            }
         };
 
-        ws.onclose = () => {
-            bridgeConnected = false;
-            ws = null;
-            if (!saving) startSimulationMode();
-        };
-
-        ws.onerror = () => {
-            bridgeConnected = false;
-            ws = null;
-            startSimulationMode();
-        };
+        ws.onclose = () => { bridgeConnected = false; ws = null; if (!saving) startSimulationMode(); };
+        ws.onerror = () => { bridgeConnected = false; ws = null; startSimulationMode(); };
 
         ws.onmessage = (e) => {
-            let data;
-            try { data = JSON.parse(e.data); } catch (_) { return; }
-            if (data.type === 'capture_result') {
-                if (data.success) {
-                    onCaptureSuccess(data.template);
+            let d;
+            try { d = JSON.parse(e.data); } catch (_) { return; }
+
+            if (d.type === 'ready') {
+                // Bridge loaded templates and is ready — wait for finger
+                setStatus('Place your finger on the scanner',
+                    `Checking against ${d.count} enrolled member fingerprint(s)…`, 'scan');
+
+            } else if (d.type === 'identify_result') {
+                if (d.matched) {
+                    // Finger already belongs to another member
+                    const match = otherMembers.find(m => m.id === d.member_id);
+                    const name  = match ? match.name : 'another member';
+                    onDuplicateDetected(name);
+                } else if (d.template) {
+                    // Recompiled bridge: returns template on no-match — save in one scan
+                    onCaptureSuccess(d.template);
                 } else {
-                    onCaptureError(data.message || 'Capture failed. Try again.');
+                    // Current bridge: no template returned on no-match — stop identify mode
+                    // and fall through to plain capture so the finger is actually stored
+                    usingIdentify = false;
+                    clearError();
+                    setStatus('Fingerprint is unique!',
+                        'Please place the same finger on the scanner once more to enroll it…', 'scan');
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ action: 'stop_identify' }));
+                    }
+                    setTimeout(() => startCapture(), 400);
+                }
+
+            } else if (d.type === 'capture_result') {
+                // Plain capture mode (no other enrolled members)
+                if (d.success) {
+                    onCaptureSuccess(d.template);
+                } else {
+                    onCaptureError(d.message || 'Capture failed. Try again.');
                 }
             }
         };
@@ -216,13 +296,18 @@ function connectBridge() {
     }
 }
 
-// ── Start a capture request ────────────────────────────────────────────────
-function startCapture() {
-    if (saving) return;
-    capturedTemplate = null;
+// ── Clear error / saving UI ────────────────────────────────────────────────
+function clearError() {
     document.getElementById('saving-indicator').classList.add('hidden');
     document.getElementById('error-msg').classList.add('hidden');
     document.getElementById('btn-retry').style.display = 'none';
+}
+
+// ── Start a plain capture ──────────────────────────────────────────────────
+function startCapture() {
+    if (saving) return;
+    capturedTemplate = null;
+    clearError();
 
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ action: 'capture' }));
@@ -230,24 +315,40 @@ function startCapture() {
     }
 }
 
-// ── Simulation fallback ────────────────────────────────────────────────────
-function startSimulationMode() {
-    document.getElementById('test-mode-notice').innerHTML =
-        '<strong>No scanner bridge detected.</strong> Running in simulation mode — a test template will be used. ' +
-        'Start <code>run-bridge.bat</code> as Administrator and refresh the page to use the real scanner.';
-    document.getElementById('test-mode-notice').style.display = '';
-    setStatus('Simulation mode', 'Click Retry to simulate a capture', 'idle');
-    document.getElementById('btn-retry').style.display = '';
-    document.getElementById('btn-retry').textContent = 'Simulate Capture';
-    document.getElementById('btn-retry').onclick = runSimulation;
+// ── Retry after duplicate/error ────────────────────────────────────────────
+function retryCapture() {
+    if (saving) return;
+    capturedTemplate = null;
+    clearError();
+
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+    if (usingIdentify) {
+        // Re-enter identify mode so the next scan is checked for duplicates again
+        ws.send(JSON.stringify({
+            action: 'start_identify',
+            members: otherMembers.map(m => ({ id: m.id, t1: m.t1, t2: m.t2 || null }))
+        }));
+        setStatus('Place your finger on the scanner', 'Checking for duplicate fingerprints…', 'scan');
+    } else {
+        startCapture();
+    }
 }
 
-async function runSimulation() {
-    document.getElementById('btn-retry').style.display = 'none';
-    setStatus('Simulating scan…', 'Please wait', 'scan');
-    await new Promise(r => setTimeout(r, 1500));
-    const simTemplate = btoa('SIM_FP_' + Date.now() + '_' + Math.random().toString(36).slice(2));
-    onCaptureSuccess(simTemplate);
+// ── Bridge not installed / unreachable ─────────────────────────────────────
+function startSimulationMode() {
+    document.getElementById('test-mode-notice').style.display = 'none';
+    document.getElementById('bridge-not-installed').classList.remove('hidden');
+    setStatus('Scanner bridge not running', 'Install the bridge on this computer to enable scanning', 'idle');
+}
+
+function retryBridgeConnect() {
+    document.getElementById('bridge-not-installed').classList.add('hidden');
+    document.getElementById('test-mode-notice').style.display = '';
+    document.getElementById('test-mode-notice').innerHTML = '<strong>Reconnecting…</strong> Please wait.';
+    setStatus('Connecting to scanner…', 'Please wait', 'idle');
+    // Small delay then retry
+    setTimeout(() => { ws = null; bridgeConnected = false; connectBridge(); }, 800);
 }
 
 // ── UI helpers ─────────────────────────────────────────────────────────────
@@ -270,17 +371,28 @@ function showToast(msg) {
     document.getElementById('success-toast-msg').textContent = msg;
     toast.style.display = 'flex';
     toast.style.opacity = '1';
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => { toast.style.display = 'none'; }, 400);
-    }, 3500);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => { toast.style.display = 'none'; }, 400); }, 3500);
 }
 
-// ── Capture result handlers ────────────────────────────────────────────────
+// ── Result handlers ────────────────────────────────────────────────────────
 function onCaptureSuccess(template) {
+    if (!template) {
+        onCaptureError('No fingerprint data received from scanner. Please try again.');
+        return;
+    }
     capturedTemplate = template;
     setStatus('Fingerprint captured!', 'Saving to database…', 'success');
     saveFingerprint();
+}
+
+function onDuplicateDetected(memberName) {
+    setStatus('Duplicate fingerprint', 'Use a different finger and try again', 'error');
+    const el = document.getElementById('error-msg');
+    el.textContent = `This fingerprint is already enrolled for ${memberName}. Each person must use their own unique finger.`;
+    el.classList.remove('hidden');
+    document.getElementById('btn-retry').style.display = '';
+    document.getElementById('btn-retry').textContent = 'Try a Different Finger';
+    document.getElementById('btn-retry').onclick = retryCapture;
 }
 
 function onCaptureError(msg) {
@@ -288,10 +400,9 @@ function onCaptureError(msg) {
     const el = document.getElementById('error-msg');
     el.textContent = msg;
     el.classList.remove('hidden');
-    // Show retry button — do NOT auto-retry, let admin read the error first
     document.getElementById('btn-retry').style.display = '';
     document.getElementById('btn-retry').textContent = 'Retry Capture';
-    document.getElementById('btn-retry').onclick = startCapture;
+    document.getElementById('btn-retry').onclick = retryCapture;
 }
 
 // ── Save to server ─────────────────────────────────────────────────────────
@@ -306,15 +417,8 @@ async function saveFingerprint() {
     try {
         const res = await fetch(ENROLL_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': CSRF_TOKEN,
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                fingerprint_template: capturedTemplate,
-                finger_index: fingerIndex,
-            }),
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
+            body: JSON.stringify({ fingerprint_template: capturedTemplate, finger_index: fingerIndex }),
         });
 
         const rawText = await res.text();
@@ -339,7 +443,7 @@ async function saveFingerprint() {
 }
 
 // ── Boot ───────────────────────────────────────────────────────────────────
-connectBridge();
+init();
 </script>
 @endpush
 @endsection

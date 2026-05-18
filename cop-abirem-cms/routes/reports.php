@@ -42,6 +42,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
 
         // Ledger Views
         Route::get('/income-ledger', [IncomeLedgerController::class, 'index'])->name('income-ledger');
+        Route::get('/income-ledger/export', [IncomeLedgerController::class, 'export'])->name('income-ledger.export');
         Route::get('/expense-ledger', [ExpenseLedgerController::class, 'index'])->name('expense-ledger');
+        Route::get('/expense-ledger/export', [ExpenseLedgerController::class, 'export'])->name('expense-ledger.export');
     });
 });

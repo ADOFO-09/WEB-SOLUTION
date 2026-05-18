@@ -11,19 +11,27 @@
             <h1 style="font-size:1.5rem;font-weight:700;color:#1e3a5f;">Expense Ledger</h1>
             <p style="color:#64748b;">{{ \Carbon\Carbon::createFromDate($year, $month, 1)->format('F Y') }}</p>
         </div>
-        <form method="GET" style="display:flex;gap:.5rem;align-items:center;">
-            <select name="month" class="form-select" style="width:auto;">
-                @foreach($months as $num => $name)
-                <option value="{{ $num }}" {{ $month == $num ? 'selected' : '' }}>{{ $name }}</option>
-                @endforeach
-            </select>
-            <select name="year" class="form-select" style="width:auto;">
-                @for($y = now()->year; $y >= now()->year - 5; $y--)
-                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                @endfor
-            </select>
-            <button type="submit" class="btn btn-primary">View</button>
-        </form>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+            <form method="GET" style="display:flex;gap:.5rem;align-items:center;">
+                <select name="month" class="form-select" style="width:auto;">
+                    @foreach($months as $num => $name)
+                    <option value="{{ $num }}" {{ $month == $num ? 'selected' : '' }}>{{ $name }}</option>
+                    @endforeach
+                </select>
+                <select name="year" class="form-select" style="width:auto;">
+                    @for($y = now()->year; $y >= now()->year - 5; $y--)
+                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endfor
+                </select>
+                <button type="submit" class="btn btn-primary">View</button>
+            </form>
+            <a href="{{ route('admin.reports.expense-ledger.export', ['month' => $month, 'year' => $year]) }}"
+               style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .9rem;background:#166534;color:#fff;border-radius:.45rem;font-size:.8rem;font-weight:600;text-decoration:none;transition:background .15s;"
+               onmouseover="this.style.background='#14532d'" onmouseout="this.style.background='#166534'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export Excel
+            </a>
+        </div>
     </div>
 
     {{-- Ledger Table --}}
