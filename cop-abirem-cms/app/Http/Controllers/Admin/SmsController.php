@@ -100,7 +100,7 @@ class SmsController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'subject' => 'nullable|string|max:255',
-            'message_content' => 'required|string|max:480',
+            'message_content' => 'required|string|max:320',
             'category' => 'required|in:general,financial,attendance,event,reminder,birthday',
             'recipient_type' => 'required|in:all,ministry,custom',
             'ministry_id' => 'required_if:recipient_type,ministry|nullable|exists:ministries,id',

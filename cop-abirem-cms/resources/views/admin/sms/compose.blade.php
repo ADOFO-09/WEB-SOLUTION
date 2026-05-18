@@ -88,14 +88,14 @@
                 </div>
 
                 <div>
-                    <label for="message_content" class="block text-sm font-medium text-gray-700">Message Content * <span class="text-gray-400">(Max 480 characters)</span></label>
-                    <textarea name="message_content" id="message_content" rows="5" required maxlength="480"
+                    <label for="message_content" class="block text-sm font-medium text-gray-700">Message Content * <span class="text-gray-400">(Max 320 characters)</span></label>
+                    <textarea name="message_content" id="message_content" rows="5" required maxlength="320"
                               oninput="updateCharCount()"
                               placeholder="Type your message here... Use {name} for member name, {church} for church name."
                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('message_content', $selectedTemplate->content ?? '') }}</textarea>
                     <div class="mt-1 flex justify-between text-xs">
                         <span class="text-gray-500">Variables: {name}, {church}, {date}</span>
-                        <span id="charCount" class="text-gray-500">0 / 480</span>
+                        <span id="charCount" class="text-gray-500">0 / 320</span>
                     </div>
                     @error('message_content')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
@@ -203,8 +203,8 @@ function updateCharCount() {
     const content = document.getElementById('message_content').value;
     const count = content.length;
     const smsCount = Math.ceil(count / 160) || 1;
-    document.getElementById('charCount').textContent = count + ' / 480';
-    document.getElementById('charCount').className = count > 480 ? 'text-red-600' : 'text-gray-500';
+    document.getElementById('charCount').textContent = count + ' / 320';
+    document.getElementById('charCount').className = count > 320 ? 'text-red-600' : count > 280 ? 'text-amber-500' : 'text-gray-500';
     document.getElementById('preview').textContent = content || 'Your message will appear here...';
     document.getElementById('smsCount').textContent = `Estimated: ${smsCount} SMS per recipient (${count} chars)`;
 }
