@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ExpenseLedgerController;
 use App\Http\Controllers\Admin\IncomeLedgerController;
+use App\Http\Controllers\Admin\MonthlyReportController;
 use App\Http\Controllers\Admin\ReportController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,5 +46,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::get('/income-ledger/export', [IncomeLedgerController::class, 'export'])->name('income-ledger.export');
         Route::get('/expense-ledger', [ExpenseLedgerController::class, 'index'])->name('expense-ledger');
         Route::get('/expense-ledger/export', [ExpenseLedgerController::class, 'export'])->name('expense-ledger.export');
+
+        // Monthly Reports
+        Route::resource('monthly-report', MonthlyReportController::class)
+            ->parameters(['monthly-report' => 'monthlyReport']);
+        Route::get('/monthly-report/{monthlyReport}/print', [MonthlyReportController::class, 'print'])
+            ->name('monthly-report.print');
+        Route::get('/monthly-report/{monthlyReport}/pdf', [MonthlyReportController::class, 'pdf'])
+            ->name('monthly-report.pdf');
     });
 });

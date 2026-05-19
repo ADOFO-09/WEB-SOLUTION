@@ -68,6 +68,7 @@ class MinistryController extends Controller implements HasMiddleware
         $validated = $request->validate([
             'name' => 'required|string|max:100|unique:ministries',
             'description' => 'nullable|string|max:500',
+            'type' => 'nullable|string|in:' . implode(',', array_keys(Ministry::TYPES)),
             'leader_id' => 'nullable|exists:members,id',
             'meeting_day' => 'nullable|string|max:20',
             'meeting_time' => 'nullable|date_format:H:i',
@@ -117,6 +118,7 @@ class MinistryController extends Controller implements HasMiddleware
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100', Rule::unique('ministries')->ignore($ministry->id)],
             'description' => 'nullable|string|max:500',
+            'type' => 'nullable|string|in:' . implode(',', array_keys(Ministry::TYPES)),
             'leader_id' => 'nullable|exists:members,id',
             'meeting_day' => 'nullable|string|max:20',
             'meeting_time' => 'nullable|date_format:H:i',

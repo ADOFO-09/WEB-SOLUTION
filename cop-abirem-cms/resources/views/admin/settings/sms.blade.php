@@ -39,6 +39,18 @@
             {{ session('sms_balance_error') }}
         </div>
         @endif
+        @if(session('birthday_sms_success'))
+        <div class="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
+            <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div><strong>Birthday SMS Run Complete:</strong><br><pre class="mt-1 text-xs whitespace-pre-wrap">{{ session('birthday_sms_success') }}</pre></div>
+        </div>
+        @endif
+        @if(session('birthday_sms_error'))
+        <div class="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
+            <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div><strong>Birthday SMS Failed:</strong><br><pre class="mt-1 text-xs whitespace-pre-wrap">{{ session('birthday_sms_error') }}</pre></div>
+        </div>
+        @endif
 
         <form action="{{ route('admin.settings.sms.update') }}" method="POST">
             @csrf
@@ -152,11 +164,29 @@
                         </label>
                     </div>
 
-                    <div>
-                        <label for="sms_birthday_template" class="block text-sm font-medium text-gray-700">Birthday Message Template</label>
-                        <textarea name="sms_birthday_template" id="sms_birthday_template" rows="3"
-                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('sms_birthday_template', $settings['sms_birthday_template'] ?? '') }}</textarea>
-                        <p class="mt-1 text-xs text-gray-500">Available placeholders: {name}, {first_name}, {last_name}</p>
+                    <div x-data="{ count: {{ strlen(old('sms_birthday_template', $settings['sms_birthday_template'] ?? '')) }} }">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="sms_birthday_template" class="block text-sm font-medium text-gray-700">Birthday Message Template</label>
+                            <span class="text-xs" :class="count > 320 ? 'text-red-600 font-semibold' : count > 280 ? 'text-amber-500' : 'text-gray-400'"
+                                  x-text="count + ' / 320 chars'"></span>
+                        </div>
+                        <textarea name="sms_birthday_template" id="sms_birthday_template" rows="4" maxlength="320"
+                                  x-on:input="count = $el.value.length"
+                                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm">{{ old('sms_birthday_template', $settings['sms_birthday_template'] ?? '') }}</textarea>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            <span class="text-xs text-gray-500 font-medium">Placeholders:</span>
+                            @foreach(['{name}' => 'Full name', '{first_name}' => 'First name', '{last_name}' => 'Last name'] as $ph => $label)
+                            <button type="button"
+                                    onclick="var t=document.getElementById('sms_birthday_template');var s=t.selectionStart;t.value=t.value.slice(0,s)+'{{ $ph }}'+t.value.slice(t.selectionEnd);t.focus();t.selectionStart=t.selectionEnd=s+{{ strlen($ph) }};t.dispatchEvent(new Event('input'));"
+                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 cursor-pointer">
+                                {{ $ph }}
+                                <span class="ml-1 font-sans text-indigo-400">{{ $label }}</span>
+                            </button>
+                            @endforeach
+                        </div>
+                        <p class="mt-1 text-xs text-gray-400">
+                            Example: <em>Happy Birthday, {first_name}! Wishing you God's abundant blessings. — COP Abirem</em>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -228,6 +258,68 @@
                     </form>
                 </div>
 
+                {{-- Run Birthday SMS Now --}}
+                <div class="border border-purple-200 rounded-lg p-5 md:col-span-2">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:#faf5ff;">
+                            <svg class="w-5 h-5" style="color:#7c3aed;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6l3 3m0 0l3-3m-3 3V2m0 16l-3 3m3-3l3 3"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900 text-sm">Run Birthday SMS Now</h4>
+                            <p class="text-xs text-gray-500">Manually trigger today's birthday greetings (ignores enable/disable setting)</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                        <p class="text-sm text-gray-600 flex-1">
+                            Sends birthday SMS to all active members whose birthday is <strong>today</strong>.
+                            The scheduler runs this automatically at <strong>06:00 every day</strong>.
+                            Use this button to test or to catch up if the scheduler missed a run.
+                        </p>
+                        <form action="{{ route('admin.settings.sms.birthday.run-now') }}" method="POST" class="flex-shrink-0">
+                            @csrf
+                            <button type="submit"
+                                    onclick="return confirm('Send birthday SMS to all members with a birthday today?')"
+                                    class="px-5 py-2 text-sm font-medium text-white rounded-md transition-colors"
+                                    style="background:#7c3aed;" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">
+                                Send Now
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        {{-- Cron / Scheduler Setup --}}
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Automatic Scheduler Setup</h3>
+                <p class="text-sm text-gray-500">Configure your server so birthday SMS runs automatically at 06:00 every day.</p>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                    <strong>Required:</strong> The birthday SMS runs via Laravel's task scheduler. The scheduler only works if a cron job (or Windows Task) calls <code class="font-mono bg-amber-100 px-1 rounded">php artisan schedule:run</code> every minute.
+                </div>
+
+                {{-- Linux / cPanel --}}
+                <div>
+                    <p class="text-sm font-semibold text-gray-700 mb-1">Linux / cPanel / shared hosting</p>
+                    <p class="text-xs text-gray-500 mb-2">Add this single cron entry via cPanel → Cron Jobs (replace the path with your actual project path):</p>
+                    <pre class="bg-gray-900 text-green-400 rounded-lg p-3 text-xs overflow-x-auto">* * * * * cd /home/yourusername/public_html/cop-abirem-cms &amp;&amp; php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</pre>
+                </div>
+
+                {{-- Windows XAMPP --}}
+                <div>
+                    <p class="text-sm font-semibold text-gray-700 mb-1">Windows (XAMPP — development)</p>
+                    <p class="text-xs text-gray-500 mb-2">Open <strong>Task Scheduler</strong> → Create Basic Task → repeat every 1 minute → Action: start a program:</p>
+                    <pre class="bg-gray-900 text-green-400 rounded-lg p-3 text-xs overflow-x-auto">Program : C:\xampp\php\php.exe
+Arguments: C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\artisan schedule:run</pre>
+                </div>
+
+                <p class="text-xs text-gray-400">
+                    Once the scheduler is running, birthday messages are sent automatically at 06:00.
+                    Check <code class="font-mono bg-gray-100 px-1 rounded">storage/logs/birthday-sms.log</code> to see the results of each run.
+                </p>
             </div>
         </div>
 

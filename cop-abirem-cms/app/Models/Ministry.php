@@ -14,6 +14,21 @@ class Ministry extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Ministry type labels used throughout the UI
+    public const TYPES = [
+        'general'    => 'General Ministry',
+        'home_cell'  => 'Home Cell',
+        'bible_study'=> 'Bible Study Group',
+        'prayer'     => 'Prayer Ministry',
+        'youth'      => 'Youth Ministry',
+        'women'      => "Women's Ministry",
+        'men'        => "Men's Ministry",
+        'children'   => "Children's Ministry",
+        'choir'      => 'Choir / Music',
+        'evangelism' => 'Evangelism Ministry',
+        'other'      => 'Other',
+    ];
+
     protected $fillable = [
         'name',
         'slug',
@@ -22,6 +37,7 @@ class Ministry extends Model
         'meeting_day',
         'meeting_time',
         'is_active',
+        'type',
     ];
 
     protected $casts = [

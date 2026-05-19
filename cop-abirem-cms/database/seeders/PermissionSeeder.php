@@ -100,6 +100,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Financial Reports', 'slug' => 'reports.financial', 'module' => 'reports', 'description' => 'View financial reports'],
             ['name' => 'Membership Reports', 'slug' => 'reports.membership', 'module' => 'reports', 'description' => 'View membership reports'],
             ['name' => 'Attendance Reports', 'slug' => 'reports.attendance', 'module' => 'reports', 'description' => 'View attendance reports'],
+            ['name' => 'Monthly Reports', 'slug' => 'reports.monthly', 'module' => 'reports', 'description' => 'Create and manage monthly statistical reports'],
             ['name' => 'Ministry Reports Only', 'slug' => 'reports.ministry_only', 'module' => 'reports', 'description' => 'View own ministry reports only'],
 
             // Users

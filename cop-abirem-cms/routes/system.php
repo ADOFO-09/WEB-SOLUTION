@@ -87,6 +87,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::put('/sms', [SettingsController::class, 'updateSms'])->name('sms.update');
         Route::post('/sms/test', [SettingsController::class, 'testSms'])->name('sms.test');
         Route::post('/sms/balance', [SettingsController::class, 'checkSmsBalance'])->name('sms.balance');
+        Route::post('/sms/birthday/run-now', [SettingsController::class, 'runBirthdaySmsNow'])->name('sms.birthday.run-now');
 
         // System Settings
         Route::get('/system', [SettingsController::class, 'system'])->name('system');

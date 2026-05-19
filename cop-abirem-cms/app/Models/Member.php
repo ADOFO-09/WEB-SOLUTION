@@ -43,6 +43,7 @@ class Member extends Model
         'biometric_enrolled',
         'biometric_enrolled_at',
         'date_joined',
+        'date_left',
         'baptism_date',
         'baptism_type',
         'membership_status',
@@ -55,6 +56,7 @@ class Member extends Model
     protected $casts = [
         'date_of_birth'          => 'date',
         'date_joined'            => 'date',
+        'date_left'              => 'date',
         'baptism_date'           => 'date',
         'biometric_enrolled'     => 'boolean',
         'biometric_enrolled_at'  => 'datetime',

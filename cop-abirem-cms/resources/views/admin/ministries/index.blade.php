@@ -67,9 +67,16 @@
                         </p>
                         @endif
                     </div>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ministry->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                        {{ $ministry->is_active ? 'Active' : 'Inactive' }}
-                    </span>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ministry->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                            {{ $ministry->is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                        @if($ministry->type && $ministry->type !== 'general')
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700">
+                            {{ \App\Models\Ministry::TYPES[$ministry->type] ?? $ministry->type }}
+                        </span>
+                        @endif
+                    </div>
                 </div>
 
                 @if($ministry->description)

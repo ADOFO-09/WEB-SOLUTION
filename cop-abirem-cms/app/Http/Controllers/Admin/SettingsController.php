@@ -203,6 +203,21 @@ class SettingsController extends Controller
     }
 
     /**
+     * Manually trigger the birthday SMS command (for admin testing / on-demand runs).
+     */
+    public function runBirthdaySmsNow()
+    {
+        $exitCode = Artisan::call('sms:send-birthdays', ['--force' => true]);
+        $output   = trim(Artisan::output());
+
+        if ($exitCode === 0) {
+            return back()->with('birthday_sms_success', $output ?: 'Birthday SMS run completed successfully.');
+        }
+
+        return back()->with('birthday_sms_error', $output ?: 'Birthday SMS run failed. Check Settings → SMS template and credentials.');
+    }
+
+    /**
      * Display system settings.
      */
     public function system()

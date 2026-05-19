@@ -948,7 +948,6 @@
         .top-nav,
         .page-header,
         .mobile-menu-btn,
-        [x-data],
         nav[aria-label="pagination"] {
             display: none !important;
         }

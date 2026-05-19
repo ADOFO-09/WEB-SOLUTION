@@ -323,15 +323,12 @@
                    class="px-3 py-1.5 text-xs font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
                     Re-enroll
                 </a>
-                <form action="{{ route('admin.members.biometric.remove', $member) }}" method="POST"
-                      onsubmit="return confirm('Remove all biometric data for {{ addslashes($member->full_name) }}?')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                            class="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                        Remove
-                    </button>
-                </form>
+                <button type="submit"
+                        form="biometric-remove-form"
+                        onclick="return confirm('Remove all biometric data for {{ addslashes($member->full_name) }}?')"
+                        class="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    Remove
+                </button>
             </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
@@ -376,6 +373,14 @@
             Update Member
         </button>
     </div>
+</form>
+
+{{-- Standalone biometric-remove form (outside the main form to avoid nested-form HTML bug) --}}
+<form id="biometric-remove-form"
+      action="{{ route('admin.members.biometric.remove', $member) }}"
+      method="POST" style="display:none;">
+    @csrf
+    @method('DELETE')
 </form>
 
 @push('scripts')

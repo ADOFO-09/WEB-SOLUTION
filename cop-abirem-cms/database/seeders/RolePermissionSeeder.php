@@ -84,6 +84,7 @@ class RolePermissionSeeder extends Seeder
             // Reports — full
             'reports.view', 'reports.generate', 'reports.export',
             'reports.financial', 'reports.membership', 'reports.attendance',
+            'reports.monthly',
 
             // System — logs only
             'settings.logs',
@@ -123,7 +124,7 @@ class RolePermissionSeeder extends Seeder
 
             // Reports — membership & attendance
             'reports.view', 'reports.generate', 'reports.export',
-            'reports.membership', 'reports.attendance',
+            'reports.membership', 'reports.attendance', 'reports.monthly',
         ]);
 
         // ============================================

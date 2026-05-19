@@ -46,6 +46,25 @@
                 @error('description')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
 
+            <!-- Type -->
+            <div>
+                <label for="type" class="block text-sm font-medium text-gray-700">Ministry Type *</label>
+                <select name="type" id="type" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Select type</option>
+                    @foreach(\App\Models\Ministry::TYPES as $value => $label)
+                        <option value="{{ $value }}"
+                            {{ old('type', $ministry->type ?? '') == $value ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-xs text-gray-500">
+                    Set <strong>Home Cell</strong> or <strong>Bible Study Group</strong> so this ministry appears in the monthly statistical report.
+                </p>
+                @error('type')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+
             <!-- Leader -->
             <div>
                 <label for="leader_id" class="block text-sm font-medium text-gray-700">Ministry Leader</label>
