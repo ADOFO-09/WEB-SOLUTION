@@ -242,7 +242,7 @@
                 <div class="photo-section">
                     <div class="member-photo">
                         @if($member->photo_path)
-                            <img src="{{ asset('storage/' . $member->photo_path) }}" alt="{{ $member->full_name }}">
+                            <img src="{{ $member->photo_url }}" alt="{{ $member->full_name }}">
                         @else
                             <div class="initials">
                                 {{ substr($member->first_name, 0, 1) }}{{ substr($member->last_name, 0, 1) }}

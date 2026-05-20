@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\FinancialYear;
 use App\Models\Permission;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 
@@ -25,6 +27,16 @@ class AppServiceProvider extends ServiceProvider
     {
         // Use Bootstrap pagination styling
         Paginator::useBootstrap();
+
+        // Share financial years with all admin views so year dropdowns stay in sync.
+        View::composer('admin.*', function ($view) {
+            if (!Schema::hasTable('financial_years')) return;
+            try {
+                $view->with('financialYears',
+                    FinancialYear::orderBy('start_date', 'desc')->get()
+                );
+            } catch (\Exception $e) {}
+        });
 
         // Register permission gates
         $this->registerPermissionGates();

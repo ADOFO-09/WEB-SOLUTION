@@ -12,9 +12,14 @@
         </div>
         <form action="" method="GET" class="flex items-center space-x-2">
             <select name="year" onchange="this.form.submit()" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                @for($y = date('Y'); $y >= date('Y') - 3; $y--)
-                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                @endfor
+                @forelse($financialYears as $fy)
+                    <option value="{{ $fy->start_date->year }}"
+                        {{ $year == $fy->start_date->year ? 'selected' : '' }}>
+                        {{ $fy->name }}{{ $fy->is_active ? ' ★' : '' }}
+                    </option>
+                @empty
+                    <option value="{{ date('Y') }}" selected>{{ date('Y') }}</option>
+                @endforelse
             </select>
         </form>
     </div>

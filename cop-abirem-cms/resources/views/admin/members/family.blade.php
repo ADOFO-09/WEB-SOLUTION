@@ -22,7 +22,7 @@
         <div class="bg-white rounded-lg shadow p-6">
             <div class="text-center mb-4">
                 @if($member->photo_path)
-                <img src="{{ asset('storage/' . $member->photo_path) }}" class="w-24 h-24 rounded-full mx-auto object-cover">
+                <img src="{{ $member->photo_url }}" class="w-24 h-24 rounded-full mx-auto object-cover">
                 @else
                 <div class="w-24 h-24 rounded-full bg-indigo-100 mx-auto flex items-center justify-center">
                     <span class="text-2xl font-bold text-indigo-600">{{ substr($member->first_name, 0, 1) }}{{ substr($member->last_name, 0, 1) }}</span>
@@ -87,7 +87,7 @@
                 <div class="p-6 flex items-center justify-between">
                     <div class="flex items-center">
                         @if($relationship->relatedMember->photo_path)
-                        <img src="{{ asset('storage/' . $relationship->relatedMember->photo_path) }}" 
+                        <img src="{{ $relationship->relatedMember->photo_url }}"
                              class="w-12 h-12 rounded-full object-cover">
                         @else
                         <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">

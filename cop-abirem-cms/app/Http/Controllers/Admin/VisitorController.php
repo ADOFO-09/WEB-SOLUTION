@@ -8,6 +8,8 @@ use App\Models\Member;
 use App\Models\Ministry;
 use App\Models\FollowUpLog;
 use App\Models\ServiceType;
+use App\Models\SmsTemplate;
+use App\Services\GiantSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -124,6 +126,9 @@ class VisitorController extends Controller implements HasMiddleware
         // Record first visit
         $visitor->recordVisit();
 
+        // Send welcome SMS
+        $this->sendWelcomeSms($visitor);
+
         return redirect()->route('admin.visitors.show', $visitor)
             ->with('success', 'Visitor registered successfully.');
     }
@@ -219,12 +224,17 @@ class VisitorController extends Controller implements HasMiddleware
         // Update follow-up status based on outcome
         $newStatus = match ($validated['outcome']) {
             'not_interested' => 'not_interested',
-            'interested'     => 'in_progress',
-            'reached'        => $visitor->follow_up_status === 'pending' ? 'in_progress' : $visitor->follow_up_status,
+            'interested'     => 'interested',
+            'reached'        => $visitor->follow_up_status === 'pending' ? 'contacted' : $visitor->follow_up_status,
             default          => $visitor->follow_up_status,
         };
 
         $visitor->update(['follow_up_status' => $newStatus]);
+
+        // Send SMS if the chosen contact method is SMS
+        if ($validated['contact_method'] === 'sms') {
+            $this->sendFollowUpSms($visitor, $validated['notes'] ?? null);
+        }
 
         return back()->with('success', 'Follow-up recorded successfully.');
     }
@@ -305,5 +315,78 @@ class VisitorController extends Controller implements HasMiddleware
         ]);
 
         return back()->with('success', 'Visit recorded successfully.');
+    }
+
+    /**
+     * Send a welcome SMS to a newly registered visitor.
+     */
+    private function sendWelcomeSms(Visitor $visitor): void
+    {
+        if (empty($visitor->phone)) {
+            return;
+        }
+
+        try {
+            $sms = new GiantSmsService();
+            if (!$sms->isConfigured()) {
+                return;
+            }
+
+            $template = SmsTemplate::where('slug', 'visitor-welcome')->where('is_active', true)->first();
+
+            if ($template) {
+                $message = $template->renderContent([
+                    'name' => $visitor->first_name,
+                    'date' => $visitor->first_visit_date->format('d M Y'),
+                ]);
+            } else {
+                $message = 'Dear ' . $visitor->first_name . ', welcome to COP Abirem Central Assembly!'
+                    . ' We are glad you visited us on ' . $visitor->first_visit_date->format('d M Y')
+                    . '. We hope to see you again. God bless you! - COP Abirem Central';
+            }
+
+            $sms->send($visitor->phone, $message);
+
+        } catch (\Throwable $e) {
+            Log::warning('Visitor welcome SMS failed for visitor #' . $visitor->id . ': ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send a follow-up SMS to a visitor.
+     */
+    private function sendFollowUpSms(Visitor $visitor, ?string $notes): void
+    {
+        if (empty($visitor->phone)) {
+            return;
+        }
+
+        try {
+            $sms = new GiantSmsService();
+            if (!$sms->isConfigured()) {
+                return;
+            }
+
+            $template = SmsTemplate::where('slug', 'visitor-followup')->where('is_active', true)->first();
+
+            $notesLine = $notes ? trim($notes) . ' ' : '';
+
+            if ($template) {
+                $message = $template->renderContent([
+                    'name'  => $visitor->first_name,
+                    'notes' => $notesLine,
+                ]);
+            } else {
+                $message = 'Dear ' . $visitor->first_name . ', greetings from COP Abirem!'
+                    . ' We are following up on your visit with us. '
+                    . $notesLine
+                    . 'We would love to see you again. God bless you! - COP Abirem Central';
+            }
+
+            $sms->send($visitor->phone, $message);
+
+        } catch (\Throwable $e) {
+            Log::warning('Visitor follow-up SMS failed for visitor #' . $visitor->id . ': ' . $e->getMessage());
+        }
     }
 }

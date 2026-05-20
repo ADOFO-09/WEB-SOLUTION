@@ -7,9 +7,12 @@ use App\Models\Tithe;
 use App\Models\Member;
 use App\Models\FinancialYear;
 use App\Models\AttendanceSession;
+use App\Models\SmsTemplate;
+use App\Services\GiantSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Log;
 
 class TitheController extends Controller implements HasMiddleware
 {
@@ -122,6 +125,9 @@ class TitheController extends Controller implements HasMiddleware
         $validated['recorded_by'] = auth()->id();
 
         $tithe = Tithe::create($validated);
+
+        // Send SMS receipt to member
+        $this->sendTitheSms($tithe);
 
         if ($request->ajax()) {
             return response()->json([
@@ -282,6 +288,58 @@ class TitheController extends Controller implements HasMiddleware
 
         return redirect()->route('admin.finance.dashboard')
             ->with('success', "Session tithe of GH₵" . number_format($request->amount, 2) . " recorded for {$serviceName} on {$sessionDate}.");
+    }
+
+    /**
+     * Send an SMS receipt to the member after a tithe is recorded.
+     * Silently skips if SMS is not configured, member has no phone, or it's a session collection.
+     */
+    private function sendTitheSms(Tithe $tithe): void
+    {
+        // Session-level tithes have no individual member
+        if (!$tithe->member_id) {
+            return;
+        }
+
+        $member = $tithe->member ?? $tithe->load('member')->member;
+        $phone  = $member?->phone_primary;
+
+        if (!$phone) {
+            return;
+        }
+
+        try {
+            $sms = new GiantSmsService();
+
+            if (!$sms->isConfigured()) {
+                return;
+            }
+
+            $template = SmsTemplate::where('slug', 'tithe-confirmation')->where('is_active', true)->first();
+
+            if ($template) {
+                $message = $template->renderContent([
+                    'member_name' => $member->first_name,
+                    'amount'      => 'GH' . "\u{20B5}" . number_format((float) $tithe->amount, 2),
+                    'date'        => $tithe->month_for->format('F Y'),
+                    'receipt_no'  => $tithe->receipt_number,
+                ]);
+            } else {
+                $message = 'Dear ' . $member->first_name . ', your tithe of GH'
+                    . "\u{20B5}" . number_format((float) $tithe->amount, 2)
+                    . ' for ' . $tithe->month_for->format('F Y')
+                    . ' has been received. Receipt #' . $tithe->receipt_number
+                    . '. Thank you. God bless you.';
+            }
+
+            $sms->send($phone, $message);
+
+            $tithe->update(['sms_sent' => true]);
+
+        } catch (\Throwable $e) {
+            // Never let an SMS failure block the tithe record from being saved
+            Log::warning('Tithe SMS failed for tithe #' . $tithe->id . ': ' . $e->getMessage());
+        }
     }
 
     /**

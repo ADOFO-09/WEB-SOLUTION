@@ -9,3 +9,6 @@ C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\bin\Release\net48\ZK
 C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\bin\Release\net48\ZKFingerBridge.pdb
 C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\obj\Release\net48\ZKFingerBridge.exe
 C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\obj\Release\net48\ZKFingerBridge.pdb
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\bin\Release\net48-new\ZKFingerBridge.exe.config
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\bin\Release\net48-new\ZKFingerBridge.exe
+C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\zkfinger-bridge\bin\Release\net48-new\ZKFingerBridge.pdb

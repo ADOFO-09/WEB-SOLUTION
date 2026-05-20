@@ -61,8 +61,8 @@
             <div class="px-6 pb-6">
                 <div class="-mt-12 flex justify-center">
                     @if($member->photo_path)
-                        <img class="h-24 w-24 rounded-full border-4 border-white object-cover shadow-lg" 
-                             src="{{ asset('storage/' . $member->photo_path) }}" 
+                        <img class="h-24 w-24 rounded-full border-4 border-white object-cover shadow-lg"
+                             src="{{ $member->photo_url }}"
                              alt="{{ $member->full_name }}">
                     @else
                         <div class="h-24 w-24 rounded-full border-4 border-white flex items-center justify-center shadow-lg" style="background:linear-gradient(135deg,#1e3a5f,#2d5a8a);">

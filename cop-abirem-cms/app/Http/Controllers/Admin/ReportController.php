@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\FinancialYear;
 use App\Models\Member;
 use App\Models\Visitor;
 use App\Models\AttendanceSession;
@@ -87,7 +88,7 @@ class ReportController extends Controller implements HasMiddleware
      */
     public function incomeStatement(Request $request)
     {
-        $year = $request->get('year', date('Y'));
+        $year = (int) $request->get('year', $this->defaultYear());
         $month = $request->get('month');
         
         if ($month) {
@@ -157,7 +158,7 @@ class ReportController extends Controller implements HasMiddleware
      */
     public function titheReport(Request $request)
     {
-        $year = $request->get('year', date('Y'));
+        $year = (int) $request->get('year', $this->defaultYear());
         $month = $request->get('month');
 
         $query = Tithe::with('member')->whereYear('payment_date', $year);
@@ -201,7 +202,7 @@ class ReportController extends Controller implements HasMiddleware
      */
     public function expenseReport(Request $request)
     {
-        $year = $request->get('year', date('Y'));
+        $year = (int) $request->get('year', $this->defaultYear());
         
         // By category
         $byCategory = ExpenseCategory::withCount(['expenses as paid_count' => fn($q) => 
@@ -245,7 +246,7 @@ class ReportController extends Controller implements HasMiddleware
      */
     public function membershipReport(Request $request)
     {
-        $year = $request->get('year', date('Y'));
+        $year = (int) $request->get('year', $this->defaultYear());
 
         // Demographics
         $demographics = [
@@ -314,7 +315,7 @@ class ReportController extends Controller implements HasMiddleware
      */
     public function attendanceReport(Request $request)
     {
-        $year = $request->get('year', date('Y'));
+        $year = (int) $request->get('year', $this->defaultYear());
         $serviceTypeId = $request->get('service_type_id');
 
         $query = AttendanceSession::whereYear('service_date', $year);
@@ -368,7 +369,7 @@ class ReportController extends Controller implements HasMiddleware
      */
     public function visitorReport(Request $request)
     {
-        $year = $request->get('year', date('Y'));
+        $year = (int) $request->get('year', $this->defaultYear());
 
         // Monthly visitors
         $monthlyVisitors = [];
@@ -476,7 +477,7 @@ class ReportController extends Controller implements HasMiddleware
      */
     public function offeringReport(Request $request)
     {
-        $year = $request->get('year', date('Y'));
+        $year = (int) $request->get('year', $this->defaultYear());
         $categoryId = $request->get('category_id');
 
         // By category
@@ -510,5 +511,11 @@ class ReportController extends Controller implements HasMiddleware
         return view('admin.reports.offerings', compact(
             'byCategory', 'monthlyTrend', 'categories', 'totals', 'year', 'categoryId'
         ));
+    }
+
+    private function defaultYear(): int
+    {
+        $active = FinancialYear::active()->first() ?? FinancialYear::open()->orderBy('start_date', 'desc')->first();
+        return $active ? $active->start_date->year : (int) date('Y');
     }
 }

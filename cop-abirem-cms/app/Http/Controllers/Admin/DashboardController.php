@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\FinancialYear;
 use App\Models\Member;
 use App\Models\Visitor;
 use App\Models\AttendanceSession;
@@ -36,24 +37,40 @@ class DashboardController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-        $period = $request->get('period', 'month');
-        $year = $request->get('year', date('Y'));
-        $month = $request->get('month', date('m'));
+        $financialYears = FinancialYear::orderBy('start_date', 'desc')->get();
+        $activeFinancialYear = $financialYears->firstWhere('is_active', true)
+            ?? $financialYears->first();
 
-        // Date ranges
+        $defaultYear = $activeFinancialYear
+            ? $activeFinancialYear->start_date->year
+            : (int) date('Y');
+
+        $period = $request->get('period', 'month');
+        $year   = (int) $request->get('year', $defaultYear);
+        $month  = (int) $request->get('month', date('m'));
+
+        // When period = 'year', prefer the matching financial year's exact date range
+        $selectedFY = $financialYears->first(
+            fn($fy) => $fy->start_date->year === $year
+        );
+
         $startDate = match($period) {
-            'week' => Carbon::now()->startOfWeek(),
-            'month' => Carbon::create($year, $month, 1)->startOfMonth(),
+            'week'    => Carbon::now()->startOfWeek(),
+            'month'   => Carbon::create($year, $month, 1)->startOfMonth(),
             'quarter' => Carbon::now()->startOfQuarter(),
-            'year' => Carbon::create($year, 1, 1)->startOfYear(),
-            default => Carbon::create($year, $month, 1)->startOfMonth(),
+            'year'    => $selectedFY
+                            ? $selectedFY->start_date->startOfDay()
+                            : Carbon::create($year, 1, 1)->startOfYear(),
+            default   => Carbon::create($year, $month, 1)->startOfMonth(),
         };
         $endDate = match($period) {
-            'week' => Carbon::now()->endOfWeek(),
-            'month' => Carbon::create($year, $month, 1)->endOfMonth(),
+            'week'    => Carbon::now()->endOfWeek(),
+            'month'   => Carbon::create($year, $month, 1)->endOfMonth(),
             'quarter' => Carbon::now()->endOfQuarter(),
-            'year' => Carbon::create($year, 12, 31)->endOfYear(),
-            default => Carbon::create($year, $month, 1)->endOfMonth(),
+            'year'    => $selectedFY
+                            ? $selectedFY->end_date->endOfDay()
+                            : Carbon::create($year, 12, 31)->endOfYear(),
+            default   => Carbon::create($year, $month, 1)->endOfMonth(),
         };
 
         // Member Statistics
@@ -130,7 +147,8 @@ class DashboardController extends Controller implements HasMiddleware
         return view('admin.dashboard.index', compact(
             'memberStats', 'visitorStats', 'attendanceStats', 'financeStats',
             'recentMembers', 'recentVisitors', 'pendingExpenses',
-            'charts', 'quickStats', 'period', 'year', 'month'
+            'charts', 'quickStats', 'period', 'year', 'month',
+            'financialYears'
         ));
     }
 

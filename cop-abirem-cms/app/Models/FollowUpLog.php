@@ -10,6 +10,8 @@ class FollowUpLog extends Model
 {
     use HasFactory;
 
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'visitor_id',
         'contact_date',

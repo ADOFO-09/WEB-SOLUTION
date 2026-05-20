@@ -380,37 +380,109 @@ class SettingsController extends Controller
         }
 
         try {
-            // Get database credentials
-            $host = config('database.connections.mysql.host');
+            $host     = config('database.connections.mysql.host');
             $database = config('database.connections.mysql.database');
             $username = config('database.connections.mysql.username');
             $password = config('database.connections.mysql.password');
 
-            // Restore using mysql command
-            $command = \sprintf(
-                'mysql --host=%s --user=%s --password=%s %s < %s',
-                escapeshellarg($host),
-                escapeshellarg($username),
-                escapeshellarg($password),
-                escapeshellarg($database),
-                escapeshellarg($path)
-            );
+            $restored = false;
+            $mysqlBin = $this->findMysqlBinary();
 
-            exec($command, $output, $returnVar);
+            if ($mysqlBin) {
+                // Use proc_open to pipe file to stdin — avoids shell-redirect issues on Windows.
+                $command = sprintf(
+                    '%s --host=%s --user=%s --password=%s %s',
+                    escapeshellarg($mysqlBin),
+                    escapeshellarg($host),
+                    escapeshellarg($username),
+                    escapeshellarg($password),
+                    escapeshellarg($database)
+                );
 
-            if ($returnVar !== 0) {
-                throw new \Exception('MySQL restore command failed.');
+                $descriptors = [
+                    0 => ['file', $path, 'r'],
+                    1 => ['pipe', 'w'],
+                    2 => ['pipe', 'w'],
+                ];
+
+                $process = proc_open($command, $descriptors, $pipes);
+
+                if (is_resource($process)) {
+                    $stderr = stream_get_contents($pipes[2]);
+                    fclose($pipes[1]);
+                    fclose($pipes[2]);
+                    $returnVar = proc_close($process);
+
+                    if ($returnVar === 0) {
+                        $restored = true;
+                    } else {
+                        Log::warning('mysql CLI restore failed, falling back to PHP restore. stderr: ' . $stderr);
+                    }
+                }
             }
 
-            // Log the restore
-            ActivityLog::log('backup_restored', null, null, ['filename' => $filename]);
+            if (!$restored) {
+                $this->restoreViaPHP($path);
+            }
 
+            ActivityLog::log('backup_restored', null, null, ['filename' => $filename]);
             return back()->with('success', 'Database restored successfully from backup.');
 
         } catch (\Exception $e) {
             Log::error('Database restore failed: ' . $e->getMessage());
-            return back()->with('error', 'Restore failed. Please try again or check server logs.');
+            return back()->with('error', 'Restore failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * PHP-based restore — executes SQL statements directly via Laravel DB.
+     * Used as a fallback when the mysql CLI is unavailable.
+     */
+    private function restoreViaPHP(string $path): void
+    {
+        $sql = File::get($path);
+        $statements = $this->parseSqlStatements($sql);
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        try {
+            foreach ($statements as $statement) {
+                DB::unprepared($statement);
+            }
+        } finally {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
+    }
+
+    /**
+     * Split a SQL dump into individual statements.
+     * Accumulates lines until one ends with a semicolon, then yields the statement.
+     */
+    private function parseSqlStatements(string $sql): array
+    {
+        $statements = [];
+        $current    = '';
+
+        foreach (explode("\n", $sql) as $line) {
+            $line = rtrim($line);
+
+            // Skip blank lines and single-line comments
+            if ($line === '' || str_starts_with($line, '--') || str_starts_with($line, '#')) {
+                continue;
+            }
+
+            $current .= $line . "\n";
+
+            if (str_ends_with(rtrim($line), ';')) {
+                $statements[] = rtrim($current);
+                $current = '';
+            }
+        }
+
+        if (trim($current) !== '') {
+            $statements[] = rtrim($current);
+        }
+
+        return $statements;
     }
 
     /**
@@ -449,6 +521,38 @@ class SettingsController extends Controller
             $i++;
         }
         return round($bytes, 2) . ' ' . $units[$i];
+    }
+
+    /**
+     * Locate the mysql client binary, checking XAMPP paths and system PATH.
+     */
+    private function findMysqlBinary(): ?string
+    {
+        $candidates = [
+            'C:\\xampp\\mysql\\bin\\mysql.exe',
+            'C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysql.exe',
+            'C:\\Program Files\\MySQL\\MySQL Server 5.7\\bin\\mysql.exe',
+            '/usr/bin/mysql',
+            '/usr/local/bin/mysql',
+            '/opt/homebrew/bin/mysql',
+            'mysql',
+        ];
+
+        foreach ($candidates as $bin) {
+            if (str_contains($bin, DIRECTORY_SEPARATOR) || str_contains($bin, '/')) {
+                if (file_exists($bin)) {
+                    return $bin;
+                }
+            } else {
+                $cmd = PHP_OS_FAMILY === 'Windows' ? "where {$bin} 2>nul" : "which {$bin} 2>/dev/null";
+                exec($cmd, $out, $ret);
+                if ($ret === 0 && !empty($out)) {
+                    return trim($out[0]);
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

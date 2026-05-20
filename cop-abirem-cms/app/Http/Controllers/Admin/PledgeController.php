@@ -8,9 +8,12 @@ use App\Models\PledgePayment;
 use App\Models\Member;
 use App\Models\IncomeCategory;
 use App\Models\Project;
+use App\Models\SmsTemplate;
+use App\Services\GiantSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Log;
 
 class PledgeController extends Controller implements HasMiddleware
 {
@@ -225,7 +228,59 @@ class PledgeController extends Controller implements HasMiddleware
             $pledge->project->updateAmountRaised();
         }
 
+        $this->sendPledgePaymentSms($pledge, $payment);
+
         return back()->with('success', 'Payment of GH₵ ' . number_format($validated['amount'], 2) . ' recorded. Receipt #' . $payment->receipt_number);
+    }
+
+    /**
+     * Send an SMS confirmation to the member after a pledge payment is recorded.
+     */
+    private function sendPledgePaymentSms(Pledge $pledge, PledgePayment $payment): void
+    {
+        $phone = $pledge->member?->phone_primary;
+
+        if (!$phone) {
+            return;
+        }
+
+        try {
+            $sms = new GiantSmsService();
+
+            if (!$sms->isConfigured()) {
+                return;
+            }
+
+            $memberName = $pledge->member->first_name;
+            $amount     = 'GH' . "\u{20B5}" . number_format((float) $payment->amount, 2);
+            $balance    = 'GH' . "\u{20B5}" . number_format((float) $pledge->balance, 2);
+
+            $template = SmsTemplate::where('slug', 'pledge-payment-confirmation')->where('is_active', true)->first();
+
+            if ($template) {
+                $message = $template->renderContent([
+                    'member_name' => $memberName,
+                    'amount'      => $amount,
+                    'balance'     => $balance,
+                ]);
+            } else {
+                $remaining = $pledge->balance > 0
+                    ? ' Remaining balance: ' . $balance . '.'
+                    : ' Your pledge is now fully paid. Thank you!';
+
+                $message = 'Dear ' . $memberName . ', your pledge payment of ' . $amount
+                    . ' has been received. Receipt #' . $payment->receipt_number . '.'
+                    . $remaining
+                    . ' God bless you! - COP Abirem Central';
+            }
+
+            $sms->send($phone, $message);
+
+            $payment->update(['sms_sent' => true]);
+
+        } catch (\Throwable $e) {
+            Log::warning('Pledge payment SMS failed for payment #' . $payment->id . ': ' . $e->getMessage());
+        }
     }
 
     /**

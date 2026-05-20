@@ -61,11 +61,12 @@ class SmsTemplate extends Model
     }
 
     public const CATEGORIES = [
-        'general' => 'General',
-        'financial' => 'Financial',
+        'general'    => 'General',
+        'financial'  => 'Financial',
         'attendance' => 'Attendance',
-        'event' => 'Event',
-        'reminder' => 'Reminder',
-        'birthday' => 'Birthday',
+        'event'      => 'Event',
+        'reminder'   => 'Reminder',
+        'birthday'   => 'Birthday',
+        'visitor'    => 'Visitor',
     ];
 }

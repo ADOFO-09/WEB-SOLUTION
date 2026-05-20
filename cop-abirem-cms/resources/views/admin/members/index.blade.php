@@ -128,8 +128,8 @@
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
                                     @if($member->photo_path)
-                                        <img class="h-10 w-10 rounded-full object-cover border-2 border-blue-200" 
-                                             src="{{ asset('storage/' . $member->photo_path) }}" 
+                                        <img class="h-10 w-10 rounded-full object-cover border-2 border-blue-200"
+                                             src="{{ $member->photo_url }}"
                                              alt="{{ $member->full_name }}">
                                     @else
                                         <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">

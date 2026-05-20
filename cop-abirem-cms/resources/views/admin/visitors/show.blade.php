@@ -138,7 +138,7 @@
                 <h3 class="text-lg font-medium text-gray-900">Add Follow-up Log</h3>
             </div>
             <div class="p-6">
-                <form action="{{ route('admin.visitors.followup', $visitor) }}" method="POST">
+                <form action="{{ route('admin.visitors.follow-up', $visitor) }}" method="POST">
                     @csrf
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>

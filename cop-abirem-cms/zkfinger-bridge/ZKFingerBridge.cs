@@ -63,8 +63,13 @@ class ZKFingerBridge
         [Out] byte[] b64, uint cbB64);
 
     // ── State ─────────────────────────────────────────────────────────────────
-    const int WS_PORT   = 15896;
-    const int TMPL_SIZE = 2048;
+    const int WS_PORT         = 15896;
+    const int TMPL_SIZE       = 2048;
+    // Minimum 1:1 match score to flag a duplicate via the fallback check.
+    // DBIdentify uses a higher internal threshold and can miss the same finger
+    // scanned in a different session. DBMatch is more sensitive — 35 is a safe
+    // lower-bound that avoids false positives while catching near-certain matches.
+    const int FALLBACK_SCORE  = 35;
 
     static IntPtr devHandle = IntPtr.Zero;
     static IntPtr dbHandle  = IntPtr.Zero;
@@ -83,6 +88,13 @@ class ZKFingerBridge
     static byte[]   cachedTmpl;
     static uint     cachedSize;
     static DateTime cachedAt = DateTime.MinValue;
+
+    // Separate copy of identify templates for 1:1 fallback matching.
+    // Written only from the WS thread (start_identify / stop_identify).
+    // Read from the capture thread — protected by identifyLock.
+    static readonly object identifyLock = new object();
+    struct IdentifyEntry { public uint id; public byte[] tmpl; public uint size; }
+    static IdentifyEntry[] identifyEntries = Array.Empty<IdentifyEntry>();
 
     // ── Entry point ───────────────────────────────────────────────────────────
     static void Main()
@@ -232,16 +244,44 @@ class ZKFingerBridge
 
                 if (r2 == 0)
                 {
-                    Console.WriteLine($"[IDENTIFY] MATCHED: member_id={fid} score={score}");
+                    Console.WriteLine($"[IDENTIFY] MATCHED (DBIdentify): member_id={fid} score={score}");
                     _ = SendAsync(ws, $"{{\"type\":\"identify_result\",\"matched\":true,\"member_id\":{fid},\"score\":{score}}}");
                 }
                 else
                 {
-                    // No match = fingerprint is unique. Return the template so the
-                    // enrollment page can save it without requiring a second scan.
-                    string b64 = BlobToBase64(copy, cbTmp);
-                    Console.WriteLine($"[IDENTIFY] NO MATCH (unique): ret={r2} scan_size={cbTmp}");
-                    _ = SendAsync(ws, $"{{\"type\":\"identify_result\",\"matched\":false,\"template\":\"{b64}\"}}");
+                    // DBIdentify said no match — run a 1:1 fallback check with a lower
+                    // threshold to catch cases where DBIdentify's strict internal score
+                    // misses the same finger scanned in a different session.
+                    uint fallbackMemberId = 0;
+                    int  fallbackScore    = 0;
+
+                    IdentifyEntry[] entries;
+                    lock (identifyLock) { entries = identifyEntries; }
+
+                    foreach (var e in entries)
+                    {
+                        int s = ZKFPM_DBMatch(dbHandle, copy, cbTmp, e.tmpl, e.size);
+                        Console.WriteLine($"[IDENTIFY] DBMatch fallback: member_id={e.id} score={s}");
+                        if (s >= FALLBACK_SCORE && s > fallbackScore)
+                        {
+                            fallbackScore    = s;
+                            fallbackMemberId = e.id;
+                        }
+                    }
+
+                    if (fallbackMemberId != 0)
+                    {
+                        Console.WriteLine($"[IDENTIFY] MATCHED (DBMatch fallback): member_id={fallbackMemberId} score={fallbackScore}");
+                        _ = SendAsync(ws, $"{{\"type\":\"identify_result\",\"matched\":true,\"member_id\":{fallbackMemberId},\"score\":{fallbackScore}}}");
+                    }
+                    else
+                    {
+                        // Genuinely unique — return the template so the enrollment page
+                        // can save it without requiring a second scan.
+                        string b64 = BlobToBase64(copy, cbTmp);
+                        Console.WriteLine($"[IDENTIFY] NO MATCH (unique after fallback): ret={r2} scan_size={cbTmp}");
+                        _ = SendAsync(ws, $"{{\"type\":\"identify_result\",\"matched\":false,\"template\":\"{b64}\"}}");
+                    }
                 }
             }
 
@@ -328,6 +368,7 @@ class ZKFingerBridge
                 {
                     mode = Mode.Idle;
                     ZKFPM_DBClear(dbHandle);
+                    lock (identifyLock) { identifyEntries = Array.Empty<IdentifyEntry>(); }
                     await SendAsync(ws, "{\"type\":\"stopped\"}");
                 }
             }
@@ -337,6 +378,7 @@ class ZKFingerBridge
         {
             mode = Mode.Idle; pendingTcs = null; activeWs = null;
             ZKFPM_DBClear(dbHandle);
+            lock (identifyLock) { identifyEntries = Array.Empty<IdentifyEntry>(); }
             try { ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).Wait(2000); } catch { }
             Console.WriteLine("[WS] Client disconnected");
         }
@@ -353,8 +395,8 @@ class ZKFingerBridge
     {
         int count = 0;
         int failed = 0;
-        // Track which member IDs are already loaded so a second template (t2) gets the +1M offset
         var seenIds = new System.Collections.Generic.HashSet<uint>();
+        var entries = new System.Collections.Generic.List<IdentifyEntry>();
 
         foreach (Match obj in Regex.Matches(json, @"\{[^{}]*\}"))
         {
@@ -380,7 +422,7 @@ class ZKFingerBridge
                 if (s > 0)
                 {
                     int r = ZKFPM_DBAdd(dbHandle, id, b, (uint)s);
-                    if (r == 0) { count++; seenIds.Add(id); }
+                    if (r == 0) { count++; seenIds.Add(id); entries.Add(new IdentifyEntry { id = id, tmpl = b, size = (uint)s }); }
                     else { failed++; Console.Error.WriteLine($"[WARN] ZKFPM_DBAdd failed id={id} t1: ret={r} size={s}"); }
                 }
                 else { Console.Error.WriteLine($"[WARN] Base64ToBlob failed id={id} t1 b64_len={t1M.Groups[1].Value.Length}"); }
@@ -393,7 +435,7 @@ class ZKFingerBridge
                 if (s > 0)
                 {
                     int r = ZKFPM_DBAdd(dbHandle, id + 1_000_000, b, (uint)s);
-                    if (r == 0) { count++; }
+                    if (r == 0) { count++; entries.Add(new IdentifyEntry { id = id, tmpl = b, size = (uint)s }); }
                     else { failed++; Console.Error.WriteLine($"[WARN] ZKFPM_DBAdd failed id={id} t2: ret={r} size={s}"); }
                 }
                 else { Console.Error.WriteLine($"[WARN] Base64ToBlob failed id={id} t2 b64_len={t2M.Groups[1].Value.Length}"); }
@@ -407,12 +449,14 @@ class ZKFingerBridge
                 if (s > 0)
                 {
                     int r = ZKFPM_DBAdd(dbHandle, fid, b, (uint)s);
-                    if (r == 0) { count++; seenIds.Add(id); }
+                    if (r == 0) { count++; seenIds.Add(id); entries.Add(new IdentifyEntry { id = id, tmpl = b, size = (uint)s }); }
                     else { failed++; Console.Error.WriteLine($"[WARN] ZKFPM_DBAdd failed id={id} template: ret={r} size={s}"); }
                 }
                 else { Console.Error.WriteLine($"[WARN] Base64ToBlob failed id={id} template b64_len={tmM.Groups[1].Value.Length}"); }
             }
         }
+
+        lock (identifyLock) { identifyEntries = entries.ToArray(); }
 
         if (failed > 0)
             Console.Error.WriteLine($"[WARN] LoadMembers: {count} loaded, {failed} failed");

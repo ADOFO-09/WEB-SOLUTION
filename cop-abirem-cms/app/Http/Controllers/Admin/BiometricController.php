@@ -29,12 +29,30 @@ class BiometricController extends Controller
             'finger_index'         => 'required|in:1,2',
         ]);
 
-        $field = $request->finger_index == 1
-            ? 'fingerprint_template_1'
-            : 'fingerprint_template_2';
+        $template     = $request->input('fingerprint_template');
+        $fingerIndex  = (int) $request->input('finger_index');
+
+        $templateHash = hash('sha256', $template);
+        $hashField    = $fingerIndex === 1 ? 'fingerprint_hash_1' : 'fingerprint_hash_2';
+        $tmplField    = $fingerIndex === 1 ? 'fingerprint_template_1' : 'fingerprint_template_2';
+
+        // Server-side duplicate guard: if this exact template is already stored for
+        // another member, reject immediately (catches copy-paste or session replay).
+        $conflict = Member::where($hashField, $templateHash)
+            ->where('id', '!=', $member->id)
+            ->first();
+
+        if ($conflict) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This fingerprint is already enrolled for ' . $conflict->full_name
+                           . '. Each member must use their own unique finger.',
+            ], 422);
+        }
 
         $member->update([
-            $field                  => $request->fingerprint_template,
+            $tmplField              => $template,
+            $hashField              => $templateHash,
             'biometric_enrolled'    => true,
             'biometric_enrolled_at' => now(),
         ]);
@@ -42,8 +60,30 @@ class BiometricController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Fingerprint enrolled successfully',
-            'finger'  => $request->finger_index == 1 ? 'Primary' : 'Backup',
+            'finger'  => $fingerIndex === 1 ? 'Primary' : 'Backup',
         ]);
+    }
+
+    /**
+     * Return ALL enrolled members' templates — used by the create-member page
+     * where no member ID exists yet to exclude.
+     */
+    public function allEnrolledTemplates(): JsonResponse
+    {
+        $members = Member::where('biometric_enrolled', true)
+            ->whereNotNull('fingerprint_template_1')
+            ->select('id', 'first_name', 'last_name',
+                     'fingerprint_template_1', 'fingerprint_template_2')
+            ->get()
+            ->map(fn($m) => [
+                'id'   => $m->id,
+                'name' => $m->first_name . ' ' . $m->last_name,
+                't1'   => $m->fingerprint_template_1,
+                't2'   => $m->fingerprint_template_2,
+            ])
+            ->values();
+
+        return response()->json(['members' => $members]);
     }
 
     /**

@@ -7,6 +7,8 @@ use App\Models\Member;
 use App\Models\Ministry;
 use App\Models\FamilyRelationship;
 use App\Models\Setting;
+use App\Models\SmsTemplate;
+use App\Services\GiantSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -145,6 +147,38 @@ class MemberController extends Controller implements HasMiddleware
 
             // Handle biometric enrollment during creation
             if (!empty($validated['fingerprint_template_1'])) {
+                // Duplicate fingerprint guard — same as BiometricController::enroll()
+                $hash1 = hash('sha256', $validated['fingerprint_template_1']);
+                $conflict = Member::where('fingerprint_hash_1', $hash1)->first()
+                         ?? Member::where('fingerprint_hash_2', $hash1)->first();
+
+                if ($conflict) {
+                    DB::rollBack();
+                    return back()->withErrors([
+                        'fingerprint_template_1' => 'Primary fingerprint is already enrolled for '
+                            . $conflict->full_name . '. Each member must use their own unique finger.',
+                    ])->withInput();
+                }
+
+                $hash2 = !empty($validated['fingerprint_template_2'])
+                    ? hash('sha256', $validated['fingerprint_template_2'])
+                    : null;
+
+                if ($hash2) {
+                    $conflict2 = Member::where('fingerprint_hash_1', $hash2)->first()
+                              ?? Member::where('fingerprint_hash_2', $hash2)->first();
+
+                    if ($conflict2) {
+                        DB::rollBack();
+                        return back()->withErrors([
+                            'fingerprint_template_2' => 'Backup fingerprint is already enrolled for '
+                                . $conflict2->full_name . '. Each member must use their own unique finger.',
+                        ])->withInput();
+                    }
+                }
+
+                $validated['fingerprint_hash_1']    = $hash1;
+                $validated['fingerprint_hash_2']    = $hash2;
                 $validated['biometric_enrolled']    = true;
                 $validated['biometric_enrolled_at'] = now();
             } else {
@@ -170,6 +204,8 @@ class MemberController extends Controller implements HasMiddleware
             $this->generateQrCode($member);
 
             DB::commit();
+
+            $this->sendWelcomeSms($member);
 
             $successMsg = 'Member registered successfully.';
             if ($member->biometric_enrolled) {
@@ -370,6 +406,22 @@ class MemberController extends Controller implements HasMiddleware
     }
 
     /**
+     * Download the member's QR code as an SVG file.
+     */
+    public function downloadQr(Member $member)
+    {
+        if (!$member->qr_code_path || !Storage::disk('public')->exists($member->qr_code_path)) {
+            $this->generateQrCode($member);
+            $member->refresh();
+        }
+
+        $path     = Storage::disk('public')->path($member->qr_code_path);
+        $filename = $member->member_id . '-qrcode.svg';
+
+        return response()->download($path, $filename, ['Content-Type' => 'image/svg+xml']);
+    }
+
+    /**
      * Regenerate QR Code for member.
      */
     public function regenerateQrCode(Member $member)
@@ -508,6 +560,44 @@ class MemberController extends Controller implements HasMiddleware
             ->get();
 
         return view('admin.members.family', compact('member', 'availableMembers'));
+    }
+
+    /**
+     * Send a welcome SMS to a newly registered member.
+     */
+    private function sendWelcomeSms(Member $member): void
+    {
+        $phone = $member->phone_primary;
+
+        if (!$phone) {
+            return;
+        }
+
+        try {
+            $sms = new GiantSmsService();
+
+            if (!$sms->isConfigured()) {
+                return;
+            }
+
+            $template = SmsTemplate::where('slug', 'welcome-new-member')->where('is_active', true)->first();
+
+            if ($template) {
+                $message = $template->renderContent([
+                    'member_name' => $member->first_name,
+                    'member_id'   => $member->member_id,
+                ]);
+            } else {
+                $message = 'Dear ' . $member->first_name . ', welcome to COP Abirem Central Assembly!'
+                    . ' Your member ID is ' . $member->member_id . '.'
+                    . ' We are glad to have you. God bless you! - COP Abirem Central';
+            }
+
+            $sms->send($phone, $message);
+
+        } catch (\Throwable $e) {
+            Log::warning('Welcome SMS failed for member #' . $member->id . ': ' . $e->getMessage());
+        }
     }
 
     /**

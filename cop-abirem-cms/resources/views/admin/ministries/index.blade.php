@@ -112,14 +112,22 @@
             </div>
 
             <div class="bg-gray-50 px-6 py-3 flex justify-end space-x-3">
-                <a href="{{ route('admin.ministries.show', $ministry) }}" 
+                <a href="{{ route('admin.ministries.show', $ministry) }}"
                    class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">View</a>
                 @can('ministries.edit')
-                <a href="{{ route('admin.ministries.edit', $ministry) }}" 
+                <a href="{{ route('admin.ministries.edit', $ministry) }}"
                    class="text-yellow-600 hover:text-yellow-900 text-sm font-medium">Edit</a>
                 @endcan
-                <a href="{{ route('admin.ministries.members', $ministry) }}" 
+                <a href="{{ route('admin.ministries.members', $ministry) }}"
                    class="text-gray-600 hover:text-gray-900 text-sm font-medium">Members</a>
+                @can('ministries.delete')
+                <form action="{{ route('admin.ministries.destroy', $ministry) }}" method="POST"
+                      onsubmit="return confirm('Delete {{ addslashes($ministry->name) }}? This cannot be undone.')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="text-red-600 hover:text-red-900 text-sm font-medium">Delete</button>
+                </form>
+                @endcan
             </div>
         </div>
         @empty

@@ -7,9 +7,12 @@ use App\Models\Donation;
 use App\Models\Member;
 use App\Models\IncomeCategory;
 use App\Models\Project;
+use App\Models\SmsTemplate;
+use App\Services\GiantSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Log;
 
 class DonationController extends Controller implements HasMiddleware
 {
@@ -140,6 +143,8 @@ class DonationController extends Controller implements HasMiddleware
             $donation->project->updateAmountRaised();
         }
 
+        $this->sendDonationSms($donation);
+
         return redirect()->route('admin.donations.show', $donation)
             ->with('success', 'Donation recorded successfully. Receipt #' . $donation->receipt_number);
     }
@@ -219,6 +224,60 @@ class DonationController extends Controller implements HasMiddleware
 
         return redirect()->route('admin.donations.index')
             ->with('success', 'Donation deleted successfully.');
+    }
+
+    /**
+     * Send an SMS confirmation to the donor after a donation is recorded.
+     */
+    private function sendDonationSms(Donation $donation): void
+    {
+        if ($donation->is_anonymous || $donation->donation_type !== 'cash') {
+            return;
+        }
+
+        $phone = $donation->member?->phone_primary ?? $donation->donor_phone;
+
+        if (!$phone) {
+            return;
+        }
+
+        try {
+            $sms = new GiantSmsService();
+
+            if (!$sms->isConfigured()) {
+                return;
+            }
+
+            $donorName  = $donation->member?->first_name ?? $donation->donor_name ?? 'Donor';
+            $purpose    = $donation->project?->name
+                       ?? $donation->incomeCategory?->name
+                       ?? 'General Donation';
+            $amount     = 'GH' . "\u{20B5}" . number_format((float) $donation->amount, 2);
+            $receiptNo  = $donation->receipt_number;
+
+            $template = SmsTemplate::where('slug', 'donation-confirmation')->where('is_active', true)->first();
+
+            if ($template) {
+                $message = $template->renderContent([
+                    'member_name' => $donorName,
+                    'amount'      => $amount,
+                    'purpose'     => $purpose,
+                    'receipt_no'  => $receiptNo,
+                ]);
+            } else {
+                $message = 'Dear ' . $donorName . ', your donation of ' . $amount
+                    . ' towards ' . $purpose
+                    . ' has been received. Receipt #' . $receiptNo
+                    . '. God bless you! - COP Abirem Central';
+            }
+
+            $sms->send($phone, $message);
+
+            $donation->update(['sms_sent' => true]);
+
+        } catch (\Throwable $e) {
+            Log::warning('Donation SMS failed for donation #' . $donation->id . ': ' . $e->getMessage());
+        }
     }
 
     /**

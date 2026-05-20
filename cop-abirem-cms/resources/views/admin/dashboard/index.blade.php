@@ -15,9 +15,14 @@
                 <option value="year" {{ $period == 'year' ? 'selected' : '' }}>This Year</option>
             </select>
             <select name="year" onchange="this.form.submit()" class="rounded-md border-gray-300 text-sm">
-                @for($y = date('Y'); $y >= date('Y') - 3; $y--)
-                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                @endfor
+                @forelse($financialYears as $fy)
+                    <option value="{{ $fy->start_date->year }}"
+                        {{ $year == $fy->start_date->year ? 'selected' : '' }}>
+                        {{ $fy->name }}{{ $fy->is_active ? ' ★' : '' }}
+                    </option>
+                @empty
+                    <option value="{{ date('Y') }}" selected>{{ date('Y') }}</option>
+                @endforelse
             </select>
         </form>
     </div>

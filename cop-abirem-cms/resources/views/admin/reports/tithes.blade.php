@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Tithe Report')
 
@@ -12,9 +12,14 @@
         </div>
         <form action="" method="GET" class="flex items-center space-x-2">
             <select name="year" onchange="this.form.submit()" class="rounded-md border-gray-300 text-sm">
-                @for($y = date('Y'); $y >= date('Y') - 5; $y--)
-                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                @endfor
+                @forelse($financialYears as $fy)
+                    <option value="{{ $fy->start_date->year }}"
+                        {{ $year == $fy->start_date->year ? 'selected' : '' }}>
+                        {{ $fy->name }}{{ $fy->is_active ? ' ★' : '' }}
+                    </option>
+                @empty
+                    <option value="{{ date('Y') }}" selected>{{ date('Y') }}</option>
+                @endforelse
             </select>
             <select name="month" onchange="this.form.submit()" class="rounded-md border-gray-300 text-sm">
                 <option value="">Full Year</option>
@@ -31,7 +36,7 @@
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white rounded-lg shadow p-6 text-center">
-            <p class="text-4xl font-bold text-green-600">GH₵ {{ number_format($totals['amount'], 2) }}</p>
+            <p class="text-4xl font-bold text-green-600">GHâ‚µ {{ number_format($totals['amount'], 2) }}</p>
             <p class="text-sm text-gray-500">Total Tithes</p>
         </div>
         <div class="bg-white rounded-lg shadow p-6 text-center">
@@ -60,7 +65,7 @@
                     @foreach($monthlyBreakdown as $data)
                     <tr>
                         <td class="px-4 py-3">{{ $data['month'] }}</td>
-                        <td class="px-4 py-3 text-right font-medium text-green-600">GH₵ {{ number_format($data['amount'], 2) }}</td>
+                        <td class="px-4 py-3 text-right font-medium text-green-600">GHâ‚µ {{ number_format($data['amount'], 2) }}</td>
                         <td class="px-4 py-3 text-right">{{ $data['count'] }}</td>
                     </tr>
                     @endforeach
@@ -88,7 +93,7 @@
                         <td class="px-4 py-3 font-medium">{{ $index + 1 }}</td>
                         <td class="px-4 py-3">{{ $item->member->full_name ?? 'Unknown' }}</td>
                         <td class="px-4 py-3 text-right">{{ $item->payments }}</td>
-                        <td class="px-4 py-3 text-right font-bold text-green-600">GH₵ {{ number_format($item->total, 2) }}</td>
+                        <td class="px-4 py-3 text-right font-bold text-green-600">GHâ‚µ {{ number_format($item->total, 2) }}</td>
                     </tr>
                     @endforeach
                 </tbody>

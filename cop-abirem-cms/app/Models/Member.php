@@ -39,7 +39,9 @@ class Member extends Model
         'photo_path',
         'qr_code_path',
         'fingerprint_template_1',
+        'fingerprint_hash_1',
         'fingerprint_template_2',
+        'fingerprint_hash_2',
         'biometric_enrolled',
         'biometric_enrolled_at',
         'date_joined',
@@ -208,7 +210,7 @@ class Member extends Model
     public function scopeInMinistry($query, $ministryId)
     {
         return $query->whereHas('ministries', function ($q) use ($ministryId) {
-            $q->where('ministries.id', $ministryId)->where('is_active', true);
+            $q->where('ministries.id', $ministryId)->where('member_ministry.is_active', true);
         });
     }
 

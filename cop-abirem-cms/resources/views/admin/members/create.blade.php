@@ -402,12 +402,27 @@ function previewImage(input) {
 }
 
 // ── Biometric capture (WebSocket bridge to local scanner server) ────────────
-let fpWs = null;
+const ALL_TEMPLATES_URL = "{{ route('admin.members.biometric.all-templates') }}";
+
+let fpWs             = null;
 let fpCapturingIndex = null;
+let fpOtherMembers   = [];   // all currently enrolled members — for duplicate check
 
 function toggleBiometricSection(show) {
     document.getElementById('biometric_section').classList.toggle('hidden', !show);
-    if (show && !fpWs) connectFpScanner();
+    if (show && !fpWs) initFpScanner();
+}
+
+async function initFpScanner() {
+    // Load all enrolled templates first, then open the WebSocket
+    try {
+        const res  = await fetch(ALL_TEMPLATES_URL, { headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        fpOtherMembers = data.members || [];
+    } catch (_) {
+        fpOtherMembers = [];
+    }
+    connectFpScanner();
 }
 
 function connectFpScanner() {
@@ -417,8 +432,24 @@ function connectFpScanner() {
         fpWs.onclose = () => { fpWs = null; document.getElementById('fp_warning').classList.remove('hidden'); };
         fpWs.onerror = () => { fpWs = null; document.getElementById('fp_warning').classList.remove('hidden'); };
         fpWs.onmessage = (e) => {
-            const d = JSON.parse(e.data);
-            if (d.type === 'capture_result' && fpCapturingIndex) {
+            let d; try { d = JSON.parse(e.data); } catch (_) { return; }
+
+            if (d.type === 'identify_result') {
+                document.getElementById('fp_scanning').classList.add('hidden');
+                if (d.matched) {
+                    const match = fpOtherMembers.find(m => m.id === d.member_id);
+                    const name  = match ? match.name : 'another member';
+                    onFpError(fpCapturingIndex,
+                        'Duplicate fingerprint — already enrolled for ' + name +
+                        '. Each member must use their own unique finger.');
+                    fpCapturingIndex = null;
+                } else if (d.template) {
+                    onFpCaptured(fpCapturingIndex, d.template);
+                    fpCapturingIndex = null;
+                }
+
+            } else if (d.type === 'capture_result') {
+                // Fallback: no enrolled members exist yet — plain capture is fine
                 document.getElementById('fp_scanning').classList.add('hidden');
                 if (d.success) {
                     onFpCaptured(fpCapturingIndex, d.template);
@@ -438,10 +469,22 @@ function captureFingerprint(index) {
         document.getElementById('fp_warning').classList.remove('hidden');
         return;
     }
+    // Clear any previous capture for this slot
+    document.getElementById('fingerprint_template_' + index).value = '';
     fpCapturingIndex = index;
     document.getElementById('fp_scanning').classList.remove('hidden');
     document.getElementById('fp_status_' + index).textContent = 'Scanning…';
-    fpWs.send(JSON.stringify({ action: 'capture' }));
+
+    if (fpOtherMembers.length > 0) {
+        // Use identify mode so the bridge checks for duplicates automatically
+        fpWs.send(JSON.stringify({
+            action: 'start_identify',
+            members: fpOtherMembers.map(m => ({ id: m.id, t1: m.t1, t2: m.t2 || null }))
+        }));
+    } else {
+        // No one enrolled yet — plain capture is safe
+        fpWs.send(JSON.stringify({ action: 'capture' }));
+    }
 }
 
 function onFpCaptured(index, template) {

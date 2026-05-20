@@ -10,6 +10,8 @@ class VisitorVisit extends Model
 {
     use HasFactory;
 
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'visitor_id',
         'visit_date',

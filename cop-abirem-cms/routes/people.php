@@ -48,6 +48,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::post('/{member}/biometric/enroll', [BiometricController::class, 'enroll'])->name('biometric.enroll');
         Route::delete('/{member}/biometric', [BiometricController::class, 'remove'])->name('biometric.remove');
 
+        // All enrolled templates — used by the create-member page (no member scope yet)
+        Route::get('/biometric/all-templates', [BiometricController::class, 'allEnrolledTemplates'])->name('biometric.all-templates');
+
         // Bridge installer download (admin only)
         Route::get('/biometric/download-bridge', [BiometricController::class, 'downloadBridge'])->name('biometric.download-bridge');
 
@@ -67,7 +70,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::put('/{visitor}', [VisitorController::class, 'update'])->name('update');
         Route::delete('/{visitor}', [VisitorController::class, 'destroy'])->name('destroy');
         Route::post('/{visitor}/follow-up', [VisitorController::class, 'addFollowUp'])->name('follow-up');
-        Route::get('/{visitor}/convert', [VisitorController::class, 'convertForm'])->name('convert.form');
+        Route::post('/{visitor}/record-visit', [VisitorController::class, 'recordVisit'])->name('record-visit');
+        Route::get('/{visitor}/convert', [VisitorController::class, 'showConvertForm'])->name('convert.form');
         Route::post('/{visitor}/convert', [VisitorController::class, 'convert'])->name('convert');
     });
 
