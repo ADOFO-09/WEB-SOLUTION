@@ -175,31 +175,37 @@ class Donation extends Model
     public static function generateReferenceNumber(): string
     {
         $prefix = 'DN';
-        $year = date('Y');
-        $last = self::whereYear('created_at', $year)
+        $year   = date('Y');
+        $last   = self::withTrashed()
+            ->whereYear('created_at', $year)
+            ->where('reference_number', 'like', $prefix . $year . '%')
             ->orderBy('id', 'desc')
             ->first();
-        
-        $sequence = $last ? ((int)substr($last->reference_number, -5) + 1) : 1;
-        
-        return $prefix . $year . str_pad($sequence, 5, '0', STR_PAD_LEFT);
+
+        $sequence = 1;
+        if ($last && preg_match('/' . $prefix . $year . '(\d+)$/', $last->reference_number, $m)) {
+            $sequence = (int) $m[1] + 1;
+        }
+
+        do {
+            $ref = $prefix . $year . str_pad($sequence++, 5, '0', STR_PAD_LEFT);
+        } while (self::withTrashed()->where('reference_number', $ref)->exists());
+
+        return $ref;
     }
 
     public static function generateReceiptNumber(): string
     {
         $prefix = 'DRC';
-        $year = date('Y');
-        $last = self::whereYear('created_at', $year)
-            ->whereNotNull('receipt_number')
-            ->orderBy('id', 'desc')
-            ->first();
-        
-        $sequence = 1;
-        if ($last && preg_match('/(\d{5})$/', $last->receipt_number, $matches)) {
-            $sequence = (int)$matches[1] + 1;
-        }
-        
-        return $prefix . $year . str_pad($sequence, 5, '0', STR_PAD_LEFT);
+        $year   = date('Y');
+        $last   = self::withTrashed()->whereYear('created_at', $year)->whereNotNull('receipt_number')->orderBy('id', 'desc')->first();
+        $sequence = ($last && preg_match('/(\d{5})$/', $last->receipt_number, $m)) ? ((int) $m[1] + 1) : 1;
+
+        do {
+            $ref = $prefix . $year . str_pad($sequence++, 5, '0', STR_PAD_LEFT);
+        } while (self::withTrashed()->where('receipt_number', $ref)->exists());
+
+        return $ref;
     }
 
     public static function getProjectTotal($projectId): float

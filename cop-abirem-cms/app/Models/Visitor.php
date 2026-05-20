@@ -129,7 +129,7 @@ class Visitor extends Model
 
     public function scopePendingFollowUp($query)
     {
-        return $query->whereIn('follow_up_status', ['pending', 'in_progress']);
+        return $query->whereIn('follow_up_status', ['pending', 'contacted', 'interested']);
     }
 
     // ==========================================
@@ -174,7 +174,9 @@ class Visitor extends Model
         $memberData['email'] = $memberData['email'] ?? $this->email;
         $memberData['address'] = $memberData['address'] ?? $this->address;
         $memberData['date_joined'] = $memberData['date_joined'] ?? now()->toDateString();
-        $memberData['member_id'] = Member::generateMemberId();
+        if (empty($memberData['member_id'])) {
+            $memberData['member_id'] = Member::generateMemberId();
+        }
         $memberData['created_by'] = auth()->id();
 
         $member = Member::create($memberData);

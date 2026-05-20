@@ -36,15 +36,30 @@ class ServiceType extends Model
 
         static::creating(function ($model) {
             if (empty($model->slug)) {
-                $model->slug = Str::slug($model->name);
+                $model->slug = static::uniqueSlug(Str::slug($model->name));
             }
         });
 
         static::updating(function ($model) {
             if ($model->isDirty('name') && !$model->isDirty('slug')) {
-                $model->slug = Str::slug($model->name);
+                $model->slug = static::uniqueSlug(Str::slug($model->name), $model->id);
             }
         });
+    }
+
+    private static function uniqueSlug(string $base, int $excludeId = null): string
+    {
+        $slug  = $base;
+        $count = 2;
+        while (
+            static::withTrashed()
+                ->where('slug', $slug)
+                ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+                ->exists()
+        ) {
+            $slug = $base . '-' . $count++;
+        }
+        return $slug;
     }
 
     // ==========================================

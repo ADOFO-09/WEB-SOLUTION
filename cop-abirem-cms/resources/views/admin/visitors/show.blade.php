@@ -51,11 +51,11 @@
                 
                 @php
                     $statusColors = [
-                        'pending' => 'bg-yellow-100 text-yellow-800',
-                        'in_progress' => 'bg-blue-100 text-blue-800',
-                        'completed' => 'bg-green-100 text-green-800',
+                        'pending'        => 'bg-yellow-100 text-yellow-800',
+                        'contacted'      => 'bg-blue-100 text-blue-800',
+                        'interested'     => 'bg-indigo-100 text-indigo-800',
                         'not_interested' => 'bg-gray-100 text-gray-800',
-                        'converted' => 'bg-purple-100 text-purple-800',
+                        'converted'      => 'bg-purple-100 text-purple-800',
                     ];
                 @endphp
                 <span class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $statusColors[$visitor->follow_up_status] ?? 'bg-gray-100' }}">

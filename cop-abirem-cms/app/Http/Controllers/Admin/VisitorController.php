@@ -175,7 +175,7 @@ class VisitorController extends Controller implements HasMiddleware
             'referral_source' => 'required|in:member,walk_in,social_media,event,flyer,other',
             'referred_by_member_id' => 'nullable|exists:members,id',
             'prayer_request' => 'nullable|string|max:1000',
-            'follow_up_status' => 'required|in:pending,in_progress,completed,not_interested,converted',
+            'follow_up_status' => 'required|in:pending,contacted,interested,not_interested,converted',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -221,15 +221,16 @@ class VisitorController extends Controller implements HasMiddleware
             'contacted_by'       => auth()->id(),
         ]);
 
-        // Update follow-up status based on outcome
-        $newStatus = match ($validated['outcome']) {
-            'not_interested' => 'not_interested',
-            'interested'     => 'interested',
-            'reached'        => $visitor->follow_up_status === 'pending' ? 'contacted' : $visitor->follow_up_status,
-            default          => $visitor->follow_up_status,
-        };
-
-        $visitor->update(['follow_up_status' => $newStatus]);
+        // Never change the status of an already-converted visitor
+        if (!$visitor->isConverted()) {
+            $newStatus = match ($validated['outcome']) {
+                'not_interested' => 'not_interested',
+                'interested'     => 'interested',
+                'reached'        => $visitor->follow_up_status === 'pending' ? 'contacted' : $visitor->follow_up_status,
+                default          => $visitor->follow_up_status,
+            };
+            $visitor->update(['follow_up_status' => $newStatus]);
+        }
 
         // Send SMS if the chosen contact method is SMS
         if ($validated['contact_method'] === 'sms') {
@@ -283,7 +284,14 @@ class VisitorController extends Controller implements HasMiddleware
         DB::beginTransaction();
 
         try {
-            $member = $visitor->convertToMember($validated);
+            // Re-check inside the transaction with a row lock to prevent double-submission
+            $locked = Visitor::lockForUpdate()->find($visitor->id);
+            if (!$locked->canBeConverted()) {
+                DB::rollBack();
+                return back()->with('error', 'This visitor has already been converted to a member.');
+            }
+
+            $member = $locked->convertToMember($validated);
 
             DB::commit();
 

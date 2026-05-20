@@ -163,31 +163,46 @@ class Tithe extends Model
     public static function generateReferenceNumber(): string
     {
         $prefix = 'TT';
-        $year = date('Y');
-        $lastTithe = self::whereYear('created_at', $year)
+        $year   = date('Y');
+        $last   = self::withTrashed()
+            ->whereYear('created_at', $year)
+            ->where('reference_number', 'like', $prefix . $year . '%')
             ->orderBy('id', 'desc')
             ->first();
-        
-        $sequence = $lastTithe ? ((int)substr($lastTithe->reference_number, -5) + 1) : 1;
-        
-        return $prefix . $year . str_pad($sequence, 5, '0', STR_PAD_LEFT);
+
+        $sequence = 1;
+        if ($last && preg_match('/' . $prefix . $year . '(\d+)$/', $last->reference_number, $m)) {
+            $sequence = (int) $m[1] + 1;
+        }
+
+        do {
+            $ref = $prefix . $year . str_pad($sequence++, 5, '0', STR_PAD_LEFT);
+        } while (self::withTrashed()->where('reference_number', $ref)->exists());
+
+        return $ref;
     }
 
     public static function generateReceiptNumber(): string
     {
         $prefix = 'RCT';
-        $year = date('Y');
-        $lastReceipt = self::whereYear('created_at', $year)
+        $year   = date('Y');
+        $last   = self::withTrashed()
+            ->whereYear('created_at', $year)
+            ->where('receipt_number', 'like', $prefix . $year . '%')
             ->whereNotNull('receipt_number')
             ->orderBy('id', 'desc')
             ->first();
-        
+
         $sequence = 1;
-        if ($lastReceipt && preg_match('/(\d{5})$/', $lastReceipt->receipt_number, $matches)) {
-            $sequence = (int)$matches[1] + 1;
+        if ($last && preg_match('/' . $prefix . $year . '(\d+)$/', $last->receipt_number, $m)) {
+            $sequence = (int) $m[1] + 1;
         }
-        
-        return $prefix . $year . str_pad($sequence, 5, '0', STR_PAD_LEFT);
+
+        do {
+            $ref = $prefix . $year . str_pad($sequence++, 5, '0', STR_PAD_LEFT);
+        } while (self::withTrashed()->where('receipt_number', $ref)->exists());
+
+        return $ref;
     }
 
     public static function getMemberTotalForYear($memberId, $year = null): float

@@ -286,7 +286,7 @@ class TitheController extends Controller implements HasMiddleware
         $serviceName = $session->serviceType->name ?? 'Service';
         $sessionDate = $session->service_date->format('M d, Y');
 
-        return redirect()->route('admin.finance.dashboard')
+        return redirect()->route('admin.tithes.index')
             ->with('success', "Session tithe of GH₵" . number_format($request->amount, 2) . " recorded for {$serviceName} on {$sessionDate}.");
     }
 

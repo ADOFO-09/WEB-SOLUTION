@@ -51,8 +51,8 @@
                     <select name="follow_up_status" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option value="">All Status</option>
                         <option value="pending" {{ request('follow_up_status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="in_progress" {{ request('follow_up_status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                        <option value="completed" {{ request('follow_up_status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                        <option value="contacted" {{ request('follow_up_status') == 'contacted' ? 'selected' : '' }}>Contacted</option>
+                        <option value="interested" {{ request('follow_up_status') == 'interested' ? 'selected' : '' }}>Interested</option>
                         <option value="not_interested" {{ request('follow_up_status') == 'not_interested' ? 'selected' : '' }}>Not Interested</option>
                         <option value="converted" {{ request('follow_up_status') == 'converted' ? 'selected' : '' }}>Converted</option>
                     </select>
@@ -137,11 +137,11 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             @php
                                 $statusColors = [
-                                    'pending' => 'bg-yellow-100 text-yellow-800',
-                                    'in_progress' => 'bg-blue-100 text-blue-800',
-                                    'completed' => 'bg-green-100 text-green-800',
+                                    'pending'        => 'bg-yellow-100 text-yellow-800',
+                                    'contacted'      => 'bg-blue-100 text-blue-800',
+                                    'interested'     => 'bg-indigo-100 text-indigo-800',
                                     'not_interested' => 'bg-gray-100 text-gray-800',
-                                    'converted' => 'bg-purple-100 text-purple-800',
+                                    'converted'      => 'bg-purple-100 text-purple-800',
                                 ];
                             @endphp
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$visitor->follow_up_status] ?? 'bg-gray-100 text-gray-800' }}">
@@ -166,13 +166,27 @@
                                 </a>
                                 @endcan
                                 @if($visitor->canBeConverted())
-                                <a href="{{ route('admin.visitors.convert.form', $visitor) }}" 
+                                <a href="{{ route('admin.visitors.convert.form', $visitor) }}"
                                    class="text-green-600 hover:text-green-900" title="Convert to Member">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                                     </svg>
                                 </a>
                                 @endif
+                                @can('visitors.delete')
+                                @if(!$visitor->isConverted())
+                                <form action="{{ route('admin.visitors.destroy', $visitor) }}" method="POST"
+                                      onsubmit="return confirm('Delete {{ addslashes($visitor->full_name) }}? This cannot be undone.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-900" title="Delete">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                                @endif
+                                @endcan
                             </div>
                         </td>
                     </tr>

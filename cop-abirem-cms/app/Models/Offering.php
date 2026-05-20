@@ -164,14 +164,23 @@ class Offering extends Model
     public static function generateReferenceNumber(): string
     {
         $prefix = 'OF';
-        $year = date('Y');
-        $lastOffering = self::whereYear('created_at', $year)
+        $year   = date('Y');
+        $last   = self::withTrashed()
+            ->whereYear('created_at', $year)
+            ->where('reference_number', 'like', $prefix . $year . '%')
             ->orderBy('id', 'desc')
             ->first();
-        
-        $sequence = $lastOffering ? ((int)substr($lastOffering->reference_number, -5) + 1) : 1;
-        
-        return $prefix . $year . str_pad($sequence, 5, '0', STR_PAD_LEFT);
+
+        $sequence = 1;
+        if ($last && preg_match('/' . $prefix . $year . '(\d+)$/', $last->reference_number, $m)) {
+            $sequence = (int) $m[1] + 1;
+        }
+
+        do {
+            $ref = $prefix . $year . str_pad($sequence++, 5, '0', STR_PAD_LEFT);
+        } while (self::withTrashed()->where('reference_number', $ref)->exists());
+
+        return $ref;
     }
 
     public static function getSessionTotal($sessionId): float

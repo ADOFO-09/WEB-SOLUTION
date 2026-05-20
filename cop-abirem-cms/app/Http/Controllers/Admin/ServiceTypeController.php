@@ -58,7 +58,7 @@ class ServiceTypeController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100|unique:service_types',
+            'name' => ['required', 'string', 'max:100', Rule::unique('service_types')->whereNull('deleted_at')],
             'day_of_week' => 'nullable|in:Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
             'default_start_time' => 'nullable|date_format:H:i',
             'description' => 'nullable|string|max:500',

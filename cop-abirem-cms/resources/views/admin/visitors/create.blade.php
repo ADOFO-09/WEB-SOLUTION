@@ -121,9 +121,10 @@
                     <select name="follow_up_status" id="follow_up_status" required
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option value="pending" {{ old('follow_up_status', $visitor->follow_up_status) == 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="in_progress" {{ old('follow_up_status', $visitor->follow_up_status) == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                        <option value="completed" {{ old('follow_up_status', $visitor->follow_up_status) == 'completed' ? 'selected' : '' }}>Completed</option>
+                        <option value="contacted" {{ old('follow_up_status', $visitor->follow_up_status) == 'contacted' ? 'selected' : '' }}>Contacted</option>
+                        <option value="interested" {{ old('follow_up_status', $visitor->follow_up_status) == 'interested' ? 'selected' : '' }}>Interested</option>
                         <option value="not_interested" {{ old('follow_up_status', $visitor->follow_up_status) == 'not_interested' ? 'selected' : '' }}>Not Interested</option>
+                        <option value="converted" {{ old('follow_up_status', $visitor->follow_up_status) == 'converted' ? 'selected' : '' }}>Converted</option>
                     </select>
                 </div>
                 @endif

@@ -78,31 +78,42 @@ class PledgePayment extends Model
         $prefix = 'PP';
         $year   = date('Y');
         $last   = self::whereYear('created_at', $year)
+            ->where('reference_number', 'like', $prefix . $year . '%')
             ->orderBy('id', 'desc')
             ->first();
 
         $sequence = 1;
-        if ($last && preg_match('/(\d{5})$/', $last->reference_number, $matches)) {
-            $sequence = (int) $matches[1] + 1;
+        if ($last && preg_match('/' . $prefix . $year . '(\d+)$/', $last->reference_number, $m)) {
+            $sequence = (int) $m[1] + 1;
         }
 
-        return $prefix . $year . str_pad($sequence, 5, '0', STR_PAD_LEFT);
+        do {
+            $ref = $prefix . $year . str_pad($sequence++, 5, '0', STR_PAD_LEFT);
+        } while (self::where('reference_number', $ref)->exists());
+
+        return $ref;
     }
 
     public static function generateReceiptNumber(): string
     {
         $prefix = 'PRC';
-        $year = date('Y');
-        $last = self::whereYear('created_at', $year)
+        $year   = date('Y');
+        $last   = self::whereYear('created_at', $year)
+            ->where('receipt_number', 'like', $prefix . $year . '%')
+            ->whereNotNull('receipt_number')
             ->orderBy('id', 'desc')
             ->first();
-        
+
         $sequence = 1;
-        if ($last && preg_match('/(\d{5})$/', $last->receipt_number, $matches)) {
-            $sequence = (int)$matches[1] + 1;
+        if ($last && preg_match('/' . $prefix . $year . '(\d+)$/', $last->receipt_number, $m)) {
+            $sequence = (int) $m[1] + 1;
         }
-        
-        return $prefix . $year . str_pad($sequence, 5, '0', STR_PAD_LEFT);
+
+        do {
+            $ref = $prefix . $year . str_pad($sequence++, 5, '0', STR_PAD_LEFT);
+        } while (self::where('receipt_number', $ref)->exists());
+
+        return $ref;
     }
 
     // ==========================================

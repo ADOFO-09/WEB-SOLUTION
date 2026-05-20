@@ -116,13 +116,17 @@
                     @endif
                     @endif
 
-                    @if($log->old_values && $log->new_values && in_array($log->action, ['voided', 'adjusted', 'restored']))
+                    @php
+                        $oldVals = is_array($log->old_values) ? $log->old_values : (is_string($log->old_values) ? json_decode($log->old_values, true) : []);
+                        $newVals = is_array($log->new_values) ? $log->new_values : (is_string($log->new_values) ? json_decode($log->new_values, true) : []);
+                    @endphp
+                    @if(is_array($oldVals) && is_array($newVals) && count($newVals) && in_array($log->action, ['voided', 'adjusted', 'restored']))
                     <div class="mt-2 space-y-1">
-                        @foreach($log->new_values as $field => $newVal)
-                        @if(isset($log->old_values[$field]) && $log->old_values[$field] != $newVal)
+                        @foreach($newVals as $field => $newVal)
+                        @if(isset($oldVals[$field]) && $oldVals[$field] != $newVal)
                         <div class="flex items-center gap-2 text-xs">
                             <span class="font-medium text-gray-500 capitalize">{{ str_replace('_', ' ', $field) }}</span>
-                            <span class="text-red-500 line-through">{{ $log->old_values[$field] }}</span>
+                            <span class="text-red-500 line-through">{{ $oldVals[$field] }}</span>
                             <span class="text-gray-400">&rarr;</span>
                             <span class="text-green-600">{{ $newVal }}</span>
                         </div>
