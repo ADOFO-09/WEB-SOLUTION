@@ -10,7 +10,7 @@
             </a>
             <h1 class="text-2xl font-bold text-gray-900">Pledge Report</h1>
         </div>
-        <form action="" method="GET">
+        <form action="{{ route('admin.reports.pledges') }}" method="GET">
             <select name="status" onchange="this.form.submit()" class="rounded-md border-gray-300 text-sm">
                 <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Status</option>
                 <option value="active" {{ $status == 'active' ? 'selected' : '' }}>Active</option>

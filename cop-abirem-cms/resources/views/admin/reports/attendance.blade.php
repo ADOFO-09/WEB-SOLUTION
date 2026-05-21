@@ -10,7 +10,7 @@
             </a>
             <h1 class="text-2xl font-bold text-gray-900">Attendance Report</h1>
         </div>
-        <form action="" method="GET" class="flex items-center space-x-2">
+        <form action="{{ route('admin.reports.attendance') }}" method="GET" class="flex items-center space-x-2">
             <select name="year" onchange="this.form.submit()" class="rounded-md border-gray-300 text-sm">
                 @forelse($financialYears as $fy)
                     <option value="{{ $fy->start_date->year }}"

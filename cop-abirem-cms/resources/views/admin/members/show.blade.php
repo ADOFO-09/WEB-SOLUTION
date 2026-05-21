@@ -323,7 +323,7 @@
         <div class="bg-white rounded-lg shadow">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h3 class="text-lg font-medium text-gray-900">Recent Tithes</h3>
-                <a href="#" class="text-indigo-600 hover:text-indigo-900 text-sm">View All</a>
+                <a href="{{ route('admin.tithes.member-history', $member) }}" class="text-indigo-600 hover:text-indigo-900 text-sm">View All</a>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -367,7 +367,7 @@
         <div class="bg-white rounded-lg shadow">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h3 class="text-lg font-medium text-gray-900">Recent Attendance</h3>
-                <a href="#" class="text-indigo-600 hover:text-indigo-900 text-sm">View All</a>
+                <a href="{{ route('admin.attendance.index') }}" class="text-indigo-600 hover:text-indigo-900 text-sm">View All</a>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">

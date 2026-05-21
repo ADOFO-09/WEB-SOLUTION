@@ -10,7 +10,7 @@
             </a>
             <h1 class="text-2xl font-bold text-gray-900">Birthday Report - {{ $monthName }}</h1>
         </div>
-        <form action="" method="GET" class="flex items-center space-x-2">
+        <form action="{{ route('admin.reports.birthdays') }}" method="GET" class="flex items-center space-x-2">
             <select name="month" onchange="this.form.submit()" class="rounded-md border-gray-300 text-sm">
                 @for($m = 1; $m <= 12; $m++)
                     <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>

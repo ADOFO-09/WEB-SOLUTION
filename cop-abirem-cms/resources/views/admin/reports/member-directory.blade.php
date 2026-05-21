@@ -11,7 +11,7 @@
             <h1 class="text-2xl font-bold text-gray-900">Member Directory</h1>
         </div>
         <div class="flex items-center space-x-2">
-            <form action="" method="GET" class="flex items-center space-x-2">
+            <form action="{{ route('admin.reports.member-directory') }}" method="GET" class="flex items-center space-x-2">
                 <select name="ministry_id" onchange="this.form.submit()" class="rounded-md border-gray-300 text-sm">
                     <option value="">All Ministries</option>
                     @foreach($ministries as $ministry)

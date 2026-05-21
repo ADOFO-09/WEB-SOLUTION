@@ -23,9 +23,9 @@ class FinancialYearController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        $financialYears = FinancialYear::orderByDesc('start_date')->paginate(15);
+        $yearsPaginated = FinancialYear::orderByDesc('start_date')->paginate(15);
 
-        return view('admin.finance.financial-years.index', compact('financialYears'));
+        return view('admin.finance.financial-years.index', compact('yearsPaginated'));
     }
 
     /**

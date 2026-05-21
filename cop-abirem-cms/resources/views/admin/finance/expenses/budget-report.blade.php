@@ -10,7 +10,7 @@
             </a>
             <h1 class="text-2xl font-bold text-gray-900">Budget Report {{ $year }}</h1>
         </div>
-        <form action="" method="GET" class="flex items-center space-x-2">
+        <form action="{{ route('admin.expenses.budget-report') }}" method="GET" class="flex items-center space-x-2">
             <select name="year" onchange="this.form.submit()" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 @forelse($financialYears as $fy)
                     <option value="{{ $fy->start_date->year }}"

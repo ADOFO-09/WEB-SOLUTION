@@ -10,7 +10,7 @@
             </a>
             <h1 class="text-2xl font-bold text-gray-900">Income Statement</h1>
         </div>
-        <form action="" method="GET" class="flex items-center space-x-2">
+        <form action="{{ route('admin.reports.income-statement') }}" method="GET" class="flex items-center space-x-2">
             <select name="year" onchange="this.form.submit()" class="rounded-md border-gray-300 text-sm">
                 @forelse($financialYears as $fy)
                     <option value="{{ $fy->start_date->year }}"
@@ -49,14 +49,14 @@
         <div class="p-6">
             <table class="w-full">
                 <tbody class="divide-y divide-gray-100">
-                    <tr><td class="py-3">Tithes</td><td class="py-3 text-right font-medium">GHâ‚µ {{ number_format($income['tithes'], 2) }}</td></tr>
-                    <tr><td class="py-3">Offerings</td><td class="py-3 text-right font-medium">GHâ‚µ {{ number_format($income['offerings'], 2) }}</td></tr>
-                    <tr><td class="py-3">Donations</td><td class="py-3 text-right font-medium">GHâ‚µ {{ number_format($income['donations'], 2) }}</td></tr>
+                    <tr><td class="py-3">Tithes</td><td class="py-3 text-right font-medium">GH₵ {{ number_format($income['tithes'], 2) }}</td></tr>
+                    <tr><td class="py-3">Offerings</td><td class="py-3 text-right font-medium">GH₵ {{ number_format($income['offerings'], 2) }}</td></tr>
+                    <tr><td class="py-3">Donations</td><td class="py-3 text-right font-medium">GH₵ {{ number_format($income['donations'], 2) }}</td></tr>
                 </tbody>
                 <tfoot>
                     <tr class="border-t-2 border-green-200">
                         <td class="py-4 font-bold text-green-800">Total Income</td>
-                        <td class="py-4 text-right text-xl font-bold text-green-600">GHâ‚µ {{ number_format($income['total'], 2) }}</td>
+                        <td class="py-4 text-right text-xl font-bold text-green-600">GH₵ {{ number_format($income['total'], 2) }}</td>
                     </tr>
                 </tfoot>
             </table>
@@ -70,7 +70,7 @@
             <table class="w-full">
                 <tbody class="divide-y divide-gray-100">
                     @forelse($expensesByCategory as $expense)
-                    <tr><td class="py-3">{{ $expense->expenseCategory->name ?? 'N/A' }}</td><td class="py-3 text-right font-medium">GHâ‚µ {{ number_format($expense->total, 2) }}</td></tr>
+                    <tr><td class="py-3">{{ $expense->expenseCategory->name ?? 'N/A' }}</td><td class="py-3 text-right font-medium">GH₵ {{ number_format($expense->total, 2) }}</td></tr>
                     @empty
                     <tr><td colspan="2" class="py-4 text-center text-gray-500">No expenses</td></tr>
                     @endforelse
@@ -78,7 +78,7 @@
                 <tfoot>
                     <tr class="border-t-2 border-red-200">
                         <td class="py-4 font-bold text-red-800">Total Expenses</td>
-                        <td class="py-4 text-right text-xl font-bold text-red-600">GHâ‚µ {{ number_format($totalExpenses, 2) }}</td>
+                        <td class="py-4 text-right text-xl font-bold text-red-600">GH₵ {{ number_format($totalExpenses, 2) }}</td>
                     </tr>
                 </tfoot>
             </table>
@@ -89,7 +89,7 @@
     <div class="bg-white rounded-lg shadow-sm border p-6">
         <div class="flex justify-between items-center">
             <span class="text-xl font-bold {{ $netIncome >= 0 ? 'text-green-800' : 'text-red-800' }}">Net Income</span>
-            <span class="text-3xl font-bold {{ $netIncome >= 0 ? 'text-green-600' : 'text-red-600' }}">GHâ‚µ {{ number_format($netIncome, 2) }}</span>
+            <span class="text-3xl font-bold {{ $netIncome >= 0 ? 'text-green-600' : 'text-red-600' }}">GH₵ {{ number_format($netIncome, 2) }}</span>
         </div>
     </div>
 </div>

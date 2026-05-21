@@ -46,7 +46,7 @@
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                @forelse($financialYears as $year)
+                @forelse($yearsPaginated as $year)
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-semibold text-gray-900">{{ $year->name }}</div>
@@ -72,7 +72,7 @@
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        GH&#x20B5; {{ number_format($year->getTotalIncome(), 2) }}
+                        GH₵ {{ number_format($year->getTotalIncome(), 2) }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-xs text-gray-500 space-y-0.5">
@@ -138,9 +138,9 @@
         </table>
     </div>
 
-    @if($financialYears->hasPages())
+    @if($yearsPaginated->hasPages())
     <div class="px-4 py-3 border-t">
-        {{ $financialYears->links() }}
+        {{ $yearsPaginated->links() }}
     </div>
     @endif
 </div>

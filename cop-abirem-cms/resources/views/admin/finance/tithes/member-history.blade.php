@@ -47,7 +47,7 @@
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-medium text-gray-900">{{ $year }} Summary</h3>
-                <form action="" method="GET" class="flex items-center">
+                <form action="{{ route('admin.tithes.member-history', $member) }}" method="GET" class="flex items-center">
                     <select name="year" onchange="this.form.submit()" 
                             class="text-sm border-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500">
                         @foreach($years as $y)

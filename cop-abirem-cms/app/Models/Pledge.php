@@ -173,14 +173,23 @@ class Pledge extends Model
     public static function generatePledgeNumber(): string
     {
         $prefix = 'PL';
-        $year = date('Y');
-        $last = self::whereYear('created_at', $year)
+        $year   = date('Y');
+        $last   = self::withTrashed()
+            ->whereYear('created_at', $year)
+            ->where('pledge_number', 'like', $prefix . $year . '%')
             ->orderBy('id', 'desc')
             ->first();
-        
-        $sequence = $last ? ((int)substr($last->pledge_number, -5) + 1) : 1;
-        
-        return $prefix . $year . str_pad($sequence, 5, '0', STR_PAD_LEFT);
+
+        $sequence = 1;
+        if ($last && preg_match('/' . $prefix . $year . '(\d+)$/', $last->pledge_number, $m)) {
+            $sequence = (int) $m[1] + 1;
+        }
+
+        do {
+            $ref = $prefix . $year . str_pad($sequence++, 5, '0', STR_PAD_LEFT);
+        } while (self::withTrashed()->where('pledge_number', $ref)->exists());
+
+        return $ref;
     }
 
     public function recordPayment(float $amount, array $data = []): PledgePayment
