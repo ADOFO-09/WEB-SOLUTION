@@ -125,12 +125,13 @@ class RoleHelper
         $slug = self::getRoleSlug($user);
 
         return match (true) {
+            in_array($slug, [self::SUPER_ADMIN, self::ADMIN])         => 'admin.dashboard',
             in_array($slug, [self::ELDER, self::PASTOR])              => 'admin.elder.dashboard',
             in_array($slug, [self::FINANCE, self::FINANCE_OFFICER])   => 'admin.finance.dashboard',
             $slug === self::MINISTRY_LEADER                            => 'admin.ministry.dashboard',
             $slug === self::SECRETARY                                  => 'admin.secretary.dashboard',
             $slug === self::MEMBER                                     => 'member.dashboard',
-            default                                                    => 'admin.dashboard',
+            default                                                    => 'admin.home',
         };
     }
 

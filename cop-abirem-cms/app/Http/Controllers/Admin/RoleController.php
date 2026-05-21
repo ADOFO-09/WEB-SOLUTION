@@ -10,8 +10,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
-class RoleController extends Controller
+class RoleController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+            new \Illuminate\Routing\Controllers\Middleware('permission:roles.view',    only: ['index', 'show']),
+            new \Illuminate\Routing\Controllers\Middleware('permission:roles.manage',  only: ['create', 'store', 'edit', 'update']),
+            new \Illuminate\Routing\Controllers\Middleware('permission:roles.manage',  only: ['destroy']),
+            new \Illuminate\Routing\Controllers\Middleware('permission:permissions.assign', only: ['permissions', 'updatePermissions']),
+        ];
+    }
+
     /**
      * Display a listing of roles.
      */

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\RoleHelper;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -43,11 +45,12 @@ class ProfileController extends Controller implements HasMiddleware
      */
     public function update(Request $request)
     {
+        /** @var User $user */
         $user = auth()->user();
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'email' => "required|email|max:255|unique:users,email,{$user->id}",
             'phone' => 'nullable|string|max:20',
         ]);
 
@@ -75,9 +78,9 @@ class ProfileController extends Controller implements HasMiddleware
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        auth()->user()->update([
-            'password' => Hash::make($validated['password']),
-        ]);
+        /** @var User $user */
+        $user = auth()->user();
+        $user->update(['password' => Hash::make($validated['password'])]);
 
         return redirect()->route('admin.profile.show')
             ->with('success', 'Password changed successfully.');
@@ -100,12 +103,13 @@ class ProfileController extends Controller implements HasMiddleware
             'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
-        auth()->user()->update([
-            'password'            => Hash::make($validated['password']),
-            'must_change_password' => false,
-        ]);
+        /** @var User $user */
+        $user = auth()->user();
+        $user->password             = Hash::make($validated['password']);
+        $user->must_change_password = false;
+        $user->save();
 
-        return redirect()->intended(route('admin.dashboard'))
+        return redirect()->route(RoleHelper::getDashboardRoute($user))
             ->with('success', 'Password updated. Welcome!');
     }
 }

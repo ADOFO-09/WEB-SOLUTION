@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Permission;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class PermissionSeeder extends Seeder
@@ -137,16 +136,11 @@ class PermissionSeeder extends Seeder
             ['name' => 'Mark Attendance (Manual)', 'slug' => 'attendance.mark-manual', 'module' => 'attendance', 'description' => 'Mark attendance manually from list'],
             ['name' => 'Mark Attendance (QR Code)', 'slug' => 'attendance.mark-qr', 'module' => 'attendance', 'description' => 'Mark attendance via QR code scan'],
             ['name' => 'Mark Attendance (Biometric)', 'slug' => 'attendance.mark-biometric', 'module' => 'attendance', 'description' => 'Mark attendance via biometric device'],
-            ['name' => 'Mark Attendance (Face Recognition)', 'slug' => 'attendance.mark-face', 'module' => 'attendance', 'description' => 'Mark attendance via face recognition'],
 
             // Finance - Receipts
             ['name' => 'View Receipts', 'slug' => 'receipts.view', 'module' => 'finance', 'description' => 'View issued receipts'],
             ['name' => 'Issue Receipts', 'slug' => 'receipts.issue', 'module' => 'finance', 'description' => 'Issue receipts for contributions'],
             ['name' => 'Print Receipts', 'slug' => 'receipts.print', 'module' => 'finance', 'description' => 'Print contribution receipts'],
-
-            // Announcements
-            ['name' => 'View Announcements', 'slug' => 'announcements.view', 'module' => 'communication', 'description' => 'View church announcements'],
-            ['name' => 'Manage Announcements', 'slug' => 'announcements.manage', 'module' => 'communication', 'description' => 'Create and edit announcements'],
 
             // Ministries
             ['name' => 'View All Ministries', 'slug' => 'ministries.view', 'module' => 'ministries', 'description' => 'View all ministry groups'],
@@ -167,10 +161,6 @@ class PermissionSeeder extends Seeder
             ['name' => 'Manage Roles', 'slug' => 'roles.manage', 'module' => 'users', 'description' => 'Create and edit roles'],
             ['name' => 'Assign Permissions', 'slug' => 'permissions.assign', 'module' => 'users', 'description' => 'Assign permissions to roles'],
 
-            // System operations
-            ['name' => 'Backup Database', 'slug' => 'system.backup', 'module' => 'settings', 'description' => 'Create database backups'],
-            ['name' => 'Restore Database', 'slug' => 'system.restore', 'module' => 'settings', 'description' => 'Restore from database backups'],
-            ['name' => 'System Maintenance', 'slug' => 'system.maintenance', 'module' => 'settings', 'description' => 'Perform system maintenance tasks'],
 
             // Member Portal — canonical extended slugs
             ['name' => 'Access Dashboard (Portal)', 'slug' => 'portal.dashboard', 'module' => 'portal', 'description' => 'Access the member portal dashboard'],
@@ -178,7 +168,6 @@ class PermissionSeeder extends Seeder
             ['name' => 'Request Profile Update', 'slug' => 'portal.profile.edit', 'module' => 'portal', 'description' => 'Request contact info updates via portal'],
             ['name' => 'View Own Contributions (Portal)', 'slug' => 'portal.contributions.view', 'module' => 'portal', 'description' => 'View own contribution history via portal'],
             ['name' => 'Download Statements', 'slug' => 'portal.statements.download', 'module' => 'portal', 'description' => 'Download contribution statements'],
-            ['name' => 'View Announcements (Portal)', 'slug' => 'portal.announcements.view', 'module' => 'portal', 'description' => 'View church announcements via portal'],
             ['name' => 'View Own Attendance (Portal)', 'slug' => 'portal.attendance.view', 'module' => 'portal', 'description' => 'View own attendance history via portal'],
         ];
 

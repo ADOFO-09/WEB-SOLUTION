@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Roles\ElderDashboardController;
 use App\Http\Controllers\Admin\Roles\FinanceDashboardController;
 use App\Http\Controllers\Admin\Roles\MinistryDashboardController;
 use App\Http\Controllers\Admin\Roles\SecretaryDashboardController;
+use App\Http\Controllers\Admin\StaffHomeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,7 +17,12 @@ use App\Http\Controllers\Admin\Roles\SecretaryDashboardController;
 */
 
 Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->group(function () {
-    
+
+    // ==========================================
+    // STAFF HOME (generic permission-aware dashboard)
+    // ==========================================
+    Route::get('/home', [StaffHomeController::class, 'index'])->name('home');
+
     // ==========================================
     // MINISTRIES
     // ==========================================

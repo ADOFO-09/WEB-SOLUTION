@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\RoleHelper;
 use App\Http\Controllers\Controller;
 use App\Models\FinancialYear;
 use App\Models\Member;
@@ -14,7 +15,6 @@ use App\Models\Donation;
 use App\Models\Pledge;
 use App\Models\Expense;
 use App\Models\SmsMessage;
-use Illuminate\Contracts\Routing\Middleware;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -37,6 +37,15 @@ class DashboardController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
+        // Route non-admin roles to their dedicated dashboards
+        $user = auth()->user();
+        if (!RoleHelper::isSystemAdmin($user)) {
+            $route = RoleHelper::getDashboardRoute($user);
+            if ($route !== 'admin.dashboard') {
+                return redirect()->route($route);
+            }
+        }
+
         $financialYears = FinancialYear::orderBy('start_date', 'desc')->get();
         $activeFinancialYear = $financialYears->firstWhere('is_active', true)
             ?? $financialYears->first();
