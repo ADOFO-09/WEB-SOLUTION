@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -10,6 +10,7 @@ use App\Models\Ministry;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use App\Helpers\SettingHelper;
 
 class AssetController extends Controller implements HasMiddleware
 {
@@ -48,7 +49,7 @@ class AssetController extends Controller implements HasMiddleware
             $query->where('condition_status', $request->condition);
         }
 
-        $assets     = $query->orderBy('name')->paginate(20)->withQueryString();
+        $assets     = $query->orderBy('name')->paginate(SettingHelper::perPage())->withQueryString();
         $categories = AssetCategory::orderBy('name')->get();
 
         $stats = [

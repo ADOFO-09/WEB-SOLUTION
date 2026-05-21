@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use App\Helpers\SettingHelper;
 
 class ServiceTypeController extends Controller implements HasMiddleware
 {
@@ -39,7 +40,7 @@ class ServiceTypeController extends Controller implements HasMiddleware
             $query->where('is_active', $request->status === 'active');
         }
 
-        $serviceTypes = $query->orderBy('name')->paginate(15)->withQueryString();
+        $serviceTypes = $query->orderBy('name')->paginate(SettingHelper::perPage())->withQueryString();
 
         return view('admin.service-types.index', compact('serviceTypes'));
     }

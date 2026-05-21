@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use App\Helpers\SettingHelper;
 
 class MinistryController extends Controller implements HasMiddleware
 {
@@ -46,7 +47,7 @@ class MinistryController extends Controller implements HasMiddleware
             }
         }
 
-        $ministries = $query->orderBy('name')->paginate(15)->withQueryString();
+        $ministries = $query->orderBy('name')->paginate(SettingHelper::perPage())->withQueryString();
 
         return view('admin.ministries.index', compact('ministries'));
     }

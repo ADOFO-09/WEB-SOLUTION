@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Record Session Tithe')
 
@@ -73,10 +73,10 @@
             {{-- Amount --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Total Tithe Amount (GH₵) <span class="text-red-500">*</span>
+                    Total Tithe Amount ({{ $currencySymbol }}) <span class="text-red-500">*</span>
                 </label>
                 <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium select-none">GH₵</span>
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium select-none">{{ $currencySymbol }}</span>
                     <input type="number" name="amount" step="0.01" min="0.01" required
                            value="{{ old('amount') }}"
                            class="w-full pl-14 text-lg rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
@@ -92,10 +92,7 @@
                 </label>
                 <select name="payment_method" required
                         class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                    <option value="cash" {{ old('payment_method', 'cash') === 'cash' ? 'selected' : '' }}>Cash</option>
-                    <option value="mobile_money" {{ old('payment_method') === 'mobile_money' ? 'selected' : '' }}>Mobile Money</option>
-                    <option value="bank_transfer" {{ old('payment_method') === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
-                    <option value="cheque" {{ old('payment_method') === 'cheque' ? 'selected' : '' }}>Cheque</option>
+                    @include('admin.partials.payment-method-options', ['selected' => old('payment_method', 'cash')])
                 </select>
             </div>
 

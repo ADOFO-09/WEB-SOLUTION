@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Pledge Report')
 
@@ -26,11 +26,11 @@
     <!-- Summary -->
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div class="bg-white rounded-lg shadow p-6 text-center">
-            <p class="text-3xl font-bold text-gray-900">GH₵ {{ number_format($summary['total_pledged'], 2) }}</p>
+            <p class="text-3xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($summary['total_pledged'], 2) }}</p>
             <p class="text-sm text-gray-500">Total Pledged</p>
         </div>
         <div class="bg-white rounded-lg shadow p-6 text-center">
-            <p class="text-3xl font-bold text-green-600">GH₵ {{ number_format($summary['total_paid'], 2) }}</p>
+            <p class="text-3xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($summary['total_paid'], 2) }}</p>
             <p class="text-sm text-gray-500">Total Paid</p>
         </div>
         <div class="bg-white rounded-lg shadow p-6 text-center">
@@ -67,8 +67,8 @@
                     <tr>
                         <td class="px-4 py-3">{{ $pledge->member->full_name ?? 'Unknown' }}</td>
                         <td class="px-4 py-3 text-sm">{{ Str::limit($pledge->purpose, 30) }}</td>
-                        <td class="px-4 py-3 text-right font-medium">GH₵ {{ number_format($pledge->total_amount, 2) }}</td>
-                        <td class="px-4 py-3 text-right text-green-600">GH₵ {{ number_format($pledge->amount_paid, 2) }}</td>
+                        <td class="px-4 py-3 text-right font-medium">{{ $currencySymbol }} {{ number_format($pledge->total_amount, 2) }}</td>
+                        <td class="px-4 py-3 text-right text-green-600">{{ $currencySymbol }} {{ number_format($pledge->amount_paid, 2) }}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center">
                                 <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">

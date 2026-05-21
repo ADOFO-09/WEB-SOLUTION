@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Offering Details')
 
@@ -29,7 +29,7 @@
             <div class="text-center">
                 <p class="text-blue-100 text-sm">Reference Number</p>
                 <h2 class="text-2xl font-bold">{{ $offering->reference_number }}</h2>
-                <p class="mt-4 text-4xl font-bold">GH₵ {{ number_format($offering->amount, 2) }}</p>
+                <p class="mt-4 text-4xl font-bold">{{ $currencySymbol }} {{ number_format($offering->amount, 2) }}</p>
                 <p class="text-blue-100">{{ $offering->incomeCategory->name ?? 'General Offering' }}</p>
             </div>
         </div>

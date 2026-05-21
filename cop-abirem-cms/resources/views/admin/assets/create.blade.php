@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Add Asset')
 
@@ -54,7 +54,7 @@
                 </div>
 
                 <div>
-                    <label for="purchase_price" class="block text-sm font-medium text-gray-700">Purchase Price (GH₵) *</label>
+                    <label for="purchase_price" class="block text-sm font-medium text-gray-700">Purchase Price ({{ $currencySymbol }}) *</label>
                     <input type="number" name="purchase_price" id="purchase_price" value="{{ old('purchase_price') }}"
                            min="0" step="0.01" required
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
@@ -62,7 +62,7 @@
                 </div>
 
                 <div>
-                    <label for="current_value" class="block text-sm font-medium text-gray-700">Current Value (GH₵) *</label>
+                    <label for="current_value" class="block text-sm font-medium text-gray-700">Current Value ({{ $currencySymbol }}) *</label>
                     <input type="number" name="current_value" id="current_value" value="{{ old('current_value') }}"
                            min="0" step="0.01" required
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">

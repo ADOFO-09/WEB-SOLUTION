@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Ledger Corrections')
 
@@ -154,7 +154,7 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 font-mono text-red-800">
-                            <span class="line-through">GH₵ {{ number_format($row['amount'], 2) }}</span>
+                            <span class="line-through">{{ $currencySymbol }} {{ number_format($row['amount'], 2) }}</span>
                         </td>
                         <td class="px-4 py-3 text-gray-700 max-w-xs">{{ Str::limit($e->void_reason, 60) }}</td>
                         <td class="px-4 py-3 text-gray-500">
@@ -229,12 +229,12 @@
                                 {{ ucfirst($row['type']) }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 font-mono text-yellow-800 line-through">GH₵ {{ number_format($row['amount'], 2) }}</td>
+                        <td class="px-4 py-3 font-mono text-yellow-800 line-through">{{ $currencySymbol }} {{ number_format($row['amount'], 2) }}</td>
                         <td class="px-4 py-3 font-mono text-blue-700">
                             {{ $adj?->reference_number ?? '—' }}
                         </td>
                         <td class="px-4 py-3 font-mono text-green-700 font-semibold">
-                            {{ $adj ? 'GH₵ ' . number_format($adj->amount, 2) : '—' }}
+                            {{ $adj ? '{{ \ }} ' . number_format($adj->amount, 2) : '—' }}
                         </td>
                         <td class="px-4 py-3 text-right">
                             <a href="{{ route('admin.finance.corrections.history', [$row['type'], $e->id]) }}"

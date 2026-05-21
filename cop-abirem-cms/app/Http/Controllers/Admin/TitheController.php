@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\SettingHelper;
 
 class TitheController extends Controller implements HasMiddleware
 {
@@ -81,7 +82,7 @@ class TitheController extends Controller implements HasMiddleware
         }
 
         $query->orderBy('payment_date', 'desc');
-        $tithes = $query->paginate(20)->withQueryString();
+        $tithes = $query->paginate(SettingHelper::perPage())->withQueryString();
 
         // Statistics
         $stats = [
@@ -296,6 +297,10 @@ class TitheController extends Controller implements HasMiddleware
      */
     private function sendTitheSms(Tithe $tithe): void
     {
+        if (!\App\Models\Setting::get('sms_auto_tithe_confirmation', false)) {
+            return;
+        }
+
         // Session-level tithes have no individual member
         if (!$tithe->member_id) {
             return;

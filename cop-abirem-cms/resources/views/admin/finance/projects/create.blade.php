@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'New Project')
 
@@ -33,7 +33,7 @@
             </div>
 
             <div>
-                <label for="target_amount" class="block text-sm font-medium text-gray-700">Target Amount (GH₵) *</label>
+                <label for="target_amount" class="block text-sm font-medium text-gray-700">Target Amount ({{ $currencySymbol }}) *</label>
                 <input type="number" name="target_amount" id="target_amount" value="{{ old('target_amount', '0') }}"
                        min="0" step="0.01" required
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">

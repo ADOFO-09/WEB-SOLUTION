@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', isset($pledge) ? 'Edit Pledge' : 'Create Pledge')
 
@@ -70,10 +70,10 @@
 
                 <!-- Amount -->
                 <div>
-                    <label for="total_amount" class="block text-sm font-medium text-gray-700">Pledge Amount (GH₵) *</label>
+                    <label for="total_amount" class="block text-sm font-medium text-gray-700">Pledge Amount ({{ $currencySymbol }}) *</label>
                     <div class="mt-1 relative rounded-md shadow-sm">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span class="text-gray-500 sm:text-sm">GH₵</span>
+                            <span class="text-gray-500 sm:text-sm">{{ $currencySymbol }}</span>
                         </div>
                         <input type="number" name="total_amount" id="total_amount" step="0.01" min="1"
                                value="{{ old('total_amount', $pledge->total_amount ?? '') }}" required

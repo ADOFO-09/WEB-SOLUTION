@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\ActivityLog;
+use App\Models\Setting;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -32,6 +33,11 @@ class LogActivity
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
+
+        // Respect the enable_activity_logging setting
+        if (!Setting::get('enable_activity_logging', true)) {
+            return $response;
+        }
 
         // Only log for authenticated users
         if (!auth()->check()) {

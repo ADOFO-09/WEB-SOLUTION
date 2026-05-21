@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Session Offering Summary')
 
@@ -24,7 +24,7 @@
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Total Collected</div>
-            <div class="text-2xl font-bold text-green-600">GH₵ {{ number_format($totalAmount, 2) }}</div>
+            <div class="text-2xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($totalAmount, 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Total Records</div>
@@ -48,7 +48,7 @@
                     <div class="text-xs text-gray-400">{{ $category['count'] }} record(s)</div>
                 </div>
                 <div class="text-right">
-                    <div class="text-sm font-bold text-gray-900">GH₵ {{ number_format($category['total'], 2) }}</div>
+                    <div class="text-sm font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($category['total'], 2) }}</div>
                     @if($totalAmount > 0)
                     <div class="text-xs text-gray-400">{{ number_format(($category['total'] / $totalAmount) * 100, 1) }}%</div>
                     @endif
@@ -86,14 +86,14 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $offering->incomeCategory?->name ?? 'General' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-500 capitalize">{{ str_replace('_', ' ', $offering->payment_method) }}</td>
-                        <td class="px-6 py-4 text-sm text-right font-semibold text-gray-900">GH₵ {{ number_format($offering->amount, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-right font-semibold text-gray-900">{{ $currencySymbol }} {{ number_format($offering->amount, 2) }}</td>
                     </tr>
                     @endforeach
                 </tbody>
                 <tfoot class="bg-gray-50">
                     <tr>
                         <td colspan="4" class="px-6 py-4 text-sm font-semibold text-gray-700">Total</td>
-                        <td class="px-6 py-4 text-sm text-right font-bold text-green-600">GH₵ {{ number_format($totalAmount, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-right font-bold text-green-600">{{ $currencySymbol }} {{ number_format($totalAmount, 2) }}</td>
                     </tr>
                 </tfoot>
             </table>

@@ -164,6 +164,45 @@
                         </label>
                     </div>
 
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Auto Tithe Confirmation</h4>
+                            <p class="text-sm text-gray-500">Send SMS to member when a tithe payment is recorded.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="sms_auto_tithe_confirmation" value="1"
+                                   {{ ($settings['sms_auto_tithe_confirmation'] ?? '0') == '1' ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Auto Donation Confirmation</h4>
+                            <p class="text-sm text-gray-500">Send SMS to donor when a donation is recorded.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="sms_auto_donation_confirmation" value="1"
+                                   {{ ($settings['sms_auto_donation_confirmation'] ?? '0') == '1' ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Auto Pledge Reminder</h4>
+                            <p class="text-sm text-gray-500">Remind members of outstanding pledge balances via SMS.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="sms_auto_pledge_reminder" value="1"
+                                   {{ ($settings['sms_auto_pledge_reminder'] ?? '0') == '1' ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+
                     <div x-data="{ count: {{ strlen(old('sms_birthday_template', $settings['sms_birthday_template'] ?? '')) }} }">
                         <div class="flex items-center justify-between mb-1">
                             <label for="sms_birthday_template" class="block text-sm font-medium text-gray-700">Birthday Message Template</label>

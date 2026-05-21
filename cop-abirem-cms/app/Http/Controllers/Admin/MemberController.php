@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -17,6 +17,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Helpers\SettingHelper;
 
 class MemberController extends Controller implements HasMiddleware
 {
@@ -73,7 +74,7 @@ class MemberController extends Controller implements HasMiddleware
         $sortDirection = in_array($request->get('direction'), $allowedDirections) ? $request->get('direction') : 'desc';
         $query->orderBy($sortField, $sortDirection);
 
-        $members = $query->paginate(15)->withQueryString();
+        $members = $query->paginate(SettingHelper::perPage())->withQueryString();
         $ministries = Ministry::active()->orderBy('name')->get();
 
         // Statistics

@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Monthly Report — ' . $report->period_label)
 
@@ -268,14 +268,14 @@
             'Spent (Non-Human)'          => $report->amount_spent_non_human,
         ] as $label => $val)
         <div class="bg-blue-50 rounded p-4">
-            <p class="text-2xl font-bold text-blue-800">GH₵ {{ number_format($val, 2) }}</p>
+            <p class="text-2xl font-bold text-blue-800">{{ $currencySymbol }} {{ number_format($val, 2) }}</p>
             <p class="text-xs text-gray-500 mt-1">{{ $label }}</p>
         </div>
         @endforeach
     </div>
     <div class="px-6 pb-4 text-right">
         <span class="text-sm text-gray-500">Total Amount Spent: </span>
-        <span class="font-semibold text-gray-800">GH₵ {{ number_format($report->total_amount_spent, 2) }}</span>
+        <span class="font-semibold text-gray-800">{{ $currencySymbol }} {{ number_format($report->total_amount_spent, 2) }}</span>
     </div>
 </div>
 

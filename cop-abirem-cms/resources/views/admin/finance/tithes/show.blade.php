@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Tithe Details')
 
@@ -38,7 +38,7 @@
             <div class="text-center">
                 <p class="text-green-100 text-sm">Receipt Number</p>
                 <h2 class="text-2xl font-bold">{{ $tithe->receipt_number }}</h2>
-                <p class="mt-4 text-4xl font-bold">GH₵ {{ number_format($tithe->amount, 2) }}</p>
+                <p class="mt-4 text-4xl font-bold">{{ $currencySymbol }} {{ number_format($tithe->amount, 2) }}</p>
                 <p class="text-green-100">Tithe Payment</p>
             </div>
         </div>

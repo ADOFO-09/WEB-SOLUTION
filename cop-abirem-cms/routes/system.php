@@ -99,6 +99,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::get('/backup/download/{filename}', [SettingsController::class, 'downloadBackup'])->name('backup.download');
         Route::delete('/backup/{filename}', [SettingsController::class, 'deleteBackup'])->name('backup.delete');
         Route::post('/backup/restore/{filename}', [SettingsController::class, 'restoreBackup'])->name('backup.restore');
+        Route::put('/backup/settings', [SettingsController::class, 'updateBackupSettings'])->name('backup.settings');
 
         // Cache & Optimization
         Route::post('/cache/clear', [SettingsController::class, 'clearCache'])->name('cache.clear');

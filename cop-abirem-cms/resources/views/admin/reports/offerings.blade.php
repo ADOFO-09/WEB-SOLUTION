@@ -36,7 +36,7 @@
     <!-- Summary -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="bg-white rounded-lg shadow p-6 text-center">
-            <p class="text-4xl font-bold text-green-600">GH₵ {{ number_format($totals['total'], 2) }}</p>
+            <p class="text-4xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($totals['total'], 2) }}</p>
             <p class="text-sm text-gray-500">Total Offerings</p>
         </div>
         <div class="bg-white rounded-lg shadow p-6 text-center">
@@ -61,7 +61,7 @@
                     @foreach($byCategory->filter(fn($c) => $c->total > 0) as $cat)
                     <tr>
                         <td class="px-4 py-3">{{ $cat->name }}</td>
-                        <td class="px-4 py-3 text-right font-medium text-green-600">GH₵ {{ number_format($cat->total, 2) }}</td>
+                        <td class="px-4 py-3 text-right font-medium text-green-600">{{ $currencySymbol }} {{ number_format($cat->total, 2) }}</td>
                         <td class="px-4 py-3 text-right">{{ $totals['total'] > 0 ? round(($cat->total / $totals['total']) * 100, 1) : 0 }}%</td>
                     </tr>
                     @endforeach
@@ -85,7 +85,7 @@
                     @foreach($monthlyTrend as $data)
                     <tr>
                         <td class="px-4 py-3">{{ $data['month'] }}</td>
-                        <td class="px-4 py-3 text-right font-medium text-green-600">GH₵ {{ number_format($data['amount'], 2) }}</td>
+                        <td class="px-4 py-3 text-right font-medium text-green-600">{{ $currencySymbol }} {{ number_format($data['amount'], 2) }}</td>
                     </tr>
                     @endforeach
                 </tbody>

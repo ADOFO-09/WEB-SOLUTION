@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -8,6 +8,7 @@ use App\Models\ExpenseCategory;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Http\Request;
+use App\Helpers\SettingHelper;
 
 class ExpenseController extends Controller implements HasMiddleware
 {
@@ -55,7 +56,7 @@ class ExpenseController extends Controller implements HasMiddleware
         }
 
         $query->orderBy('created_at', 'desc');
-        $expenses = $query->paginate(20)->withQueryString();
+        $expenses = $query->paginate(SettingHelper::perPage())->withQueryString();
 
         $stats = [
             'total_paid' => Expense::whereYear('expense_date', date('Y'))->where('status', 'paid')->sum('amount'),

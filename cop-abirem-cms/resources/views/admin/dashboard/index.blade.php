@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Dashboard')
 
@@ -59,19 +59,19 @@
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Financial Summary</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div class="text-center p-4 bg-green-50 rounded-lg">
-                    <p class="text-2xl font-bold text-green-600">GH₵ {{ number_format($financeStats['tithes'], 2) }}</p>
+                    <p class="text-2xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($financeStats['tithes'], 2) }}</p>
                     <p class="text-sm text-gray-600">Tithes</p>
                 </div>
                 <div class="text-center p-4 bg-blue-50 rounded-lg">
-                    <p class="text-2xl font-bold text-blue-600">GH₵ {{ number_format($financeStats['offerings'], 2) }}</p>
+                    <p class="text-2xl font-bold text-blue-600">{{ $currencySymbol }} {{ number_format($financeStats['offerings'], 2) }}</p>
                     <p class="text-sm text-gray-600">Offerings</p>
                 </div>
                 <div class="text-center p-4 bg-purple-50 rounded-lg">
-                    <p class="text-2xl font-bold text-purple-600">GH₵ {{ number_format($financeStats['donations'], 2) }}</p>
+                    <p class="text-2xl font-bold text-purple-600">{{ $currencySymbol }} {{ number_format($financeStats['donations'], 2) }}</p>
                     <p class="text-sm text-gray-600">Donations</p>
                 </div>
                 <div class="text-center p-4 bg-red-50 rounded-lg">
-                    <p class="text-2xl font-bold text-red-600">GH₵ {{ number_format($financeStats['expenses_paid'], 2) }}</p>
+                    <p class="text-2xl font-bold text-red-600">{{ $currencySymbol }} {{ number_format($financeStats['expenses_paid'], 2) }}</p>
                     <p class="text-sm text-gray-600">Expenses</p>
                 </div>
             </div>
@@ -79,7 +79,7 @@
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Net Income:</span>
                     <span class="text-2xl font-bold {{ $financeStats['net_income'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                        GH₵ {{ number_format($financeStats['net_income'], 2) }}
+                        {{ $currencySymbol }} {{ number_format($financeStats['net_income'], 2) }}
                     </span>
                 </div>
             </div>
@@ -242,7 +242,7 @@
                         <p class="text-xs text-gray-500">{{ $expense->reference_number }}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm font-bold text-red-600">GH₵ {{ number_format($expense->amount, 2) }}</p>
+                        <p class="text-sm font-bold text-red-600">{{ $currencySymbol }} {{ number_format($expense->amount, 2) }}</p>
                         <a href="{{ route('admin.expenses.show', $expense) }}" class="text-xs text-indigo-600">Review</a>
                     </div>
                 </div>

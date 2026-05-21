@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Overdue Pledges Report')
 
@@ -17,7 +17,7 @@
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div class="bg-white rounded-lg shadow p-4 border-l-4 border-red-400">
             <div class="text-sm font-medium text-gray-500">Total Overdue</div>
-            <div class="text-2xl font-bold text-red-600">GH₵ {{ number_format($totalOverdue, 2) }}</div>
+            <div class="text-2xl font-bold text-red-600">{{ $currencySymbol }} {{ number_format($totalOverdue, 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Overdue Pledges</div>
@@ -26,7 +26,7 @@
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Average Balance</div>
             <div class="text-2xl font-bold text-orange-600">
-                GH₵ {{ $pledges->count() > 0 ? number_format($totalOverdue / $pledges->count(), 2) : '0.00' }}
+                {{ $currencySymbol }} {{ $pledges->count() > 0 ? number_format($totalOverdue / $pledges->count(), 2) : '0.00' }}
             </div>
         </div>
     </div>
@@ -66,9 +66,9 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $pledge->project?->name ?? '—' }}</td>
                         <td class="px-6 py-4 text-sm text-red-600 font-medium">{{ $pledge->due_date->format('d M Y') }}</td>
-                        <td class="px-6 py-4 text-sm text-right text-gray-700">GH₵ {{ number_format($pledge->amount, 2) }}</td>
-                        <td class="px-6 py-4 text-sm text-right text-green-600">GH₵ {{ number_format($pledge->amount_paid, 2) }}</td>
-                        <td class="px-6 py-4 text-sm text-right font-bold text-red-600">GH₵ {{ number_format($pledge->balance, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-right text-gray-700">{{ $currencySymbol }} {{ number_format($pledge->amount, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-right text-green-600">{{ $currencySymbol }} {{ number_format($pledge->amount_paid, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-right font-bold text-red-600">{{ $currencySymbol }} {{ number_format($pledge->balance, 2) }}</td>
                         <td class="px-6 py-4 text-sm text-right">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $daysOverdue > 90 ? 'bg-red-100 text-red-800' : ($daysOverdue > 30 ? 'bg-orange-100 text-orange-800' : 'bg-yellow-100 text-yellow-800') }}">
                                 {{ $daysOverdue }} days
@@ -83,7 +83,7 @@
                 <tfoot class="bg-gray-50">
                     <tr>
                         <td colspan="6" class="px-6 py-4 text-sm font-semibold text-gray-700">Total Outstanding</td>
-                        <td class="px-6 py-4 text-sm text-right font-bold text-red-600">GH₵ {{ number_format($totalOverdue, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-right font-bold text-red-600">{{ $currencySymbol }} {{ number_format($totalOverdue, 2) }}</td>
                         <td colspan="2"></td>
                     </tr>
                 </tfoot>

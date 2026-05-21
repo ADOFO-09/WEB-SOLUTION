@@ -36,7 +36,7 @@
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white rounded-lg shadow p-6 text-center">
-            <p class="text-4xl font-bold text-green-600">GH₵ {{ number_format($totals['amount'], 2) }}</p>
+            <p class="text-4xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($totals['amount'], 2) }}</p>
             <p class="text-sm text-gray-500">Total Tithes</p>
         </div>
         <div class="bg-white rounded-lg shadow p-6 text-center">
@@ -65,7 +65,7 @@
                     @foreach($monthlyBreakdown as $data)
                     <tr>
                         <td class="px-4 py-3">{{ $data['month'] }}</td>
-                        <td class="px-4 py-3 text-right font-medium text-green-600">GH₵ {{ number_format($data['amount'], 2) }}</td>
+                        <td class="px-4 py-3 text-right font-medium text-green-600">{{ $currencySymbol }} {{ number_format($data['amount'], 2) }}</td>
                         <td class="px-4 py-3 text-right">{{ $data['count'] }}</td>
                     </tr>
                     @endforeach
@@ -93,7 +93,7 @@
                         <td class="px-4 py-3 font-medium">{{ $index + 1 }}</td>
                         <td class="px-4 py-3">{{ $item->member->full_name ?? 'Unknown' }}</td>
                         <td class="px-4 py-3 text-right">{{ $item->payments }}</td>
-                        <td class="px-4 py-3 text-right font-bold text-green-600">GH₵ {{ number_format($item->total, 2) }}</td>
+                        <td class="px-4 py-3 text-right font-bold text-green-600">{{ $currencySymbol }} {{ number_format($item->total, 2) }}</td>
                     </tr>
                     @endforeach
                 </tbody>

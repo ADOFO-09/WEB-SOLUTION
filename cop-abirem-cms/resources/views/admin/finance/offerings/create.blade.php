@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', isset($offering) ? 'Edit Offering' : 'Record Offering')
 
@@ -91,7 +91,7 @@
                                 {{ $pledge->pledge_number }}
                                 — {{ $pledge->member->full_name ?? 'Unknown' }}
                                 — {{ $pledge->purpose ?? 'Pledge' }}
-                                (Balance: GH₵{{ number_format($pledge->balance, 2) }})
+                                (Balance: {{ $currencySymbol }}}{{ number_format($pledge->balance, 2) }})
                             </option>
                             @endforeach
                         </select>
@@ -116,10 +116,10 @@
 
                 <!-- Amount -->
                 <div>
-                    <label for="amount" class="block text-sm font-medium text-gray-700">Amount (GH₵) *</label>
+                    <label for="amount" class="block text-sm font-medium text-gray-700">Amount ({{ $currencySymbol }}) *</label>
                     <div class="mt-1 relative rounded-md shadow-sm">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span class="text-gray-500 sm:text-sm">GH₵</span>
+                            <span class="text-gray-500 sm:text-sm">{{ $currencySymbol }}</span>
                         </div>
                         <input type="number" name="amount" id="amount" step="0.01" min="0.01"
                                value="{{ old('amount', $offering->amount ?? '') }}" required
@@ -141,10 +141,7 @@
                     <label for="payment_method" class="block text-sm font-medium text-gray-700">Payment Method *</label>
                     <select name="payment_method" id="payment_method" required
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="cash" {{ old('payment_method', $offering->payment_method ?? '') == 'cash' ? 'selected' : '' }}>Cash</option>
-                        <option value="mobile_money" {{ old('payment_method', $offering->payment_method ?? '') == 'mobile_money' ? 'selected' : '' }}>Mobile Money</option>
-                        <option value="bank_transfer" {{ old('payment_method', $offering->payment_method ?? '') == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
-                        <option value="cheque" {{ old('payment_method', $offering->payment_method ?? '') == 'cheque' ? 'selected' : '' }}>Cheque</option>
+                        @include('admin.partials.payment-method-options', ['selected' => old('payment_method', $offering->payment_method ?? '')])
                     </select>
                 </div>
 

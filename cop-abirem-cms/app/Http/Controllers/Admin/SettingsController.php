@@ -44,6 +44,7 @@ class SettingsController extends Controller
             'pastor_phone' => 'nullable|string|max:20',
             'district' => 'nullable|string|max:255',
             'area' => 'nullable|string|max:255',
+            'member_id_prefix' => 'nullable|string|max:10|alpha_num',
         ]);
 
         foreach ($validated as $key => $value) {
@@ -80,6 +81,10 @@ class SettingsController extends Controller
             'bank_account_name' => 'nullable|string|max:255',
             'mobile_money_number' => 'nullable|string|max:20',
             'mobile_money_name' => 'nullable|string|max:255',
+            'tithe_receipt_prefix' => 'nullable|string|max:10|alpha_num',
+            'offering_receipt_prefix' => 'nullable|string|max:10|alpha_num',
+            'donation_receipt_prefix' => 'nullable|string|max:10|alpha_num',
+            'expense_voucher_prefix' => 'nullable|string|max:10|alpha_num',
         ]);
 
         // Handle payment methods array
@@ -121,10 +126,16 @@ class SettingsController extends Controller
             'enable_sms_notifications' => 'boolean',
             'sms_birthday_enabled' => 'boolean',
             'sms_birthday_template' => 'nullable|string|max:500',
+            'sms_auto_tithe_confirmation' => 'boolean',
+            'sms_auto_donation_confirmation' => 'boolean',
+            'sms_auto_pledge_reminder' => 'boolean',
         ]);
 
         $validated['enable_sms_notifications'] = $request->boolean('enable_sms_notifications');
         $validated['sms_birthday_enabled'] = $request->boolean('sms_birthday_enabled');
+        $validated['sms_auto_tithe_confirmation'] = $request->boolean('sms_auto_tithe_confirmation');
+        $validated['sms_auto_donation_confirmation'] = $request->boolean('sms_auto_donation_confirmation');
+        $validated['sms_auto_pledge_reminder'] = $request->boolean('sms_auto_pledge_reminder');
 
         // Encrypt credentials before storing; skip if blank (preserve existing value)
         foreach (['sms_api_key', 'sms_api_secret'] as $credKey) {
@@ -251,11 +262,18 @@ class SettingsController extends Controller
             'session_timeout' => 'required|integer|min:5|max:480',
             'enable_two_factor' => 'boolean',
             'maintenance_mode' => 'boolean',
+            'attendance_grace_minutes' => 'nullable|integer|min:0|max:120',
+            'attendance_biometric_enabled' => 'boolean',
+            'attendance_manual_enabled' => 'boolean',
+            'attendance_qr_enabled' => 'boolean',
         ]);
 
         $validated['enable_activity_logging'] = $request->boolean('enable_activity_logging');
         $validated['enable_two_factor'] = $request->boolean('enable_two_factor');
         $validated['maintenance_mode'] = $request->boolean('maintenance_mode');
+        $validated['attendance_biometric_enabled'] = $request->boolean('attendance_biometric_enabled');
+        $validated['attendance_manual_enabled'] = $request->boolean('attendance_manual_enabled');
+        $validated['attendance_qr_enabled'] = $request->boolean('attendance_qr_enabled');
 
         foreach ($validated as $key => $value) {
             Setting::set($key, $value, 'system');
@@ -270,8 +288,29 @@ class SettingsController extends Controller
     public function backup()
     {
         $backups = $this->getBackupFiles();
-        
-        return view('admin.settings.backup', compact('backups'));
+        $backupSettings = Setting::getGroup('backup');
+
+        return view('admin.settings.backup', compact('backups', 'backupSettings'));
+    }
+
+    /**
+     * Update automatic backup settings.
+     */
+    public function updateBackupSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'auto_backup_enabled' => 'boolean',
+            'backup_frequency' => 'required|in:daily,weekly,monthly',
+            'backup_retention_days' => 'required|integer|min:1|max:365',
+        ]);
+
+        $validated['auto_backup_enabled'] = $request->boolean('auto_backup_enabled');
+
+        foreach ($validated as $key => $value) {
+            Setting::set($key, $value, 'backup');
+        }
+
+        return back()->with('success', 'Backup settings updated successfully.');
     }
 
     /**

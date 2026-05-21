@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -7,6 +7,7 @@ use App\Models\FinancialYear;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use App\Helpers\SettingHelper;
 
 class FinancialYearController extends Controller implements HasMiddleware
 {
@@ -23,7 +24,7 @@ class FinancialYearController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        $yearsPaginated = FinancialYear::orderByDesc('start_date')->paginate(15);
+        $yearsPaginated = FinancialYear::orderByDesc('start_date')->paginate(SettingHelper::perPage());
 
         return view('admin.finance.financial-years.index', compact('yearsPaginated'));
     }

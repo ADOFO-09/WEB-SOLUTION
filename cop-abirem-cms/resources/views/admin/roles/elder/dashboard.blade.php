@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Presiding Elder Dashboard')
 
@@ -31,10 +31,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
         </div>
-        <div class="stat-card-value">GH₵{{ number_format($financeStats['total_income'], 2) }}</div>
+        <div class="stat-card-value">{{ $currencySymbol }}{{ number_format($financeStats['total_income'], 2) }}</div>
         <div class="stat-card-label">Monthly Income</div>
         <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">
-            Net: GH₵{{ number_format($financeStats['net_income'], 2) }}
+            Net: {{ $currencySymbol }}{{ number_format($financeStats['net_income'], 2) }}
         </div>
     </div>
 
@@ -95,7 +95,7 @@
                             <td>{{ $expense->expense_date ? $expense->expense_date->format('M d, Y') : 'N/A' }}</td>
                             <td>{{ Str::limit($expense->description, 30) }}</td>
                             <td>{{ $expense->category->name ?? 'N/A' }}</td>
-                            <td style="font-weight: 600;">GH₵{{ number_format($expense->amount, 2) }}</td>
+                            <td style="font-weight: 600;">{{ $currencySymbol }}{{ number_format($expense->amount, 2) }}</td>
                             <td>{{ $expense->recordedBy->name ?? 'N/A' }}</td>
                             <td>
                                 <div style="display: flex; gap: 0.5rem;">
@@ -123,19 +123,19 @@
             <div class="card-body">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div style="text-align: center; padding: 1rem; background: #f0fdf4; border-radius: 0.5rem;">
-                        <div style="font-size: 1.25rem; font-weight: 700; color: #166534;">GH₵{{ number_format($financeStats['tithes'], 2) }}</div>
+                        <div style="font-size: 1.25rem; font-weight: 700; color: #166534;">{{ $currencySymbol }}{{ number_format($financeStats['tithes'], 2) }}</div>
                         <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Tithes</div>
                     </div>
                     <div style="text-align: center; padding: 1rem; background: #eff6ff; border-radius: 0.5rem;">
-                        <div style="font-size: 1.25rem; font-weight: 700; color: #1e40af;">GH₵{{ number_format($financeStats['offerings'], 2) }}</div>
+                        <div style="font-size: 1.25rem; font-weight: 700; color: #1e40af;">{{ $currencySymbol }}{{ number_format($financeStats['offerings'], 2) }}</div>
                         <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Offerings</div>
                     </div>
                     <div style="text-align: center; padding: 1rem; background: #fdf4ff; border-radius: 0.5rem;">
-                        <div style="font-size: 1.25rem; font-weight: 700; color: #86198f;">GH₵{{ number_format($financeStats['donations'], 2) }}</div>
+                        <div style="font-size: 1.25rem; font-weight: 700; color: #86198f;">{{ $currencySymbol }}{{ number_format($financeStats['donations'], 2) }}</div>
                         <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Donations</div>
                     </div>
                     <div style="text-align: center; padding: 1rem; background: #fef2f2; border-radius: 0.5rem;">
-                        <div style="font-size: 1.25rem; font-weight: 700; color: #991b1b;">GH₵{{ number_format($financeStats['expenses'], 2) }}</div>
+                        <div style="font-size: 1.25rem; font-weight: 700; color: #991b1b;">{{ $currencySymbol }}{{ number_format($financeStats['expenses'], 2) }}</div>
                         <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Expenses</div>
                     </div>
                 </div>
@@ -190,15 +190,15 @@
                 <div style="margin-bottom: 1rem;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <span style="color: #64748b;">Total Pledged</span>
-                        <span style="font-weight: 600;">GH₵{{ number_format($pledgeStats['total_pledged'], 2) }}</span>
+                        <span style="font-weight: 600;">{{ $currencySymbol }}{{ number_format($pledgeStats['total_pledged'], 2) }}</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <span style="color: #64748b;">Total Paid</span>
-                        <span style="font-weight: 600; color: #059669;">GH₵{{ number_format($pledgeStats['total_paid'], 2) }}</span>
+                        <span style="font-weight: 600; color: #059669;">{{ $currencySymbol }}{{ number_format($pledgeStats['total_paid'], 2) }}</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <span style="color: #64748b;">Balance</span>
-                        <span style="font-weight: 600; color: #dc2626;">GH₵{{ number_format($pledgeStats['balance'], 2) }}</span>
+                        <span style="font-weight: 600; color: #dc2626;">{{ $currencySymbol }}{{ number_format($pledgeStats['balance'], 2) }}</span>
                     </div>
                 </div>
                 <div style="background: #f1f5f9; border-radius: 9999px; height: 8px; overflow: hidden;">

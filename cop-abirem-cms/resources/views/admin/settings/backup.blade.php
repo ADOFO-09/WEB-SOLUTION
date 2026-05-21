@@ -117,6 +117,69 @@
             @endif
         </div>
 
+        <!-- Automatic Backup Settings -->
+        <div class="mt-6 bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Automatic Backup Settings</h3>
+                <p class="text-sm text-gray-500">Configure the scheduled database backup behaviour. Requires the Laravel scheduler to be running (see SMS settings for cron setup).</p>
+            </div>
+            <div class="p-6">
+                <form action="{{ route('admin.settings.backup.settings') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    @if(session('success'))
+                    <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">{{ session('success') }}</div>
+                    @endif
+
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <h4 class="font-medium text-gray-900">Enable Automatic Backups</h4>
+                                <p class="text-sm text-gray-500">Let the scheduler create backups on the configured schedule.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="auto_backup_enabled" value="1"
+                                       {{ ($backupSettings['auto_backup_enabled'] ?? '0') == '1' ? 'checked' : '' }}
+                                       class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="backup_frequency" class="block text-sm font-medium text-gray-700">Backup Frequency</label>
+                                <select name="backup_frequency" id="backup_frequency"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="daily"   {{ ($backupSettings['backup_frequency'] ?? 'daily') == 'daily'   ? 'selected' : '' }}>Daily</option>
+                                    <option value="weekly"  {{ ($backupSettings['backup_frequency'] ?? 'daily') == 'weekly'  ? 'selected' : '' }}>Weekly</option>
+                                    <option value="monthly" {{ ($backupSettings['backup_frequency'] ?? 'daily') == 'monthly' ? 'selected' : '' }}>Monthly</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="backup_retention_days" class="block text-sm font-medium text-gray-700">Keep Backups For</label>
+                                <div class="mt-1 flex items-center">
+                                    <input type="number" name="backup_retention_days" id="backup_retention_days"
+                                           value="{{ old('backup_retention_days', $backupSettings['backup_retention_days'] ?? '30') }}"
+                                           min="1" max="365"
+                                           class="block w-24 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <span class="ml-2 text-gray-500">days</span>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-400">Backups older than this are deleted automatically</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                            Save Backup Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Backup Tips -->
         <div class="mt-6 bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Backup Best Practices</h3>

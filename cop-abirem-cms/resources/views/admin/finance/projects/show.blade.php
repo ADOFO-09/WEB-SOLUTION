@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', $project->name)
 
@@ -41,15 +41,15 @@
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div class="bg-white rounded-lg shadow p-5">
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Target</div>
-            <div class="mt-1 text-2xl font-bold text-gray-900">GH₵{{ number_format($project->target_amount, 2) }}</div>
+            <div class="mt-1 text-2xl font-bold text-gray-900">{{ $currencySymbol }}}{{ number_format($project->target_amount, 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-5">
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Raised</div>
-            <div class="mt-1 text-2xl font-bold text-green-700">GH₵{{ number_format($raised, 2) }}</div>
+            <div class="mt-1 text-2xl font-bold text-green-700">{{ $currencySymbol }}}{{ number_format($raised, 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-5">
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</div>
-            <div class="mt-1 text-2xl font-bold text-red-600">GH₵{{ number_format($project->balance, 2) }}</div>
+            <div class="mt-1 text-2xl font-bold text-red-600">{{ $currencySymbol }}}{{ number_format($project->balance, 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-5">
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</div>
@@ -138,7 +138,7 @@
                                         {{ $donation->donor_name ?? '—' }}
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-right font-medium text-green-700">GH₵{{ number_format($donation->amount, 2) }}</td>
+                                <td class="px-4 py-3 text-right font-medium text-green-700">{{ $currencySymbol }}}{{ number_format($donation->amount, 2) }}</td>
                                 <td class="px-4 py-3 font-mono text-xs text-gray-500">{{ $donation->receipt_number }}</td>
                             </tr>
                             @endforeach
@@ -174,8 +174,8 @@
                                         {{ $pledge->member->full_name }}
                                     </a>
                                 </td>
-                                <td class="px-4 py-3 text-right font-medium text-gray-900">GH₵{{ number_format($pledge->total_amount, 2) }}</td>
-                                <td class="px-4 py-3 text-right text-green-700">GH₵{{ number_format($pledge->amount_paid, 2) }}</td>
+                                <td class="px-4 py-3 text-right font-medium text-gray-900">{{ $currencySymbol }}}{{ number_format($pledge->total_amount, 2) }}</td>
+                                <td class="px-4 py-3 text-right text-green-700">{{ $currencySymbol }}}{{ number_format($pledge->amount_paid, 2) }}</td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                                         {{ $pledge->status === 'completed' ? 'bg-green-100 text-green-800' :

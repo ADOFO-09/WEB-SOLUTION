@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Audit History')
 
@@ -33,7 +33,7 @@
             </div>
             <div>
                 <div class="text-xs text-gray-500 uppercase font-medium">Amount</div>
-                <div class="font-semibold text-gray-900">GH₵ {{ number_format($entry->amount, 2) }}</div>
+                <div class="font-semibold text-gray-900">{{ $currencySymbol }} {{ number_format($entry->amount, 2) }}</div>
             </div>
             <div>
                 <div class="text-xs text-gray-500 uppercase font-medium">Ledger Status</div>
@@ -51,7 +51,7 @@
             <div class="col-span-2 md:col-span-3">
                 <div class="text-xs text-gray-500 uppercase font-medium">Adjustment Entry</div>
                 <span class="font-mono text-blue-700">{{ $entry->adjustmentEntry->reference_number }}</span>
-                &mdash; GH₵ {{ number_format($entry->adjustmentEntry->amount, 2) }}
+                &mdash; {{ $currencySymbol }} {{ number_format($entry->adjustmentEntry->amount, 2) }}
             </div>
             @endif
             @if($entry->isAdjustment() && $entry->originalEntry)

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\SettingHelper;
 use App\Traits\HasLedgerCorrections;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -196,7 +197,7 @@ class Donation extends Model
 
     public static function generateReceiptNumber(): string
     {
-        $prefix = 'DRC';
+        $prefix = SettingHelper::donationReceiptPrefix();
         $year   = date('Y');
         $last   = self::withTrashed()->whereYear('created_at', $year)->whereNotNull('receipt_number')->orderBy('id', 'desc')->first();
         $sequence = ($last && preg_match('/(\d{5})$/', $last->receipt_number, $m)) ? ((int) $m[1] + 1) : 1;

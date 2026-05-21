@@ -169,6 +169,67 @@
                 </div>
             </div>
 
+            <!-- Attendance Settings -->
+            <div class="bg-white rounded-lg shadow mb-6">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Attendance Settings</h3>
+                </div>
+                <div class="p-6 space-y-6">
+                    <div class="max-w-xs">
+                        <label for="attendance_grace_minutes" class="block text-sm font-medium text-gray-700">Grace Period (minutes)</label>
+                        <input type="number" name="attendance_grace_minutes" id="attendance_grace_minutes"
+                               value="{{ old('attendance_grace_minutes', $settings['attendance_grace_minutes'] ?? '15') }}"
+                               min="0" max="120"
+                               class="mt-1 block w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <p class="mt-1 text-xs text-gray-400">Minutes after session start before marking late</p>
+                    </div>
+
+                    <div>
+                        <p class="text-sm font-medium text-gray-700 mb-3">Allowed Check-in Methods</p>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div>
+                                    <h4 class="font-medium text-gray-900">Biometric (Fingerprint)</h4>
+                                    <p class="text-sm text-gray-500">Allow fingerprint check-in on attendance sessions.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="attendance_biometric_enabled" value="1"
+                                           {{ ($settings['attendance_biometric_enabled'] ?? '1') == '1' ? 'checked' : '' }}
+                                           class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div>
+                                    <h4 class="font-medium text-gray-900">Manual (Name List)</h4>
+                                    <p class="text-sm text-gray-500">Allow manual name-based check-in.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="attendance_manual_enabled" value="1"
+                                           {{ ($settings['attendance_manual_enabled'] ?? '1') == '1' ? 'checked' : '' }}
+                                           class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div>
+                                    <h4 class="font-medium text-gray-900">QR Code</h4>
+                                    <p class="text-sm text-gray-500">Allow QR code scan check-in.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="attendance_qr_enabled" value="1"
+                                           {{ ($settings['attendance_qr_enabled'] ?? '1') == '1' ? 'checked' : '' }}
+                                           class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex justify-end">
                 <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                     Save Changes

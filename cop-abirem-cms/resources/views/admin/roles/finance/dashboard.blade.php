@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Financial Secretary Dashboard')
 
@@ -13,19 +13,19 @@
     <h2 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; opacity: 0.9;">Today's Collections</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
-            <div style="font-size: 1.75rem; font-weight: 700;">GH₵{{ number_format($todayStats['tithes'], 2) }}</div>
+            <div style="font-size: 1.75rem; font-weight: 700;">{{ $currencySymbol }}{{ number_format($todayStats['tithes'], 2) }}</div>
             <div style="font-size: 0.75rem; opacity: 0.7;">Tithes</div>
         </div>
         <div>
-            <div style="font-size: 1.75rem; font-weight: 700;">GH₵{{ number_format($todayStats['offerings'], 2) }}</div>
+            <div style="font-size: 1.75rem; font-weight: 700;">{{ $currencySymbol }}{{ number_format($todayStats['offerings'], 2) }}</div>
             <div style="font-size: 0.75rem; opacity: 0.7;">Offerings</div>
         </div>
         <div>
-            <div style="font-size: 1.75rem; font-weight: 700;">GH₵{{ number_format($todayStats['donations'], 2) }}</div>
+            <div style="font-size: 1.75rem; font-weight: 700;">{{ $currencySymbol }}{{ number_format($todayStats['donations'], 2) }}</div>
             <div style="font-size: 0.75rem; opacity: 0.7;">Donations</div>
         </div>
         <div>
-            <div style="font-size: 1.75rem; font-weight: 700; color: #fbbf24;">GH₵{{ number_format($todayStats['total'], 2) }}</div>
+            <div style="font-size: 1.75rem; font-weight: 700; color: #fbbf24;">{{ $currencySymbol }}{{ number_format($todayStats['total'], 2) }}</div>
             <div style="font-size: 0.75rem; opacity: 0.7;">Total Today</div>
         </div>
     </div>
@@ -40,7 +40,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
             </svg>
         </div>
-        <div class="stat-card-value">GH₵{{ number_format($weekStats['total'], 2) }}</div>
+        <div class="stat-card-value">{{ $currencySymbol }}{{ number_format($weekStats['total'], 2) }}</div>
         <div class="stat-card-label">This Week</div>
     </div>
 
@@ -51,10 +51,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
             </svg>
         </div>
-        <div class="stat-card-value">GH₵{{ number_format($monthStats['total_income'], 2) }}</div>
+        <div class="stat-card-value">{{ $currencySymbol }}{{ number_format($monthStats['total_income'], 2) }}</div>
         <div class="stat-card-label">This Month</div>
         <div style="font-size: 0.75rem; color: {{ $monthStats['net'] >= 0 ? '#10b981' : '#ef4444' }}; margin-top: 0.25rem;">
-            Net: GH₵{{ number_format($monthStats['net'], 2) }}
+            Net: {{ $currencySymbol }}{{ number_format($monthStats['net'], 2) }}
         </div>
     </div>
 
@@ -65,7 +65,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
             </svg>
         </div>
-        <div class="stat-card-value">GH₵{{ number_format($ytdStats['total_income'], 2) }}</div>
+        <div class="stat-card-value">{{ $currencySymbol }}{{ number_format($ytdStats['total_income'], 2) }}</div>
         <div class="stat-card-label">Year to Date</div>
     </div>
 
@@ -132,17 +132,14 @@
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="form-group">
-                        <label class="form-label">Total Amount (GH₵)</label>
+                        <label class="form-label">Total Amount ({{ $currencySymbol }})</label>
                         <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required
                                placeholder="0.00" value="{{ old('amount') }}">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Payment Method</label>
                         <select name="payment_method" class="form-select" required>
-                            <option value="cash">Cash</option>
-                            <option value="mobile_money">Mobile Money</option>
-                            <option value="bank_transfer">Bank Transfer</option>
-                            <option value="cheque">Cheque</option>
+                            @include('admin.partials.payment-method-options')
                         </select>
                     </div>
                 </div>
@@ -184,7 +181,7 @@
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="form-group">
-                        <label class="form-label">Amount (GH₵)</label>
+                        <label class="form-label">Amount ({{ $currencySymbol }})</label>
                         <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required placeholder="0.00">
                     </div>
                     <div class="form-group">
@@ -195,10 +192,7 @@
                 <div class="form-group">
                     <label class="form-label">Payment Method</label>
                     <select name="payment_method" class="form-select">
-                        <option value="cash">Cash</option>
-                        <option value="mobile_money">Mobile Money</option>
-                        <option value="bank_transfer">Bank Transfer</option>
-                        <option value="cheque">Cheque</option>
+                            @include('admin.partials.payment-method-options')
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Record Offering</button>
@@ -244,7 +238,7 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="form-group">
-                    <label class="form-label">Amount (GH₵)</label>
+                    <label class="form-label">Amount ({{ $currencySymbol }})</label>
                     <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required
                            placeholder="0.00" value="{{ old('amount') }}">
                 </div>
@@ -256,10 +250,7 @@
                 <div class="form-group">
                     <label class="form-label">Payment Method</label>
                     <select name="payment_method" class="form-select" required>
-                        <option value="cash">Cash</option>
-                        <option value="mobile_money">Mobile Money</option>
-                        <option value="bank_transfer">Bank Transfer</option>
-                        <option value="cheque">Cheque</option>
+                            @include('admin.partials.payment-method-options')
                     </select>
                 </div>
             </div>
@@ -299,7 +290,7 @@
                             <td>{{ $tithe->tithe_date ? $tithe->tithe_date->format('M d') : 'N/A' }}</td>
                             <td>{{ $tithe->member->first_name ?? '' }} {{ $tithe->member->last_name ?? 'Anonymous' }}</td>
                             <td style="font-family: monospace; font-size: 0.75rem;">{{ $tithe->receipt_number }}</td>
-                            <td style="font-weight: 600;">GH₵{{ number_format($tithe->amount, 2) }}</td>
+                            <td style="font-weight: 600;">{{ $currencySymbol }}{{ number_format($tithe->amount, 2) }}</td>
                         </tr>
                         @endforeach
                         @foreach($recentOfferings as $offering)
@@ -308,7 +299,7 @@
                             <td>{{ $offering->offering_date ? $offering->offering_date->format('M d') : 'N/A' }}</td>
                             <td>{{ $offering->serviceType->name ?? $offering->offering_type ?? 'General' }}</td>
                             <td style="font-family: monospace; font-size: 0.75rem;">{{ $offering->receipt_number }}</td>
-                            <td style="font-weight: 600;">GH₵{{ number_format($offering->amount, 2) }}</td>
+                            <td style="font-weight: 600;">{{ $currencySymbol }}{{ number_format($offering->amount, 2) }}</td>
                         </tr>
                         @endforeach
                         @foreach($recentDonations as $donation)
@@ -317,7 +308,7 @@
                             <td>{{ $donation->donation_date ? $donation->donation_date->format('M d') : 'N/A' }}</td>
                             <td>{{ $donation->member->first_name ?? '' }} {{ $donation->member->last_name ?? 'Anonymous' }}</td>
                             <td style="font-family: monospace; font-size: 0.75rem;">{{ $donation->receipt_number }}</td>
-                            <td style="font-weight: 600;">GH₵{{ number_format($donation->amount, 2) }}</td>
+                            <td style="font-weight: 600;">{{ $currencySymbol }}{{ number_format($donation->amount, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -341,7 +332,7 @@
                     <div style="flex: 1; text-align: center;">
                         <div style="height: {{ $height }}px; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); border-radius: 0.25rem 0.25rem 0 0; margin-bottom: 0.5rem; min-height: 4px;"></div>
                         <div style="font-size: 0.75rem; font-weight: 600; color: #374151;">{{ $month['month'] }}</div>
-                        <div style="font-size: 0.625rem; color: #64748b;">GH₵{{ number_format($total/1000, 1) }}k</div>
+                        <div style="font-size: 0.625rem; color: #64748b;">{{ $currencySymbol }}{{ number_format($total/1000, 1) }}k</div>
                     </div>
                     @endforeach
                 </div>
@@ -368,7 +359,7 @@
                             <div style="font-size: 0.75rem; color: #64748b;">{{ $expense->expenseCategory->name ?? 'Uncategorized' }}</div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-weight: 600; color: #1e3a5f;">GH₵{{ number_format($expense->amount, 2) }}</div>
+                            <div style="font-weight: 600; color: #1e3a5f;">{{ $currencySymbol }}{{ number_format($expense->amount, 2) }}</div>
                             <span class="badge badge-warning" style="font-size: 0.625rem;">Pending</span>
                         </div>
                     </div>
@@ -394,7 +385,7 @@
                     <div style="flex: 1;">
                         <div style="font-size: 0.875rem; font-weight: 500;">{{ $tither->member->first_name ?? 'N/A' }} {{ $tither->member->last_name ?? '' }}</div>
                     </div>
-                    <div style="font-weight: 600; color: #059669;">GH₵{{ number_format($tither->total, 2) }}</div>
+                    <div style="font-weight: 600; color: #059669;">{{ $currencySymbol }}{{ number_format($tither->total, 2) }}</div>
                 </div>
                 @empty
                 <p style="text-align: center; color: #64748b;">No tithes this month</p>

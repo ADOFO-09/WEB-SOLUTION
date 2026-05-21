@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -121,7 +121,7 @@
 
         <div class="amount-section">
             <div class="amount-label">Amount Received</div>
-            <div class="amount">GH₵ {{ number_format($tithe->amount, 2) }}</div>
+            <div class="amount">{{ $currencySymbol }} {{ number_format($tithe->amount, 2) }}</div>
         </div>
 
         <div class="details">

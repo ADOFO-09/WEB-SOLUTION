@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -37,7 +37,7 @@
 
         <div class="amount-box">
             <div style="font-size: 12px; color: #666; text-transform: uppercase;">Amount</div>
-            <div class="amount">GH₵ {{ number_format($expense->amount, 2) }}</div>
+            <div class="amount">{{ $currencySymbol }} {{ number_format($expense->amount, 2) }}</div>
         </div>
 
         <div class="details">

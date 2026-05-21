@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Record Donation')
 
@@ -73,7 +73,7 @@
             <!-- Cash Fields -->
             <div id="cash-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label for="amount" class="block text-sm font-medium text-gray-700">Amount (GH₵) *</label>
+                    <label for="amount" class="block text-sm font-medium text-gray-700">Amount ({{ $currencySymbol }}) *</label>
                     <input type="number" name="amount" id="amount" value="{{ old('amount') }}" step="0.01" min="0"
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     @error('amount')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
@@ -81,10 +81,7 @@
                 <div>
                     <label for="payment_method" class="block text-sm font-medium text-gray-700">Payment Method *</label>
                     <select name="payment_method" id="payment_method" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>Cash</option>
-                        <option value="mobile_money" {{ old('payment_method') == 'mobile_money' ? 'selected' : '' }}>Mobile Money</option>
-                        <option value="bank_transfer" {{ old('payment_method') == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
-                        <option value="cheque" {{ old('payment_method') == 'cheque' ? 'selected' : '' }}>Cheque</option>
+                        @include('admin.partials.payment-method-options', ['selected' => old('payment_method')])
                     </select>
                 </div>
                 <div>
@@ -102,7 +99,7 @@
                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('in_kind_description') }}</textarea>
                 </div>
                 <div class="w-1/2">
-                    <label for="estimated_value" class="block text-sm font-medium text-gray-700">Estimated Value (GH₵)</label>
+                    <label for="estimated_value" class="block text-sm font-medium text-gray-700">Estimated Value ({{ $currencySymbol }})</label>
                     <input type="number" name="estimated_value" id="estimated_value" value="{{ old('estimated_value') }}" step="0.01" min="0"
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 </div>

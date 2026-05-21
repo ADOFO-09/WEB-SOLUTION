@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -11,6 +11,7 @@ use App\Models\Pledge;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use App\Helpers\SettingHelper;
 
 class OfferingController extends Controller implements HasMiddleware
 {
@@ -74,7 +75,7 @@ class OfferingController extends Controller implements HasMiddleware
         }
 
         $query->orderBy('payment_date', 'desc');
-        $offerings = $query->paginate(20)->withQueryString();
+        $offerings = $query->paginate(SettingHelper::perPage())->withQueryString();
 
         // Statistics
         $stats = [

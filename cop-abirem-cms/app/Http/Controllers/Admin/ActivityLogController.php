@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Helpers\SettingHelper;
 
 class ActivityLogController extends Controller implements HasMiddleware
 {
@@ -58,7 +59,7 @@ class ActivityLogController extends Controller implements HasMiddleware
             });
         }
 
-        $logs = $query->orderBy('created_at', 'desc')->paginate(25)->withQueryString();
+        $logs = $query->orderBy('created_at', 'desc')->paginate(SettingHelper::perPage())->withQueryString();
 
         $users = User::select('id', 'name')->orderBy('name')->get();
         $actions = ActivityLog::distinct()->pluck('action');

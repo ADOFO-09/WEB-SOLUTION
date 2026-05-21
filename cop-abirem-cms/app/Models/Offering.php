@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\SettingHelper;
 use App\Traits\HasLedgerCorrections;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -163,7 +164,7 @@ class Offering extends Model
 
     public static function generateReferenceNumber(): string
     {
-        $prefix = 'OF';
+        $prefix = SettingHelper::offeringReceiptPrefix();
         $year   = date('Y');
         $last   = self::withTrashed()
             ->whereYear('created_at', $year)

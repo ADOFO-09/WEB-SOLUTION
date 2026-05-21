@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Budget Report')
 
@@ -30,16 +30,16 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="bg-white rounded-lg shadow p-6">
             <div class="text-sm font-medium text-gray-500">Total Budget</div>
-            <div class="text-3xl font-bold text-gray-900">GH₵ {{ number_format($totalBudget, 2) }}</div>
+            <div class="text-3xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($totalBudget, 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-6">
             <div class="text-sm font-medium text-gray-500">Total Spent</div>
-            <div class="text-3xl font-bold text-red-600">GH₵ {{ number_format($totalSpent, 2) }}</div>
+            <div class="text-3xl font-bold text-red-600">{{ $currencySymbol }} {{ number_format($totalSpent, 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-6">
             <div class="text-sm font-medium text-gray-500">Remaining</div>
             <div class="text-3xl font-bold {{ ($totalBudget - $totalSpent) >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                GH₵ {{ number_format($totalBudget - $totalSpent, 2) }}
+                {{ $currencySymbol }} {{ number_format($totalBudget - $totalSpent, 2) }}
             </div>
         </div>
     </div>
@@ -80,10 +80,10 @@
                     @foreach($categories as $category)
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ $category->name }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-900">GH₵ {{ number_format($category->budget_amount, 2) }}</td>
-                        <td class="px-6 py-4 text-sm font-bold text-red-600">GH₵ {{ number_format($category->spent, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ $currencySymbol }} {{ number_format($category->budget_amount, 2) }}</td>
+                        <td class="px-6 py-4 text-sm font-bold text-red-600">{{ $currencySymbol }} {{ number_format($category->spent, 2) }}</td>
                         <td class="px-6 py-4 text-sm {{ ($category->budget_amount - $category->spent) >= 0 ? 'text-green-600' : 'text-red-600 font-bold' }}">
-                            GH₵ {{ number_format($category->budget_amount - $category->spent, 2) }}
+                            {{ $currencySymbol }} {{ number_format($category->budget_amount - $category->spent, 2) }}
                         </td>
                         <td class="px-6 py-4">
                             <div class="w-32">
@@ -104,10 +104,10 @@
                 <tfoot class="bg-gray-50 font-bold">
                     <tr>
                         <td class="px-6 py-4 text-sm text-gray-900">Total</td>
-                        <td class="px-6 py-4 text-sm text-gray-900">GH₵ {{ number_format($totalBudget, 2) }}</td>
-                        <td class="px-6 py-4 text-sm text-red-600">GH₵ {{ number_format($totalSpent, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ $currencySymbol }} {{ number_format($totalBudget, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-red-600">{{ $currencySymbol }} {{ number_format($totalSpent, 2) }}</td>
                         <td class="px-6 py-4 text-sm {{ ($totalBudget - $totalSpent) >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                            GH₵ {{ number_format($totalBudget - $totalSpent, 2) }}
+                            {{ $currencySymbol }} {{ number_format($totalBudget - $totalSpent, 2) }}
                         </td>
                         <td colspan="2"></td>
                     </tr>

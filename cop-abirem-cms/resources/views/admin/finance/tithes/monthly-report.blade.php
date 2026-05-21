@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Monthly Tithe Report')
 
@@ -32,7 +32,7 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Total Amount</div>
-            <div class="text-2xl font-bold text-indigo-600">GH₵ {{ number_format($totalAmount, 2) }}</div>
+            <div class="text-2xl font-bold text-indigo-600">{{ $currencySymbol }} {{ number_format($totalAmount, 2) }}</div>
             <div class="text-xs text-gray-400 mt-1">{{ date('F', mktime(0, 0, 0, $month, 1)) }} {{ $year }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
@@ -46,7 +46,7 @@
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Average Amount</div>
             <div class="text-2xl font-bold text-blue-600">
-                GH₵ {{ $tithes->count() > 0 ? number_format($totalAmount / $tithes->count(), 2) : '0.00' }}
+                {{ $currencySymbol }} {{ $tithes->count() > 0 ? number_format($totalAmount / $tithes->count(), 2) : '0.00' }}
             </div>
         </div>
     </div>
@@ -59,7 +59,7 @@
             @foreach($byPaymentMethod as $method => $data)
             <div class="text-center p-4 bg-gray-50 rounded-lg">
                 <div class="text-sm font-medium text-gray-500 capitalize">{{ str_replace('_', ' ', $method) }}</div>
-                <div class="text-xl font-bold text-gray-900">GH₵ {{ number_format($data['total'], 2) }}</div>
+                <div class="text-xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($data['total'], 2) }}</div>
                 <div class="text-xs text-gray-400">{{ $data['count'] }} record(s)</div>
             </div>
             @endforeach
@@ -97,7 +97,7 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-700">{{ $tithe->payment_date->format('d M Y') }}</td>
                         <td class="px-6 py-4 text-sm text-gray-500 capitalize">{{ str_replace('_', ' ', $tithe->payment_method) }}</td>
-                        <td class="px-6 py-4 text-sm text-right font-semibold text-gray-900">GH₵ {{ number_format($tithe->amount, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-right font-semibold text-gray-900">{{ $currencySymbol }} {{ number_format($tithe->amount, 2) }}</td>
                         <td class="px-6 py-4 text-sm font-mono text-gray-500">{{ $tithe->receipt_number ?? '—' }}</td>
                     </tr>
                     @endforeach
@@ -105,7 +105,7 @@
                 <tfoot class="bg-gray-50">
                     <tr>
                         <td colspan="4" class="px-6 py-4 text-sm font-semibold text-gray-700">Total</td>
-                        <td class="px-6 py-4 text-sm text-right font-bold text-indigo-600">GH₵ {{ number_format($totalAmount, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-right font-bold text-indigo-600">{{ $currencySymbol }} {{ number_format($totalAmount, 2) }}</td>
                         <td></td>
                     </tr>
                 </tfoot>

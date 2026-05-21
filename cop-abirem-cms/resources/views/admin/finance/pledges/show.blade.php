@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Pledge Details')
 
@@ -60,16 +60,16 @@
             <div class="space-y-3 text-center">
                 <div>
                     <p class="text-sm text-gray-500">Total Pledged</p>
-                    <p class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($pledge->total_amount, 2) }}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($pledge->total_amount, 2) }}</p>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <p class="text-sm text-gray-500">Paid</p>
-                        <p class="text-lg font-bold text-green-600">GH₵ {{ number_format($pledge->amount_paid, 2) }}</p>
+                        <p class="text-lg font-bold text-green-600">{{ $currencySymbol }} {{ number_format($pledge->amount_paid, 2) }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Balance</p>
-                        <p class="text-lg font-bold text-red-600">GH₵ {{ number_format($pledge->balance, 2) }}</p>
+                        <p class="text-lg font-bold text-red-600">{{ $currencySymbol }} {{ number_format($pledge->balance, 2) }}</p>
                     </div>
                 </div>
             </div>
@@ -168,7 +168,7 @@
                         <label for="amount" class="block text-sm font-medium text-gray-700">Amount *</label>
                         <div class="mt-1 relative rounded-md shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">GH₵</span>
+                                <span class="text-gray-500 sm:text-sm">{{ $currencySymbol }}</span>
                             </div>
                             <input type="number" name="amount" id="amount" step="0.01" min="0.01" 
                                    max="{{ $pledge->balance }}" required
@@ -184,10 +184,7 @@
                         <label for="payment_method" class="block text-sm font-medium text-gray-700">Method *</label>
                         <select name="payment_method" id="payment_method" required
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="cash">Cash</option>
-                            <option value="mobile_money">Mobile Money</option>
-                            <option value="bank_transfer">Bank Transfer</option>
-                            <option value="cheque">Cheque</option>
+                            @include('admin.partials.payment-method-options')
                         </select>
                     </div>
                     <div class="flex items-end">
@@ -228,7 +225,7 @@
                                 {{ $payment->payment_date->format('M d, Y') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
-                                GH₵ {{ number_format($payment->amount, 2) }}
+                                {{ $currencySymbol }} {{ number_format($payment->amount, 2) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {{ ucfirst(str_replace('_', ' ', $payment->payment_method)) }}
@@ -243,7 +240,7 @@
                         <tr>
                             <td colspan="2" class="px-6 py-4 text-sm font-medium text-gray-900">Total Paid</td>
                             <td class="px-6 py-4 text-sm font-bold text-green-600">
-                                GH₵ {{ number_format($pledge->payments->sum('amount'), 2) }}
+                                {{ $currencySymbol }} {{ number_format($pledge->payments->sum('amount'), 2) }}
                             </td>
                             <td colspan="2"></td>
                         </tr>

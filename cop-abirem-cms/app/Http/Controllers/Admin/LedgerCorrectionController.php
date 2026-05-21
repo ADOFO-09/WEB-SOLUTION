@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -10,6 +10,7 @@ use App\Models\Offering;
 use App\Models\Tithe;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use App\Helpers\SettingHelper;
 
 class LedgerCorrectionController extends Controller
 {
@@ -21,7 +22,7 @@ class LedgerCorrectionController extends Controller
         if ($typeFilter !== 'all') {
             $logsQuery->where('entry_type', $typeFilter);
         }
-        $auditLogs = $logsQuery->paginate(20);
+        $auditLogs = $logsQuery->paginate(SettingHelper::perPage());
 
         $voidedTithes    = Tithe::voided()->with('voidedByUser')->latest('voided_at')->get();
         $voidedOfferings = Offering::voided()->with('voidedByUser')->latest('voided_at')->get();

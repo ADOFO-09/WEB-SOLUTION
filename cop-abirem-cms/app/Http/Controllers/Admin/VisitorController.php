@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use App\Helpers\SettingHelper;
 
 class VisitorController extends Controller implements HasMiddleware
 {
@@ -78,7 +79,7 @@ class VisitorController extends Controller implements HasMiddleware
         $sortDirection = in_array($request->get('direction'), $allowedDirections) ? $request->get('direction') : 'desc';
         $query->orderBy($sortField, $sortDirection);
 
-        $visitors = $query->paginate(15)->withQueryString();
+        $visitors = $query->paginate(SettingHelper::perPage())->withQueryString();
 
         // Statistics
         $stats = [

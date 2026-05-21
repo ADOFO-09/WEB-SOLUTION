@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -12,6 +12,7 @@ use App\Services\GiantSmsService;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Http\Request;
+use App\Helpers\SettingHelper;
 
 class SmsController extends Controller implements HasMiddleware
 {
@@ -52,7 +53,7 @@ class SmsController extends Controller implements HasMiddleware
         }
 
         $query->orderBy('created_at', 'desc');
-        $messages = $query->paginate(20)->withQueryString();
+        $messages = $query->paginate(SettingHelper::perPage())->withQueryString();
 
         $stats = [
             'total_sent' => SmsMessage::whereIn('status', ['sent', 'partially_sent'])->count(),

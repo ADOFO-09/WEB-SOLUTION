@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Helpers\SettingHelper;
 use App\Models\FinancialYear;
 use App\Models\Permission;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -28,6 +30,14 @@ class AppServiceProvider extends ServiceProvider
         // Use Bootstrap pagination styling
         Paginator::useBootstrap();
 
+        // Apply session timeout from settings
+        if (Schema::hasTable('settings')) {
+            try {
+                $timeout = (int) Setting::get('session_timeout', 120);
+                config(['session.lifetime' => $timeout]);
+            } catch (\Exception $e) {}
+        }
+
         // Share financial years with all admin views so year dropdowns stay in sync.
         View::composer('admin.*', function ($view) {
             if (!Schema::hasTable('financial_years')) return;
@@ -35,6 +45,15 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('financialYears',
                     FinancialYear::orderBy('start_date', 'desc')->get()
                 );
+            } catch (\Exception $e) {}
+        });
+
+        // Share currency symbol and payment methods with all admin views.
+        View::composer('admin.*', function ($view) {
+            if (!Schema::hasTable('settings')) return;
+            try {
+                $view->with('currencySymbol', SettingHelper::currencySymbol());
+                $view->with('paymentMethods', SettingHelper::paymentMethods());
             } catch (\Exception $e) {}
         });
 

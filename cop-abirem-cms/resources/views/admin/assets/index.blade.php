@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Assets')
 
@@ -40,7 +40,7 @@
     </div>
     <div class="bg-white rounded-lg shadow p-4">
         <div class="text-xs text-gray-500 uppercase tracking-wider">Total Value</div>
-        <div class="mt-1 text-2xl font-bold text-gray-900">GH₵{{ number_format($stats['total_value'], 2) }}</div>
+        <div class="mt-1 text-2xl font-bold text-gray-900">{{ $currencySymbol }}{{ number_format($stats['total_value'], 2) }}</div>
     </div>
 </div>
 
@@ -121,7 +121,7 @@
                             {{ ucfirst($asset->status) }}
                         </span>
                     </td>
-                    <td class="px-4 py-3 text-right font-medium text-gray-900">GH₵{{ number_format($asset->current_value, 2) }}</td>
+                    <td class="px-4 py-3 text-right font-medium text-gray-900">{{ $currencySymbol }}{{ number_format($asset->current_value, 2) }}</td>
                     <td class="px-4 py-3 text-gray-600">{{ $asset->location ?? '—' }}</td>
                     <td class="px-4 py-3 text-right">
                         <div class="flex items-center justify-end space-x-2">

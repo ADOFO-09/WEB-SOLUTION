@@ -16,6 +16,7 @@
             </div>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap gap-2">
+            @if($allowBiometric)
             <button onclick="openBiometricPanel()"
                 class="inline-flex items-center px-4 py-2 border border-purple-500 rounded-md shadow-sm text-sm font-medium text-purple-600 bg-white hover:bg-purple-50">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,6 +25,8 @@
                 </svg>
                 Biometric Scan
             </button>
+            @endif
+            @if($allowQr)
             <a href="{{ route('admin.attendance.qr-display', $attendance) }}"
                class="inline-flex items-center px-4 py-2 border border-indigo-500 rounded-md shadow-sm text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,6 +34,7 @@
                 </svg>
                 Display QR Code
             </a>
+            @endif
             <form action="{{ route('admin.attendance.close', $attendance) }}" method="POST"
                   onsubmit="return confirm('Close this session? You can reopen it later if needed.');">
                 @csrf
@@ -72,6 +76,7 @@
 #bio-fp-icon.bio-success  { color:#34d399; }
 #bio-fp-icon.bio-error    { color:#f87171; }
 </style>
+@if($allowQr)
 {{-- QR info banner --}}
 <div class="mb-5 flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
     <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,6 +91,7 @@
         View QR Code →
     </a>
 </div>
+@endif
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Left: Mark Attendance -->
@@ -106,6 +112,7 @@
             </div>
         </div>
 
+        @if($allowManual)
         <!-- Member Search & Mark -->
         <div class="bg-white rounded-lg shadow">
             <div class="px-6 py-4 border-b border-gray-200">
@@ -113,7 +120,7 @@
             </div>
             <div class="p-6">
                 <div class="mb-4">
-                    <input type="text" id="member-search" placeholder="Search member by name or ID..." 
+                    <input type="text" id="member-search" placeholder="Search member by name or ID..."
                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 </div>
                 <div id="member-list" class="max-h-64 overflow-y-auto space-y-2">
@@ -135,7 +142,7 @@
                                 <p class="text-xs text-gray-500">{{ $member->member_id }}</p>
                             </div>
                         </div>
-                        <button type="button" onclick="markMember({{ $member->id }}, this)" 
+                        <button type="button" onclick="markMember({{ $member->id }}, this)"
                                 class="px-3 py-1 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700">
                             Mark
                         </button>
@@ -162,13 +169,24 @@
                             <p class="text-sm font-medium text-gray-900">{{ $visitor->full_name }}</p>
                             <p class="text-xs text-gray-500">{{ $visitor->phone }}</p>
                         </div>
-                        <button type="button" onclick="markVisitor({{ $visitor->id }}, this)" 
+                        <button type="button" onclick="markVisitor({{ $visitor->id }}, this)"
                                 class="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700">
                             Mark
                         </button>
                     </div>
                     @endforeach
                 </div>
+            </div>
+        </div>
+        @endif
+        @else
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-8 text-center text-gray-500">
+                <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                </svg>
+                <p class="text-sm font-medium text-gray-600">Manual check-in is disabled</p>
+                <p class="text-xs text-gray-400 mt-1">Use biometric or QR scanning to mark attendance.</p>
             </div>
         </div>
         @endif
@@ -213,6 +231,7 @@
     </div>
 </div>
 
+@if($allowBiometric)
 {{-- Biometric Scanner Panel --}}
 <div id="bio-overlay" class="fixed inset-0 z-50 hidden" aria-modal="true">
     <div class="absolute inset-0 bg-black bg-opacity-60" onclick="closeBiometricPanel()"></div>
@@ -272,6 +291,7 @@
         </div>
     </div>
 </div>
+@endif
 
 <!-- Toast Notification -->
 <div id="toast" class="fixed bottom-4 right-4 transform translate-y-full opacity-0 transition-all duration-300">
@@ -432,6 +452,7 @@ function unmarkAttendance(recordId, button) {
 }
 </script>
 
+@if($allowBiometric)
 {{-- ===== Biometric Scanner Panel JS ===== --}}
 <script>
 const MEMBERS_URL = '{{ route('admin.attendance.biometric.members', $attendance) }}';
@@ -645,5 +666,6 @@ function setRingState(state) {
     }
 }
 </script>
+@endif
 @endpush
 @endsection

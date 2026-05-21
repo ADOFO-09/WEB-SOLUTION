@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Local Secretary Dashboard')
 
@@ -195,21 +195,21 @@
             <div class="card-body">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div style="text-align: center; padding: 1rem; background: #f0fdf4; border-radius: 0.5rem;">
-                        <div style="font-size: 1.125rem; font-weight: 700; color: #166534;">GH₵{{ number_format($financeStats['tithes'], 2) }}</div>
+                        <div style="font-size: 1.125rem; font-weight: 700; color: #166534;">{{ $currencySymbol }}{{ number_format($financeStats['tithes'], 2) }}</div>
                         <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Tithes</div>
                     </div>
                     <div style="text-align: center; padding: 1rem; background: #eff6ff; border-radius: 0.5rem;">
-                        <div style="font-size: 1.125rem; font-weight: 700; color: #1e40af;">GH₵{{ number_format($financeStats['offerings'], 2) }}</div>
+                        <div style="font-size: 1.125rem; font-weight: 700; color: #1e40af;">{{ $currencySymbol }}{{ number_format($financeStats['offerings'], 2) }}</div>
                         <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Offerings</div>
                     </div>
                     <div style="text-align: center; padding: 1rem; background: #fdf4ff; border-radius: 0.5rem;">
-                        <div style="font-size: 1.125rem; font-weight: 700; color: #86198f;">GH₵{{ number_format($financeStats['donations'], 2) }}</div>
+                        <div style="font-size: 1.125rem; font-weight: 700; color: #86198f;">{{ $currencySymbol }}{{ number_format($financeStats['donations'], 2) }}</div>
                         <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Donations</div>
                     </div>
                 </div>
                 <div style="margin-top: 1rem; padding: 0.75rem 1rem; background: #f8fafc; border-radius: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
                     <span style="color: #64748b; font-size: 0.875rem;">Total Income This Month</span>
-                    <span style="font-size: 1.125rem; font-weight: 700; color: #1e3a5f;">GH₵{{ number_format($financeStats['total_income'], 2) }}</span>
+                    <span style="font-size: 1.125rem; font-weight: 700; color: #1e3a5f;">{{ $currencySymbol }}{{ number_format($financeStats['total_income'], 2) }}</span>
                 </div>
                 <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.75rem; text-align: center;">Read-only summary. Contact the Financial Secretary for details.</p>
             </div>

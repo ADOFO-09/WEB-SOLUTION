@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', isset($monthlyReport) ? 'Edit Monthly Report' : 'New Monthly Report')
 
@@ -325,10 +325,10 @@
         <p class="text-xs text-gray-500 mb-4">Tithes and offerings auto-filled from finance records. Expenses split by category (human development = Welfare &amp; Ministry Support).</p>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             @foreach([
-                'monthly_net_tithes'             => 'Monthly Net Tithes (GH₵)',
-                'monthly_missions_offering'      => 'Missions Offering (GH₵)',
-                'amount_spent_human_development' => 'Spent — Human Dev. (GH₵)',
-                'amount_spent_non_human'         => 'Spent — Non-Human (GH₵)',
+                'monthly_net_tithes'             => 'Monthly Net Tithes ({{ $currencySymbol }})',
+                'monthly_missions_offering'      => 'Missions Offering ({{ $currencySymbol }})',
+                'amount_spent_human_development' => 'Spent — Human Dev. ({{ $currencySymbol }})',
+                'amount_spent_non_human'         => 'Spent — Non-Human ({{ $currencySymbol }})',
             ] as $field => $label)
             <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">{{ $label }}</label>

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Str;
+use App\Helpers\SettingHelper;
 
 class ProjectController extends Controller implements HasMiddleware
 {
@@ -26,7 +27,7 @@ class ProjectController extends Controller implements HasMiddleware
     {
         $projects = Project::withCount(['donations', 'pledges'])
             ->orderByDesc('created_at')
-            ->paginate(15);
+            ->paginate(SettingHelper::perPage());
 
         return view('admin.finance.projects.index', compact('projects'));
     }

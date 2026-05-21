@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Donations')
 
@@ -21,11 +21,11 @@
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
     <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Total This Year</div>
-        <div class="mt-2 text-2xl font-bold text-gray-900">GH₵ {{ number_format($stats['total_amount'], 2) }}</div>
+        <div class="mt-2 text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($stats['total_amount'], 2) }}</div>
     </div>
     <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">This Month</div>
-        <div class="mt-2 text-2xl font-bold text-indigo-600">GH₵ {{ number_format($stats['this_month'], 2) }}</div>
+        <div class="mt-2 text-2xl font-bold text-indigo-600">{{ $currencySymbol }} {{ number_format($stats['this_month'], 2) }}</div>
     </div>
     <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Total Donations</div>
@@ -121,11 +121,11 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm {{ $donation->isVoided() ? 'text-red-300 line-through' : 'text-gray-900' }}">
                     @if($donation->donation_type == 'cash')
-                    GH₵ {{ number_format($donation->amount, 2) }}
+                    {{ $currencySymbol }} {{ number_format($donation->amount, 2) }}
                     @else
                     {{ Str::limit($donation->in_kind_description, 30) }}
                     @if($donation->estimated_value)
-                    <div class="text-xs {{ $donation->isVoided() ? 'text-red-300' : 'text-gray-500' }}">Est: GH₵ {{ number_format($donation->estimated_value, 2) }}</div>
+                    <div class="text-xs {{ $donation->isVoided() ? 'text-red-300' : 'text-gray-500' }}">Est: {{ $currencySymbol }} {{ number_format($donation->estimated_value, 2) }}</div>
                     @endif
                     @endif
                 </td>

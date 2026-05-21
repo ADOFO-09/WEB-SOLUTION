@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Offerings')
 
@@ -22,11 +22,11 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">This Year Total</div>
-            <div class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($stats['total_amount'], 2) }}</div>
+            <div class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($stats['total_amount'], 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">This Month</div>
-            <div class="text-2xl font-bold text-green-600">GH₵ {{ number_format($stats['this_month'], 2) }}</div>
+            <div class="text-2xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($stats['this_month'], 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Total Records</div>
@@ -116,7 +116,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $offering->isVoided() ? 'text-red-300 line-through' : 'text-green-600' }}">
-                            GH₵ {{ number_format($offering->amount, 2) }}
+                            {{ $currencySymbol }} {{ number_format($offering->amount, 2) }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ $offering->payment_date->format('M d, Y') }}

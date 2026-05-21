@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Financial Years')
 
@@ -72,7 +72,7 @@
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        GH₵ {{ number_format($year->getTotalIncome(), 2) }}
+                        {{ $currencySymbol }} {{ number_format($year->getTotalIncome(), 2) }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-xs text-gray-500 space-y-0.5">

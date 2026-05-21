@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Pledges')
 
@@ -22,11 +22,11 @@
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Total Pledged</div>
-            <div class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($stats['total_pledged'], 2) }}</div>
+            <div class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($stats['total_pledged'], 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Total Paid</div>
-            <div class="text-2xl font-bold text-green-600">GH₵ {{ number_format($stats['total_paid'], 2) }}</div>
+            <div class="text-2xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($stats['total_paid'], 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Active</div>
@@ -119,8 +119,8 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <div class="font-bold text-gray-900">GH₵ {{ number_format($pledge->total_amount, 2) }}</div>
-                            <div class="text-green-600 text-xs">Paid: GH₵ {{ number_format($pledge->amount_paid, 2) }}</div>
+                            <div class="font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($pledge->total_amount, 2) }}</div>
+                            <div class="text-green-600 text-xs">Paid: {{ $currencySymbol }} {{ number_format($pledge->amount_paid, 2) }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="w-24">

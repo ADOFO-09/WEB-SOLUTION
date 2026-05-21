@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin\Roles;
 
@@ -11,6 +11,7 @@ use App\Models\AttendanceRecord;
 use App\Models\SmsMessage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Helpers\SettingHelper;
 
 class MinistryDashboardController extends Controller
 {
@@ -207,7 +208,7 @@ class MinistryDashboardController extends Controller
         $members = Member::whereHas('ministries', function ($q) use ($ministry) {
             $q->where('ministries.id', $ministry->id);
         })->orderBy('last_name')
-          ->paginate(20);
+          ->paginate(SettingHelper::perPage());
 
         return view('admin.roles.ministry.members', compact('ministry', 'members'));
     }

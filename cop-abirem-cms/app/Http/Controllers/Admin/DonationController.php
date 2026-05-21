@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\SettingHelper;
 
 class DonationController extends Controller implements HasMiddleware
 {
@@ -69,7 +70,7 @@ class DonationController extends Controller implements HasMiddleware
         }
 
         $query->orderBy('payment_date', 'desc');
-        $donations = $query->paginate(20)->withQueryString();
+        $donations = $query->paginate(SettingHelper::perPage())->withQueryString();
 
         // Statistics — only count effective (non-voided, non-superseded) entries
         $effective = fn($q) => $q->where(function ($sub) {
@@ -231,6 +232,10 @@ class DonationController extends Controller implements HasMiddleware
      */
     private function sendDonationSms(Donation $donation): void
     {
+        if (!\App\Models\Setting::get('sms_auto_donation_confirmation', false)) {
+            return;
+        }
+
         if ($donation->is_anonymous || $donation->donation_type !== 'cash') {
             return;
         }

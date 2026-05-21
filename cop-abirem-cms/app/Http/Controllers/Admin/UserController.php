@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use App\Helpers\SettingHelper;
 
 class UserController extends Controller implements HasMiddleware
 {
@@ -64,7 +65,7 @@ class UserController extends Controller implements HasMiddleware
             }
         }
 
-        $users = $query->orderBy('name')->paginate(15)->withQueryString();
+        $users = $query->orderBy('name')->paginate(SettingHelper::perPage())->withQueryString();
         $roles = Role::orderBy('name')->get();
 
         $stats = [

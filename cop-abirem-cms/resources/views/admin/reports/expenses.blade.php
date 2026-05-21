@@ -30,15 +30,15 @@
     <!-- Summary -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white rounded-lg shadow p-6 text-center">
-            <p class="text-4xl font-bold text-gray-900">GH₵ {{ number_format($totals['budget'], 2) }}</p>
+            <p class="text-4xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($totals['budget'], 2) }}</p>
             <p class="text-sm text-gray-500">Total Budget</p>
         </div>
         <div class="bg-white rounded-lg shadow p-6 text-center">
-            <p class="text-4xl font-bold text-red-600">GH₵ {{ number_format($totals['spent'], 2) }}</p>
+            <p class="text-4xl font-bold text-red-600">{{ $currencySymbol }} {{ number_format($totals['spent'], 2) }}</p>
             <p class="text-sm text-gray-500">Total Spent</p>
         </div>
         <div class="bg-white rounded-lg shadow p-6 text-center">
-            <p class="text-4xl font-bold {{ $totals['remaining'] >= 0 ? 'text-green-600' : 'text-red-600' }}">GH₵ {{ number_format($totals['remaining'], 2) }}</p>
+            <p class="text-4xl font-bold {{ $totals['remaining'] >= 0 ? 'text-green-600' : 'text-red-600' }}">{{ $currencySymbol }} {{ number_format($totals['remaining'], 2) }}</p>
             <p class="text-sm text-gray-500">Remaining</p>
         </div>
     </div>
@@ -60,8 +60,8 @@
                     @foreach($byCategory as $cat)
                     <tr>
                         <td class="px-4 py-3">{{ $cat->name }}</td>
-                        <td class="px-4 py-3 text-right">GH₵ {{ number_format($cat->budget_amount, 2) }}</td>
-                        <td class="px-4 py-3 text-right font-medium text-red-600">GH₵ {{ number_format($cat->total_spent, 2) }}</td>
+                        <td class="px-4 py-3 text-right">{{ $currencySymbol }} {{ number_format($cat->budget_amount, 2) }}</td>
+                        <td class="px-4 py-3 text-right font-medium text-red-600">{{ $currencySymbol }} {{ number_format($cat->total_spent, 2) }}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center">
                                 <div class="w-24 bg-gray-200 rounded-full h-2 mr-2">
@@ -92,7 +92,7 @@
                     @foreach($monthlyTrend as $data)
                     <tr>
                         <td class="px-4 py-3">{{ $data['month'] }}</td>
-                        <td class="px-4 py-3 text-right font-medium text-red-600">GH₵ {{ number_format($data['amount'], 2) }}</td>
+                        <td class="px-4 py-3 text-right font-medium text-red-600">{{ $currencySymbol }} {{ number_format($data['amount'], 2) }}</td>
                     </tr>
                     @endforeach
                 </tbody>

@@ -81,6 +81,24 @@
                 </div>
             </div>
 
+            <!-- Member ID -->
+            <div class="bg-white rounded-lg shadow mb-6">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Member Numbering</h3>
+                    <p class="text-sm text-gray-500">Prefix used when auto-generating member IDs. Changes apply to new members only.</p>
+                </div>
+                <div class="p-6">
+                    <div class="max-w-xs">
+                        <label for="member_id_prefix" class="block text-sm font-medium text-gray-700">Member ID Prefix</label>
+                        <input type="text" name="member_id_prefix" id="member_id_prefix"
+                               value="{{ old('member_id_prefix', $settings['member_id_prefix'] ?? 'COP') }}"
+                               maxlength="10"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <p class="mt-1 text-xs text-gray-400">e.g. COP → COP-2025-0001</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Leadership -->
             <div class="bg-white rounded-lg shadow mb-6">
                 <div class="px-6 py-4 border-b border-gray-200">

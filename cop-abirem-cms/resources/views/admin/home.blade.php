@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Home')
 
@@ -107,7 +107,7 @@
                 </svg>
             </span>
         </div>
-        <div class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($tithesStats['this_month'], 2) }}</div>
+        <div class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($tithesStats['this_month'], 2) }}</div>
         <div class="text-sm text-gray-500 mt-1">This month &bull; {{ $tithesStats['count'] }} payments</div>
         <a href="{{ route('admin.tithes.index') }}" class="mt-4 block text-xs text-emerald-600 hover:underline">View tithes &rarr;</a>
     </div>
@@ -124,7 +124,7 @@
                 </svg>
             </span>
         </div>
-        <div class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($offeringsStats['this_month'], 2) }}</div>
+        <div class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($offeringsStats['this_month'], 2) }}</div>
         <div class="text-sm text-gray-500 mt-1">This month &bull; {{ $offeringsStats['count'] }} entries</div>
         <a href="{{ route('admin.offerings.index') }}" class="mt-4 block text-xs text-teal-600 hover:underline">View offerings &rarr;</a>
     </div>
@@ -141,7 +141,7 @@
                 </svg>
             </span>
         </div>
-        <div class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($donationsStats['this_month'], 2) }}</div>
+        <div class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($donationsStats['this_month'], 2) }}</div>
         <div class="text-sm text-gray-500 mt-1">This month &bull; {{ $donationsStats['count'] }} donations</div>
         <a href="{{ route('admin.donations.index') }}" class="mt-4 block text-xs text-cyan-600 hover:underline">View donations &rarr;</a>
     </div>
@@ -158,7 +158,7 @@
                 </svg>
             </span>
         </div>
-        <div class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($expenseStats['this_month'], 2) }}</div>
+        <div class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($expenseStats['this_month'], 2) }}</div>
         <div class="text-sm text-gray-500 mt-1">Paid this month</div>
         @if($expenseStats['pending'] > 0)
         <div class="mt-3 flex items-center text-xs text-red-500 font-medium">

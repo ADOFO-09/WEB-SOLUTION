@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Income Ledger')
 
@@ -185,27 +185,27 @@
     {{-- Summary Cards --}}
     <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:1rem;">
         <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:.75rem;padding:1rem;text-align:center;">
-            <div style="font-size:1.25rem;font-weight:700;color:#15803d;">GH₵{{ number_format($totals['tithe'], 2) }}</div>
+            <div style="font-size:1.25rem;font-weight:700;color:#15803d;">{{ $currencySymbol }}{{ number_format($totals['tithe'], 2) }}</div>
             <div style="font-size:.75rem;color:#16a34a;">Tithes</div>
         </div>
         <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:.75rem;padding:1rem;text-align:center;">
-            <div style="font-size:1.25rem;font-weight:700;color:#1d4ed8;">GH₵{{ number_format($totals['offering'], 2) }}</div>
+            <div style="font-size:1.25rem;font-weight:700;color:#1d4ed8;">{{ $currencySymbol }}{{ number_format($totals['offering'], 2) }}</div>
             <div style="font-size:.75rem;color:#2563eb;">Offerings</div>
         </div>
         <div style="background:#faf5ff;border:1px solid #c4b5fd;border-radius:.75rem;padding:1rem;text-align:center;">
-            <div style="font-size:1.25rem;font-weight:700;color:#6d28d9;">GH₵{{ number_format($totals['donation'], 2) }}</div>
+            <div style="font-size:1.25rem;font-weight:700;color:#6d28d9;">{{ $currencySymbol }}{{ number_format($totals['donation'], 2) }}</div>
             <div style="font-size:.75rem;color:#7c3aed;">Donations</div>
         </div>
         <div style="background:#ecfeff;border:1px solid #a5f3fc;border-radius:.75rem;padding:1rem;text-align:center;">
-            <div style="font-size:1.25rem;font-weight:700;color:#0e7490;">GH₵{{ number_format($totals['pledge'], 2) }}</div>
+            <div style="font-size:1.25rem;font-weight:700;color:#0e7490;">{{ $currencySymbol }}{{ number_format($totals['pledge'], 2) }}</div>
             <div style="font-size:.75rem;color:#0891b2;">Pledges</div>
         </div>
         <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:.75rem;padding:1rem;text-align:center;">
-            <div style="font-size:1.25rem;font-weight:700;color:#b45309;">GH₵{{ number_format($totals['special'], 2) }}</div>
+            <div style="font-size:1.25rem;font-weight:700;color:#b45309;">{{ $currencySymbol }}{{ number_format($totals['special'], 2) }}</div>
             <div style="font-size:.75rem;color:#d97706;">Special</div>
         </div>
         <div style="background:#1e3a5f;border-radius:.75rem;padding:1rem;text-align:center;">
-            <div style="font-size:1.25rem;font-weight:700;color:#fbbf24;">GH₵{{ number_format($totals['grand_total'], 2) }}</div>
+            <div style="font-size:1.25rem;font-weight:700;color:#fbbf24;">{{ $currencySymbol }}{{ number_format($totals['grand_total'], 2) }}</div>
             <div style="font-size:.75rem;color:#94a3b8;">Grand Total</div>
         </div>
     </div>

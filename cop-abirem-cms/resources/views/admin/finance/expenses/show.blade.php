@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Expense Details')
 
@@ -47,7 +47,7 @@
                         </span>
                         <span class="ml-3 text-sm">{{ $expense->reference_number }}</span>
                     </div>
-                    <span class="text-2xl font-bold">GH₵ {{ number_format($expense->amount, 2) }}</span>
+                    <span class="text-2xl font-bold">{{ $currencySymbol }} {{ number_format($expense->amount, 2) }}</span>
                 </div>
             </div>
 
@@ -166,7 +166,7 @@
             <form action="{{ route('admin.expenses.approve', $expense) }}" method="POST" class="mb-4">
                 @csrf
                 <button type="submit" class="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
-                        onclick="return confirm('Approve this expense of GH₵ {{ number_format($expense->amount, 2) }}?')">
+                        onclick="return confirm('Approve this expense of {{ $currencySymbol }} {{ number_format($expense->amount, 2) }}?')">
                     Approve Expense
                 </button>
             </form>

@@ -157,6 +157,53 @@
                 </div>
             </div>
 
+            <!-- Reference Number Prefixes -->
+            <div class="bg-white rounded-lg shadow mb-6">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Reference Number Prefixes</h3>
+                    <p class="text-sm text-gray-500">Prefix used when generating receipt and voucher numbers. Changes apply to new records only.</p>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="tithe_receipt_prefix" class="block text-sm font-medium text-gray-700">Tithe Receipt Prefix</label>
+                            <input type="text" name="tithe_receipt_prefix" id="tithe_receipt_prefix"
+                                   value="{{ old('tithe_receipt_prefix', $settings['tithe_receipt_prefix'] ?? 'RCT') }}"
+                                   maxlength="10"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <p class="mt-1 text-xs text-gray-400">e.g. RCT → RCT20250001</p>
+                        </div>
+
+                        <div>
+                            <label for="offering_receipt_prefix" class="block text-sm font-medium text-gray-700">Offering Receipt Prefix</label>
+                            <input type="text" name="offering_receipt_prefix" id="offering_receipt_prefix"
+                                   value="{{ old('offering_receipt_prefix', $settings['offering_receipt_prefix'] ?? 'OFR') }}"
+                                   maxlength="10"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <p class="mt-1 text-xs text-gray-400">e.g. OFR → OFR20250001</p>
+                        </div>
+
+                        <div>
+                            <label for="donation_receipt_prefix" class="block text-sm font-medium text-gray-700">Donation Receipt Prefix</label>
+                            <input type="text" name="donation_receipt_prefix" id="donation_receipt_prefix"
+                                   value="{{ old('donation_receipt_prefix', $settings['donation_receipt_prefix'] ?? 'DRC') }}"
+                                   maxlength="10"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <p class="mt-1 text-xs text-gray-400">e.g. DRC → DRC20250001</p>
+                        </div>
+
+                        <div>
+                            <label for="expense_voucher_prefix" class="block text-sm font-medium text-gray-700">Expense Voucher Prefix</label>
+                            <input type="text" name="expense_voucher_prefix" id="expense_voucher_prefix"
+                                   value="{{ old('expense_voucher_prefix', $settings['expense_voucher_prefix'] ?? 'EXP') }}"
+                                   maxlength="10"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <p class="mt-1 text-xs text-gray-400">e.g. EXP → EXP20250001</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex justify-end">
                 <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                     Save Changes

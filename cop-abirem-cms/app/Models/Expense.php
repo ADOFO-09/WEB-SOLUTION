@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\SettingHelper;
 use App\Models\ExpenseCategory;
 use App\Models\User;
 use App\Models\FinancialYear;
@@ -178,7 +179,7 @@ class Expense extends Model
 
     public static function generateReferenceNumber(): string
     {
-        $prefix = 'EXP';
+        $prefix = SettingHelper::expenseVoucherPrefix();
         $year   = date('Y');
         $last   = self::withTrashed()
             ->whereYear('created_at', $year)

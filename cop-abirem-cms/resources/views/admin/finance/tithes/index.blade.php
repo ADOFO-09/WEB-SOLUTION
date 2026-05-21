@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Tithes')
 
@@ -31,11 +31,11 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">This Year Total</div>
-            <div class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($stats['total_amount'], 2) }}</div>
+            <div class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($stats['total_amount'], 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">This Month</div>
-            <div class="text-2xl font-bold text-green-600">GH₵ {{ number_format($stats['this_month'], 2) }}</div>
+            <div class="text-2xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($stats['this_month'], 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Total Records</div>
@@ -69,10 +69,7 @@
                 <div>
                     <select name="payment_method" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option value="">All Methods</option>
-                        <option value="cash" {{ request('payment_method') == 'cash' ? 'selected' : '' }}>Cash</option>
-                        <option value="mobile_money" {{ request('payment_method') == 'mobile_money' ? 'selected' : '' }}>Mobile Money</option>
-                        <option value="bank_transfer" {{ request('payment_method') == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
-                        <option value="cheque" {{ request('payment_method') == 'cheque' ? 'selected' : '' }}>Cheque</option>
+                        @include('admin.partials.payment-method-options', ['selected' => request('payment_method')])
                     </select>
                 </div>
                 <div>
@@ -141,7 +138,7 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $tithe->isVoided() ? 'text-red-400 line-through' : 'text-green-600' }}">
-                            GH₵ {{ number_format($tithe->amount, 2) }}
+                            {{ $currencySymbol }} {{ number_format($tithe->amount, 2) }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ $tithe->month_for_formatted }}

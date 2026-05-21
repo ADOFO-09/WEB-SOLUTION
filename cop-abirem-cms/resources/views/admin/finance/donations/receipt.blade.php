@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -74,14 +74,14 @@
         @if($donation->donation_type == 'cash')
         <div class="amount-row">
             <div class="amount-label">Amount Received</div>
-            <div class="amount-value">GH₵ {{ number_format($donation->amount, 2) }}</div>
+            <div class="amount-value">{{ $currencySymbol }} {{ number_format($donation->amount, 2) }}</div>
         </div>
         @else
         <div class="in-kind-box">
             <div class="in-kind-title">In-Kind Donation</div>
             <p>{{ $donation->in_kind_description }}</p>
             @if($donation->estimated_value)
-            <p style="margin-top: 10px; font-size: 12px; color: #666;">Estimated Value: GH₵ {{ number_format($donation->estimated_value, 2) }}</p>
+            <p style="margin-top: 10px; font-size: 12px; color: #666;">Estimated Value: {{ $currencySymbol }} {{ number_format($donation->estimated_value, 2) }}</p>
             @endif
         </div>
         @endif

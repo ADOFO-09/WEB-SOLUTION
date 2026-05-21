@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Donation Details')
 
@@ -65,11 +65,11 @@
                         <dt class="text-sm font-medium text-gray-500">Amount</dt>
                         <dd class="mt-1 text-2xl font-bold text-gray-900">
                             @if($donation->donation_type == 'cash')
-                            GH₵ {{ number_format($donation->amount, 2) }}
+                            {{ $currencySymbol }} {{ number_format($donation->amount, 2) }}
                             @else
                             {{ $donation->in_kind_description }}
                             @if($donation->estimated_value)
-                            <span class="text-sm text-gray-500">(Est: GH₵ {{ number_format($donation->estimated_value, 2) }})</span>
+                            <span class="text-sm text-gray-500">(Est: {{ $currencySymbol }} {{ number_format($donation->estimated_value, 2) }})</span>
                             @endif
                             @endif
                         </dd>

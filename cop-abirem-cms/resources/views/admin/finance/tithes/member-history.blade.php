@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', $member->full_name . ' - Tithe History')
 
@@ -59,7 +59,7 @@
 
             <div class="text-center py-4 bg-green-50 rounded-lg mb-4">
                 <p class="text-sm text-green-600">Total Paid</p>
-                <p class="text-3xl font-bold text-green-700">GH₵ {{ number_format($yearlyTotal, 2) }}</p>
+                <p class="text-3xl font-bold text-green-700">{{ $currencySymbol }} {{ number_format($yearlyTotal, 2) }}</p>
             </div>
 
             <div class="space-y-2">
@@ -67,7 +67,7 @@
                 @forelse($monthlyBreakdown as $month => $amount)
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">{{ $month }}</span>
-                    <span class="font-medium">GH₵ {{ number_format($amount, 2) }}</span>
+                    <span class="font-medium">{{ $currencySymbol }} {{ number_format($amount, 2) }}</span>
                 </div>
                 @empty
                 <p class="text-sm text-gray-500">No tithes recorded for this year.</p>
@@ -106,7 +106,7 @@
                                 {{ $tithe->month_for_formatted }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
-                                GH₵ {{ number_format($tithe->amount, 2) }}
+                                {{ $currencySymbol }} {{ number_format($tithe->amount, 2) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {{ $tithe->payment_date->format('M d, Y') }}
@@ -125,7 +125,7 @@
                     <tfoot class="bg-gray-50">
                         <tr>
                             <td colspan="2" class="px-6 py-4 text-sm font-medium text-gray-900">Total</td>
-                            <td class="px-6 py-4 text-sm font-bold text-green-600">GH₵ {{ number_format($yearlyTotal, 2) }}</td>
+                            <td class="px-6 py-4 text-sm font-bold text-green-600">{{ $currencySymbol }} {{ number_format($yearlyTotal, 2) }}</td>
                             <td colspan="3"></td>
                         </tr>
                     </tfoot>

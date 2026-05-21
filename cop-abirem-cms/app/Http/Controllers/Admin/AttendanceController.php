@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -12,6 +12,7 @@ use App\Models\ServiceType;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Http\Request;
+use App\Helpers\SettingHelper;
 
 class AttendanceController extends Controller implements HasMiddleware
 {
@@ -54,7 +55,7 @@ class AttendanceController extends Controller implements HasMiddleware
 
         $sessions = $query->orderBy('service_date', 'desc')
             ->orderBy('created_at', 'desc')
-            ->paginate(15)
+            ->paginate(SettingHelper::perPage())
             ->withQueryString();
 
         $serviceTypes = ServiceType::where('is_active', true)->orderBy('name')->get();
@@ -160,11 +161,17 @@ class AttendanceController extends Controller implements HasMiddleware
         // Already marked records
         $records = $session->records;
 
+        // Attendance method toggles from settings
+        $allowManual    = SettingHelper::attendanceManualEnabled();
+        $allowQr        = SettingHelper::attendanceQrEnabled();
+        $allowBiometric = SettingHelper::attendanceBiometricEnabled();
+
         // Pass as $attendance to match view expectations
         $attendance = $session;
 
         return view('admin.attendance.mark', compact(
-            'attendance', 'availableMembers', 'availableVisitors', 'records'
+            'attendance', 'availableMembers', 'availableVisitors', 'records',
+            'allowManual', 'allowQr', 'allowBiometric'
         ));
     }
 
@@ -254,6 +261,10 @@ class AttendanceController extends Controller implements HasMiddleware
     {
         if ($session->status === 'closed') {
             return response()->json(['success' => false, 'message' => 'Session is closed.'], 400);
+        }
+
+        if (!SettingHelper::attendanceQrEnabled()) {
+            return response()->json(['success' => false, 'message' => 'QR check-in is disabled.'], 403);
         }
 
         $validated = $request->validate([

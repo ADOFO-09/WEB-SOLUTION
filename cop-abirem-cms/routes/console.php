@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\Setting;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -27,3 +29,18 @@ Schedule::command('sms:send-birthdays')
     ->withoutOverlapping()
     ->runInBackground()
     ->appendOutputTo(storage_path('logs/birthday-sms.log'));
+
+// Scheduled database backup — only runs when auto_backup_enabled is on
+if (Schema::hasTable('settings') && Setting::get('auto_backup_enabled', false)) {
+    $frequency = Setting::get('backup_frequency', 'daily');
+    $job = Schedule::command('backup:run')
+        ->withoutOverlapping()
+        ->runInBackground()
+        ->appendOutputTo(storage_path('logs/backup.log'));
+
+    match ($frequency) {
+        'weekly'  => $job->weekly()->at('02:00'),
+        'monthly' => $job->monthly()->at('02:00'),
+        default   => $job->dailyAt('02:00'),
+    };
+}

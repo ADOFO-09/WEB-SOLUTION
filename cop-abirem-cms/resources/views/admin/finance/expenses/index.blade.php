@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Expenses')
 
@@ -26,16 +26,16 @@
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Year Total (Paid)</div>
-            <div class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($stats['total_paid'], 2) }}</div>
+            <div class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($stats['total_paid'], 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">This Month</div>
-            <div class="text-2xl font-bold text-red-600">GH₵ {{ number_format($stats['this_month'], 2) }}</div>
+            <div class="text-2xl font-bold text-red-600">{{ $currencySymbol }} {{ number_format($stats['this_month'], 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Pending</div>
             <div class="text-2xl font-bold text-yellow-600">{{ $stats['pending_count'] }}</div>
-            <div class="text-xs text-gray-500">GH₵ {{ number_format($stats['pending_amount'], 2) }}</div>
+            <div class="text-xs text-gray-500">{{ $currencySymbol }} {{ number_format($stats['pending_amount'], 2) }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Awaiting Payment</div>
@@ -122,7 +122,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $expense->payee_name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $expense->isVoided() ? 'text-red-300 line-through' : 'text-red-600' }}">GH₵ {{ number_format($expense->amount, 2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $expense->isVoided() ? 'text-red-300 line-through' : 'text-red-600' }}">{{ $currencySymbol }} {{ number_format($expense->amount, 2) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $expense->expense_date->format('M d, Y') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $expense->status_badge }}">

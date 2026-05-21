@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Finance Dashboard')
 
@@ -21,22 +21,22 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Total Tithes</div>
-            <div class="text-xl font-bold text-indigo-600">GH₵ {{ number_format($yearTotals['tithes'], 2) }}</div>
+            <div class="text-xl font-bold text-indigo-600">{{ $currencySymbol }} {{ number_format($yearTotals['tithes'], 2) }}</div>
             <div class="text-xs text-gray-400 mt-1">{{ $year }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Total Offerings</div>
-            <div class="text-xl font-bold text-green-600">GH₵ {{ number_format($yearTotals['offerings'], 2) }}</div>
+            <div class="text-xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($yearTotals['offerings'], 2) }}</div>
             <div class="text-xs text-gray-400 mt-1">{{ $year }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Total Donations</div>
-            <div class="text-xl font-bold text-blue-600">GH₵ {{ number_format($yearTotals['donations'], 2) }}</div>
+            <div class="text-xl font-bold text-blue-600">{{ $currencySymbol }} {{ number_format($yearTotals['donations'], 2) }}</div>
             <div class="text-xs text-gray-400 mt-1">{{ $year }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-sm font-medium text-gray-500">Total Expenses</div>
-            <div class="text-xl font-bold text-red-600">GH₵ {{ number_format($yearTotals['expenses'], 2) }}</div>
+            <div class="text-xl font-bold text-red-600">{{ $currencySymbol }} {{ number_format($yearTotals['expenses'], 2) }}</div>
             <div class="text-xs text-gray-400 mt-1">{{ $year }}</div>
         </div>
     </div>
@@ -46,7 +46,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div>
                 <div class="text-sm font-medium text-gray-500">Total Income</div>
-                <div class="text-3xl font-bold text-gray-900">GH₵ {{ number_format($yearTotals['total_income'], 2) }}</div>
+                <div class="text-3xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($yearTotals['total_income'], 2) }}</div>
             </div>
             <div class="flex items-center justify-center">
                 <span class="text-2xl text-gray-300">→</span>
@@ -54,7 +54,7 @@
             <div>
                 <div class="text-sm font-medium text-gray-500">Net Position</div>
                 <div class="text-3xl font-bold {{ $yearTotals['net'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                    GH₵ {{ number_format(abs($yearTotals['net']), 2) }}
+                    {{ $currencySymbol }} {{ number_format(abs($yearTotals['net']), 2) }}
                     <span class="text-base font-normal">{{ $yearTotals['net'] >= 0 ? 'surplus' : 'deficit' }}</span>
                 </div>
             </div>
@@ -117,7 +117,7 @@
                             {{ $tithe->member?->full_name ?? 'Unknown Member' }}
                         </span>
                     </div>
-                    <span class="text-sm font-semibold text-indigo-600">GH₵ {{ number_format($tithe->total, 2) }}</span>
+                    <span class="text-sm font-semibold text-indigo-600">{{ $currencySymbol }} {{ number_format($tithe->total, 2) }}</span>
                 </div>
                 @empty
                 <div class="px-6 py-8 text-center text-gray-400 text-sm">No tithe records for {{ $year }}</div>
@@ -137,7 +137,7 @@
                         {{ $expense->expenseCategory?->name ?? 'Uncategorized' }}
                     </span>
                     <div class="text-right">
-                        <span class="text-sm font-semibold text-red-600">GH₵ {{ number_format($expense->total, 2) }}</span>
+                        <span class="text-sm font-semibold text-red-600">{{ $currencySymbol }} {{ number_format($expense->total, 2) }}</span>
                         @if($yearTotals['expenses'] > 0)
                         <div class="text-xs text-gray-400">{{ number_format(($expense->total / $yearTotals['expenses']) * 100, 1) }}%</div>
                         @endif

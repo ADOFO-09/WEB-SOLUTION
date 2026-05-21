@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', $member->full_name)
 
@@ -98,11 +98,11 @@
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Total Tithes</span>
-                    <span class="font-semibold text-gray-900">GH₵ {{ number_format($stats['total_tithes'], 2) }}</span>
+                    <span class="font-semibold text-gray-900">{{ $currencySymbol }} {{ number_format($stats['total_tithes'], 2) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Total Offerings</span>
-                    <span class="font-semibold text-gray-900">GH₵ {{ number_format($stats['total_offerings'], 2) }}</span>
+                    <span class="font-semibold text-gray-900">{{ $currencySymbol }} {{ number_format($stats['total_offerings'], 2) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Attendance Rate (90 days)</span>
@@ -342,7 +342,7 @@
                                 {{ $tithe->payment_date->format('M d, Y') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                GH₵ {{ number_format($tithe->amount, 2) }}
+                                {{ $currencySymbol }} {{ number_format($tithe->amount, 2) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {{ $tithe->month_for->format('F Y') }}

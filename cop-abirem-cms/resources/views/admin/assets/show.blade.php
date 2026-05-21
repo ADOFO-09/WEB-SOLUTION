@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', $asset->name)
 
@@ -89,11 +89,11 @@
                 </div>
                 <div class="flex justify-between">
                     <dt class="text-gray-500">Purchase Price</dt>
-                    <dd class="font-medium text-gray-900">GH₵{{ number_format($asset->purchase_price, 2) }}</dd>
+                    <dd class="font-medium text-gray-900">{{ $currencySymbol }}{{ number_format($asset->purchase_price, 2) }}</dd>
                 </div>
                 <div class="flex justify-between">
                     <dt class="text-gray-500">Current Value</dt>
-                    <dd class="font-bold text-gray-900">GH₵{{ number_format($asset->current_value, 2) }}</dd>
+                    <dd class="font-bold text-gray-900">{{ $currencySymbol }}{{ number_format($asset->current_value, 2) }}</dd>
                 </div>
                 @if($asset->supplier)
                 <div class="flex justify-between">
@@ -167,7 +167,7 @@
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Cost (GH₵) *</label>
+                            <label class="block text-sm font-medium text-gray-700">Cost ({{ $currencySymbol }}) *</label>
                             <input type="number" name="cost" value="0" min="0" step="0.01" required
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
                         </div>
@@ -231,7 +231,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-gray-900">{{ Str::limit($record->description, 60) }}</td>
-                            <td class="px-4 py-3 text-right font-medium text-gray-900">GH₵{{ number_format($record->cost, 2) }}</td>
+                            <td class="px-4 py-3 text-right font-medium text-gray-900">{{ $currencySymbol }}{{ number_format($record->cost, 2) }}</td>
                             <td class="px-4 py-3 text-gray-600 whitespace-nowrap">
                                 {{ $record->next_maintenance_date?->format('M d, Y') ?? '—' }}
                             </td>

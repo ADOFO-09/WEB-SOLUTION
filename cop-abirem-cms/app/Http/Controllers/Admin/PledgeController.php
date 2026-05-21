@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\SettingHelper;
 
 class PledgeController extends Controller implements HasMiddleware
 {
@@ -66,7 +67,7 @@ class PledgeController extends Controller implements HasMiddleware
         }
 
         $query->orderBy('created_at', 'desc');
-        $pledges = $query->paginate(20)->withQueryString();
+        $pledges = $query->paginate(SettingHelper::perPage())->withQueryString();
 
         // Statistics
         $stats = [
@@ -238,6 +239,10 @@ class PledgeController extends Controller implements HasMiddleware
      */
     private function sendPledgePaymentSms(Pledge $pledge, PledgePayment $payment): void
     {
+        if (!\App\Models\Setting::get('sms_auto_pledge_reminder', false)) {
+            return;
+        }
+
         $phone = $pledge->member?->phone_primary;
 
         if (!$phone) {

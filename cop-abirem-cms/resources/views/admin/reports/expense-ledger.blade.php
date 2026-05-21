@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Expense Ledger')
 
@@ -154,12 +154,12 @@
         @endphp
         @foreach($summaryItems as $col => $info)
         <div style="background:{{ $info['bg'] }};border:1px solid {{ $info['border'] }};border-radius:.75rem;padding:1rem;text-align:center;">
-            <div style="font-size:1.25rem;font-weight:700;color:{{ $info['text'] }};">GH₵{{ number_format($totals[$col], 2) }}</div>
+            <div style="font-size:1.25rem;font-weight:700;color:{{ $info['text'] }};">{{ $currencySymbol }}{{ number_format($totals[$col], 2) }}</div>
             <div style="font-size:.75rem;color:{{ $info['text'] }};">{{ $info['label'] }}</div>
         </div>
         @endforeach
         <div style="background:#7f1d1d;border-radius:.75rem;padding:1rem;text-align:center;">
-            <div style="font-size:1.25rem;font-weight:700;color:#fca5a5;">GH₵{{ number_format($totals['grand_total'], 2) }}</div>
+            <div style="font-size:1.25rem;font-weight:700;color:#fca5a5;">{{ $currencySymbol }}{{ number_format($totals['grand_total'], 2) }}</div>
             <div style="font-size:.75rem;color:#fecaca;">Total Expenses</div>
         </div>
     </div>
