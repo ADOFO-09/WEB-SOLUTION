@@ -111,14 +111,14 @@
                 @forelse($records as $record)
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">{{ $record->session->service_date->format('M d, Y') }}</div>
+                        <div class="text-sm font-medium text-gray-900">{{ $record->session->service_date->format($dateFormat) }}</div>
                         <div class="text-xs text-gray-500">{{ $record->session->service_date->format('l') }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {{ $record->session->serviceType->name ?? 'Service' }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {{ $record->check_in_time ? \Carbon\Carbon::parse($record->check_in_time)->format('h:i A') : '-' }}
+                        {{ $record->check_in_time ? \Carbon\Carbon::parse($record->check_in_time)->format($timeFormat) : '-' }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         @if($record->is_late)

@@ -11,15 +11,15 @@
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
     <div class="bg-white rounded-xl shadow-sm p-6">
         <div class="text-sm text-gray-500 mb-1">Total Pledged</div>
-        <div class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($summary['total_pledged'], 2) }}</div>
+        <div class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($summary['total_pledged'], 2) }}</div>
     </div>
     <div class="bg-white rounded-xl shadow-sm p-6">
         <div class="text-sm text-gray-500 mb-1">Amount Paid</div>
-        <div class="text-2xl font-bold text-green-600">GH₵ {{ number_format($summary['total_paid'], 2) }}</div>
+        <div class="text-2xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($summary['total_paid'], 2) }}</div>
     </div>
     <div class="bg-white rounded-xl shadow-sm p-6">
         <div class="text-sm text-gray-500 mb-1">Remaining</div>
-        <div class="text-2xl font-bold text-yellow-600">GH₵ {{ number_format($summary['remaining'], 2) }}</div>
+        <div class="text-2xl font-bold text-yellow-600">{{ $currencySymbol }} {{ number_format($summary['remaining'], 2) }}</div>
     </div>
     <div class="bg-white rounded-xl shadow-sm p-6">
         <div class="text-sm text-gray-500 mb-1">Active / Completed</div>
@@ -76,25 +76,25 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
                 <span class="text-gray-500">Total Amount</span>
-                <p class="font-medium text-gray-900">GH₵ {{ number_format($pledge->total_amount, 2) }}</p>
+                <p class="font-medium text-gray-900">{{ $currencySymbol }} {{ number_format($pledge->total_amount, 2) }}</p>
             </div>
             <div>
                 <span class="text-gray-500">Amount Paid</span>
-                <p class="font-medium text-green-600">GH₵ {{ number_format($pledge->amount_paid, 2) }}</p>
+                <p class="font-medium text-green-600">{{ $currencySymbol }} {{ number_format($pledge->amount_paid, 2) }}</p>
             </div>
             <div>
                 <span class="text-gray-500">Remaining</span>
-                <p class="font-medium text-yellow-600">GH₵ {{ number_format($pledge->total_amount - $pledge->amount_paid, 2) }}</p>
+                <p class="font-medium text-yellow-600">{{ $currencySymbol }} {{ number_format($pledge->total_amount - $pledge->amount_paid, 2) }}</p>
             </div>
             <div>
                 <span class="text-gray-500">Due Date</span>
-                <p class="font-medium text-gray-900">{{ $pledge->due_date?->format('M d, Y') ?? '-' }}</p>
+                <p class="font-medium text-gray-900">{{ $pledge->due_date?->format($dateFormat) ?? '-' }}</p>
             </div>
         </div>
         
         <div class="mt-4 pt-4 border-t flex justify-between items-center">
             <span class="text-sm text-gray-500">
-                Pledge Date: {{ $pledge->pledge_date?->format('M d, Y') ?? $pledge->created_at->format('M d, Y') }}
+                Pledge Date: {{ $pledge->pledge_date?->format($dateFormat) ?? $pledge->created_at->format($dateFormat) }}
             </span>
             <a href="{{ route('member.pledges.show', $pledge) }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
                 View Details →

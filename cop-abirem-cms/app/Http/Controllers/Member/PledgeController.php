@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Member;
 
+use App\Helpers\SettingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Pledge;
 use App\Models\PledgePayment;
@@ -25,7 +26,7 @@ class PledgeController extends Controller
         }
         
         $pledges = $query->orderBy('created_at', 'desc')
-            ->paginate(10)
+            ->paginate(SettingHelper::perPage())
             ->withQueryString();
         
         $summary = [

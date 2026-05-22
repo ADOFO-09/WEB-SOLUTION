@@ -28,19 +28,19 @@
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
     <div class="bg-white rounded-xl shadow-sm p-6">
         <div class="text-sm text-gray-500 mb-1">Total Giving</div>
-        <div class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($summary['total'], 2) }}</div>
+        <div class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($summary['total'], 2) }}</div>
     </div>
     <div class="bg-white rounded-xl shadow-sm p-6">
         <div class="text-sm text-gray-500 mb-1">Tithes</div>
-        <div class="text-2xl font-bold text-green-600">GH₵ {{ number_format($summary['tithes'], 2) }}</div>
+        <div class="text-2xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($summary['tithes'], 2) }}</div>
     </div>
     <div class="bg-white rounded-xl shadow-sm p-6">
         <div class="text-sm text-gray-500 mb-1">Offerings</div>
-        <div class="text-2xl font-bold text-blue-600">GH₵ {{ number_format($summary['offerings'], 2) }}</div>
+        <div class="text-2xl font-bold text-blue-600">{{ $currencySymbol }} {{ number_format($summary['offerings'], 2) }}</div>
     </div>
     <div class="bg-white rounded-xl shadow-sm p-6">
         <div class="text-sm text-gray-500 mb-1">Donations</div>
-        <div class="text-2xl font-bold text-purple-600">GH₵ {{ number_format($summary['donations'], 2) }}</div>
+        <div class="text-2xl font-bold text-purple-600">{{ $currencySymbol }} {{ number_format($summary['donations'], 2) }}</div>
     </div>
 </div>
 
@@ -72,20 +72,20 @@
                 @foreach($monthlyData as $data)
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $data['month'] }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600">GH₵ {{ number_format($data['tithes'], 2) }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600">GH₵ {{ number_format($data['offerings'], 2) }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600">GH₵ {{ number_format($data['donations'], 2) }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900">GH₵ {{ number_format($data['total'], 2) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600">{{ $currencySymbol }} {{ number_format($data['tithes'], 2) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600">{{ $currencySymbol }} {{ number_format($data['offerings'], 2) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600">{{ $currencySymbol }} {{ number_format($data['donations'], 2) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900">{{ $currencySymbol }} {{ number_format($data['total'], 2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
             <tfoot class="bg-gray-50">
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">Total</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-600">GH₵ {{ number_format($summary['tithes'], 2) }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-600">GH₵ {{ number_format($summary['offerings'], 2) }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-purple-600">GH₵ {{ number_format($summary['donations'], 2) }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900">GH₵ {{ number_format($summary['total'], 2) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-600">{{ $currencySymbol }} {{ number_format($summary['tithes'], 2) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-600">{{ $currencySymbol }} {{ number_format($summary['offerings'], 2) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-purple-600">{{ $currencySymbol }} {{ number_format($summary['donations'], 2) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($summary['total'], 2) }}</td>
                 </tr>
             </tfoot>
         </table>
@@ -131,7 +131,7 @@
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return 'GH₵' + value;
+                            return '{{ $currencySymbol }}' + value;
                         }
                     }
                 }

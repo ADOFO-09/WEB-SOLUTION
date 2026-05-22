@@ -18,7 +18,7 @@
             </div>
             <div class="ml-4">
                 <p class="text-sm text-gray-500">Total Giving (YTD)</p>
-                <p class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($givingSummary['total_ytd'], 2) }}</p>
+                <p class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($givingSummary['total_ytd'], 2) }}</p>
             </div>
         </div>
     </div>
@@ -32,7 +32,7 @@
             </div>
             <div class="ml-4">
                 <p class="text-sm text-gray-500">Tithes (YTD)</p>
-                <p class="text-2xl font-bold text-gray-900">GH₵ {{ number_format($givingSummary['tithes_ytd'], 2) }}</p>
+                <p class="text-2xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($givingSummary['tithes_ytd'], 2) }}</p>
             </div>
         </div>
     </div>
@@ -92,16 +92,16 @@
             <div class="grid grid-cols-2 gap-4 text-center">
                 <div class="bg-gray-50 rounded-lg p-3">
                     <p class="text-xs text-gray-500">Total Pledged</p>
-                    <p class="text-lg font-bold text-gray-900">GH₵ {{ number_format($pledgeSummary['total_pledged'], 2) }}</p>
+                    <p class="text-lg font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($pledgeSummary['total_pledged'], 2) }}</p>
                 </div>
                 <div class="bg-gray-50 rounded-lg p-3">
                     <p class="text-xs text-gray-500">Amount Paid</p>
-                    <p class="text-lg font-bold text-green-600">GH₵ {{ number_format($pledgeSummary['total_paid'], 2) }}</p>
+                    <p class="text-lg font-bold text-green-600">{{ $currencySymbol }} {{ number_format($pledgeSummary['total_paid'], 2) }}</p>
                 </div>
             </div>
             <div class="bg-yellow-50 rounded-lg p-3 text-center">
                 <p class="text-xs text-yellow-700">Remaining Balance</p>
-                <p class="text-xl font-bold text-yellow-600">GH₵ {{ number_format($pledgeSummary['remaining'], 2) }}</p>
+                <p class="text-xl font-bold text-yellow-600">{{ $currencySymbol }} {{ number_format($pledgeSummary['remaining'], 2) }}</p>
             </div>
         </div>
         @else
@@ -129,8 +129,8 @@
         @forelse($recentTithes as $tithe)
         <div class="flex items-center justify-between py-3 {{ !$loop->last ? 'border-b border-gray-100' : '' }}">
             <div>
-                <p class="font-medium text-gray-900">GH₵ {{ number_format($tithe->amount, 2) }}</p>
-                <p class="text-sm text-gray-500">{{ $tithe->payment_date->format('M d, Y') }}</p>
+                <p class="font-medium text-gray-900">{{ $currencySymbol }} {{ number_format($tithe->amount, 2) }}</p>
+                <p class="text-sm text-gray-500">{{ $tithe->payment_date->format($dateFormat) }}</p>
             </div>
             <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">{{ ucfirst($tithe->payment_method) }}</span>
         </div>
@@ -149,10 +149,10 @@
         <div class="flex items-center justify-between py-3 {{ !$loop->last ? 'border-b border-gray-100' : '' }}">
             <div>
                 <p class="font-medium text-gray-900">{{ $pledge->project?->name ?? 'General Pledge' }}</p>
-                <p class="text-sm text-gray-500">Due: {{ $pledge->due_date->format('M d, Y') }}</p>
+                <p class="text-sm text-gray-500">Due: {{ $pledge->due_date->format($dateFormat) }}</p>
             </div>
             <div class="text-right">
-                <p class="font-medium text-gray-900">GH₵ {{ number_format($pledge->total_amount - $pledge->amount_paid, 2) }}</p>
+                <p class="font-medium text-gray-900">{{ $currencySymbol }} {{ number_format($pledge->total_amount - $pledge->amount_paid, 2) }}</p>
                 <p class="text-xs text-gray-500">remaining</p>
             </div>
         </div>
@@ -196,7 +196,7 @@
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return 'GH₵' + value;
+                            return '{{ $currencySymbol }}' + value;
                         }
                     }
                 }

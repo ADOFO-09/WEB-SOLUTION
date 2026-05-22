@@ -11,7 +11,7 @@
 <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
     <div class="bg-white rounded-xl shadow-sm px-6 py-4">
         <span class="text-sm text-gray-500">Total Tithes ({{ $year }})</span>
-        <span class="ml-3 text-2xl font-bold text-green-600">GH₵ {{ number_format($total, 2) }}</span>
+        <span class="ml-3 text-2xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($total, 2) }}</span>
     </div>
     <form action="{{ route('member.giving.tithes') }}" method="GET" class="flex items-center space-x-2">
         <label class="text-sm text-gray-600">Year:</label>
@@ -38,7 +38,7 @@
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($tithes as $tithe)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $tithe->payment_date->format('M d, Y') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $tithe->payment_date->format($dateFormat) }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $tithe->reference_number }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 py-1 text-xs rounded-full 
@@ -48,7 +48,7 @@
                             {{ ucfirst(str_replace('_', ' ', $tithe->payment_method)) }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900">GH₵ {{ number_format($tithe->amount, 2) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900">{{ $currencySymbol }} {{ number_format($tithe->amount, 2) }}</td>
                 </tr>
                 @empty
                 <tr>

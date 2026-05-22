@@ -89,7 +89,7 @@
                 </div>
                 <div>
                     <label class="text-sm text-gray-500">Date of Birth</label>
-                    <p class="text-gray-900 font-medium">{{ $member->date_of_birth ? $member->date_of_birth->format('F d, Y') : '-' }}</p>
+                    <p class="text-gray-900 font-medium">{{ $member->date_of_birth ? $member->date_of_birth->format($dateFormat) : '-' }}</p>
                 </div>
                 <div>
                     <label class="text-sm text-gray-500">Gender</label>
@@ -169,11 +169,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="text-sm text-gray-500">Date Joined</label>
-                    <p class="text-gray-900 font-medium">{{ $member->date_joined ? $member->date_joined->format('F d, Y') : '-' }}</p>
+                    <p class="text-gray-900 font-medium">{{ $member->date_joined ? $member->date_joined->format($dateFormat) : '-' }}</p>
                 </div>
                 <div>
                     <label class="text-sm text-gray-500">Baptism Date</label>
-                    <p class="text-gray-900 font-medium">{{ $member->baptism_date ? $member->baptism_date->format('F d, Y') : '-' }}</p>
+                    <p class="text-gray-900 font-medium">{{ $member->baptism_date ? $member->baptism_date->format($dateFormat) : '-' }}</p>
                 </div>
                 <div>
                     <label class="text-sm text-gray-500">Baptism Type</label>

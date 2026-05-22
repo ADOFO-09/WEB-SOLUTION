@@ -47,15 +47,15 @@
             <div class="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
                 <div class="text-center">
                     <p class="text-sm text-gray-500">Total Pledged</p>
-                    <p class="text-xl font-bold text-gray-900">GH₵ {{ number_format($pledge->total_amount, 2) }}</p>
+                    <p class="text-xl font-bold text-gray-900">{{ $currencySymbol }} {{ number_format($pledge->total_amount, 2) }}</p>
                 </div>
                 <div class="text-center border-x border-gray-200">
                     <p class="text-sm text-gray-500">Amount Paid</p>
-                    <p class="text-xl font-bold text-green-600">GH₵ {{ number_format($pledge->amount_paid, 2) }}</p>
+                    <p class="text-xl font-bold text-green-600">{{ $currencySymbol }} {{ number_format($pledge->amount_paid, 2) }}</p>
                 </div>
                 <div class="text-center">
                     <p class="text-sm text-gray-500">Remaining</p>
-                    <p class="text-xl font-bold text-yellow-600">GH₵ {{ number_format($pledge->total_amount - $pledge->amount_paid, 2) }}</p>
+                    <p class="text-xl font-bold text-yellow-600">{{ $currencySymbol }} {{ number_format($pledge->total_amount - $pledge->amount_paid, 2) }}</p>
                 </div>
             </div>
         </div>
@@ -79,21 +79,21 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($payments as $payment)
                         <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $payment->payment_date->format('M d, Y') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $payment->payment_date->format($dateFormat) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $payment->reference_number ?? '-' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
                                     {{ ucfirst(str_replace('_', ' ', $payment->payment_method)) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-green-600">GH₵ {{ number_format($payment->amount, 2) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-green-600">{{ $currencySymbol }} {{ number_format($payment->amount, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                     <tfoot class="bg-gray-50">
                         <tr>
                             <td colspan="3" class="px-6 py-4 text-sm font-bold text-gray-900">Total Paid</td>
-                            <td class="px-6 py-4 text-sm text-right font-bold text-green-600">GH₵ {{ number_format($payments->sum('amount'), 2) }}</td>
+                            <td class="px-6 py-4 text-sm text-right font-bold text-green-600">{{ $currencySymbol }} {{ number_format($payments->sum('amount'), 2) }}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -117,11 +117,11 @@
             <div class="space-y-4 text-sm">
                 <div>
                     <span class="text-gray-500">Pledge Date</span>
-                    <p class="font-medium text-gray-900">{{ $pledge->pledge_date?->format('F d, Y') ?? $pledge->created_at->format('F d, Y') }}</p>
+                    <p class="font-medium text-gray-900">{{ $pledge->pledge_date?->format($dateFormat) ?? $pledge->created_at->format($dateFormat) }}</p>
                 </div>
                 <div>
                     <span class="text-gray-500">Due Date</span>
-                    <p class="font-medium text-gray-900">{{ $pledge->due_date?->format('F d, Y') ?? 'Not set' }}</p>
+                    <p class="font-medium text-gray-900">{{ $pledge->due_date?->format($dateFormat) ?? 'Not set' }}</p>
                 </div>
                 <div>
                     <span class="text-gray-500">Payment Frequency</span>
@@ -163,7 +163,7 @@
                 $suggestedPayment = $remaining / $monthsLeft;
             @endphp
             <p class="text-sm text-blue-700">
-                Suggested {{ strtolower($pledge->payment_frequency) }} payment: <strong>GH₵ {{ number_format($suggestedPayment, 2) }}</strong>
+                Suggested {{ strtolower($pledge->payment_frequency) }} payment: <strong>{{ $currencySymbol }} {{ number_format($suggestedPayment, 2) }}</strong>
             </p>
             @endif
         </div>

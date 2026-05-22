@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Member;
 
+use App\Helpers\SettingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Tithe;
 use App\Models\Offering;
@@ -78,7 +79,7 @@ class GivingController extends Controller
         $tithes = Tithe::where('member_id', $member->id)
             ->whereYear('payment_date', $year)
             ->orderBy('payment_date', 'desc')
-            ->paginate(20)
+            ->paginate(SettingHelper::perPage())
             ->withQueryString();
         
         $total = Tithe::where('member_id', $member->id)
@@ -102,7 +103,7 @@ class GivingController extends Controller
             ->whereYear('payment_date', $year)
             ->with('offeringType')
             ->orderBy('payment_date', 'desc')
-            ->paginate(20)
+            ->paginate(SettingHelper::perPage())
             ->withQueryString();
         
         $total = Offering::where('member_id', $member->id)
@@ -126,7 +127,7 @@ class GivingController extends Controller
             ->whereYear('payment_date', $year)
             ->with('project')
             ->orderBy('payment_date', 'desc')
-            ->paginate(20)
+            ->paginate(SettingHelper::perPage())
             ->withQueryString();
         
         $total = Donation::where('member_id', $member->id)
@@ -209,7 +210,7 @@ class GivingController extends Controller
             // Header
             fputcsv($handle, ['GIVING STATEMENT - ' . $year]);
             fputcsv($handle, ['Member: ' . $member->full_name . ' (' . $member->member_id . ')']);
-            fputcsv($handle, ['Generated: ' . now()->format('F d, Y')]);
+            fputcsv($handle, ['Generated: ' . now()->format(SettingHelper::dateFormat())]);
             fputcsv($handle, []);
             
             // Tithes
@@ -256,7 +257,7 @@ class GivingController extends Controller
             
             // Grand Total
             $grandTotal = $tithes->sum('amount') + $offerings->sum('amount') + $donations->sum('amount');
-            fputcsv($handle, ['GRAND TOTAL', '', 'GH₵ ' . number_format($grandTotal, 2), '']);
+            fputcsv($handle, ['GRAND TOTAL', '', SettingHelper::currencySymbol() . ' ' . number_format($grandTotal, 2), '']);
             
             fclose($handle);
         }, $filename, [

@@ -11,7 +11,7 @@
 <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
     <div class="bg-white rounded-xl shadow-sm px-6 py-4">
         <span class="text-sm text-gray-500">Total Donations ({{ $year }})</span>
-        <span class="ml-3 text-2xl font-bold text-purple-600">GH₵ {{ number_format($total, 2) }}</span>
+        <span class="ml-3 text-2xl font-bold text-purple-600">{{ $currencySymbol }} {{ number_format($total, 2) }}</span>
     </div>
     <form action="{{ route('member.giving.donations') }}" method="GET" class="flex items-center space-x-2">
         <label class="text-sm text-gray-600">Year:</label>
@@ -39,7 +39,7 @@
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($donations as $donation)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $donation->payment_date->format('M d, Y') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $donation->payment_date->format($dateFormat) }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $donation->receipt_number ?? $donation->reference_number }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         @if($donation->donation_type == 'cash')
@@ -51,7 +51,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $donation->project?->name ?? 'General' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900">
                         @if($donation->donation_type == 'cash')
-                        GH₵ {{ number_format($donation->amount, 2) }}
+                        {{ $currencySymbol }} {{ number_format($donation->amount, 2) }}
                         @else
                         <span class="text-gray-500">{{ Str::limit($donation->in_kind_description, 20) }}</span>
                         @endif

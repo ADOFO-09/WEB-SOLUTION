@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Member;
 
+use App\Helpers\SettingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
@@ -30,7 +31,7 @@ class AttendanceController extends Controller
             ->with(['session.serviceType']);
         
         $records = $query->orderBy('created_at', 'desc')
-            ->paginate(20)
+            ->paginate(SettingHelper::perPage())
             ->withQueryString();
         
         // Monthly attendance summary

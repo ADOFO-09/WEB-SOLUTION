@@ -57,6 +57,17 @@ class AppServiceProvider extends ServiceProvider
             } catch (\Exception $e) {}
         });
 
+        // Share currency, date/time format, and church name with all member views.
+        View::composer('member.*', function ($view) {
+            if (!Schema::hasTable('settings')) return;
+            try {
+                $view->with('currencySymbol', SettingHelper::currencySymbol());
+                $view->with('dateFormat', SettingHelper::dateFormat());
+                $view->with('timeFormat', SettingHelper::timeFormat());
+                $view->with('churchName', Setting::get('church_name', 'Church of Pentecost - Abirem'));
+            } catch (\Exception $e) {}
+        });
+
         // Register permission gates
         $this->registerPermissionGates();
     }

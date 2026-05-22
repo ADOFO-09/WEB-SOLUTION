@@ -32,12 +32,12 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Date</p>
-                    <p class="text-sm font-medium text-gray-800">{{ $session->service_date->format('l, M d, Y') }}</p>
+                    <p class="text-sm font-medium text-gray-800">{{ $session->service_date->format('l, ' . $dateFormat) }}</p>
                 </div>
                 <div>
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Time</p>
                     <p class="text-sm font-medium text-gray-800">
-                        {{ $session->start_time?->format('g:i A') ?? '—' }}
+                        {{ $session->start_time?->format($timeFormat) ?? '—' }}
                     </p>
                 </div>
             </div>
@@ -80,7 +80,7 @@
     </div>
 
     <p class="mt-4 text-center text-xs text-gray-400">
-        Your attendance will be recorded at {{ now()->format('g:i A') }} on {{ now()->format('M d, Y') }}.
+        Your attendance will be recorded at {{ now()->format($timeFormat) }} on {{ now()->format($dateFormat) }}.
     </p>
 </div>
 @endsection

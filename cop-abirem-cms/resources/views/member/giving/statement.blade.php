@@ -38,7 +38,7 @@
 <div class="bg-white rounded-xl shadow-sm p-8" id="statement">
     <!-- Header -->
     <div class="text-center border-b pb-6 mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Church of Pentecost - Abirem</h1>
+        <h1 class="text-2xl font-bold text-gray-900">{{ $churchName }}</h1>
         <p class="text-gray-600">Giving Statement for {{ $year }}</p>
     </div>
     
@@ -59,7 +59,7 @@
             </div>
             <div>
                 <p class="text-sm text-gray-500">Generated</p>
-                <p class="font-medium">{{ now()->format('F d, Y') }}</p>
+                <p class="font-medium">{{ now()->format($dateFormat) }}</p>
             </div>
         </div>
     </div>
@@ -79,16 +79,16 @@
             <tbody class="text-sm">
                 @foreach($tithes as $tithe)
                 <tr class="border-b border-gray-100">
-                    <td class="py-2">{{ $tithe->payment_date->format('M d, Y') }}</td>
+                    <td class="py-2">{{ $tithe->payment_date->format($dateFormat) }}</td>
                     <td class="py-2">{{ $tithe->reference_number }}</td>
-                    <td class="py-2 text-right">GH₵ {{ number_format($tithe->amount, 2) }}</td>
+                    <td class="py-2 text-right">{{ $currencySymbol }} {{ number_format($tithe->amount, 2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr class="font-bold">
                     <td colspan="2" class="pt-2">Total Tithes</td>
-                    <td class="pt-2 text-right">GH₵ {{ number_format($totals['tithes'], 2) }}</td>
+                    <td class="pt-2 text-right">{{ $currencySymbol }} {{ number_format($totals['tithes'], 2) }}</td>
                 </tr>
             </tfoot>
         </table>
@@ -112,16 +112,16 @@
             <tbody class="text-sm">
                 @foreach($offerings as $offering)
                 <tr class="border-b border-gray-100">
-                    <td class="py-2">{{ $offering->payment_date->format('M d, Y') }}</td>
+                    <td class="py-2">{{ $offering->payment_date->format($dateFormat) }}</td>
                     <td class="py-2">{{ $offering->offeringType?->name ?? 'General' }}</td>
-                    <td class="py-2 text-right">GH₵ {{ number_format($offering->amount, 2) }}</td>
+                    <td class="py-2 text-right">{{ $currencySymbol }} {{ number_format($offering->amount, 2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr class="font-bold">
                     <td colspan="2" class="pt-2">Total Offerings</td>
-                    <td class="pt-2 text-right">GH₵ {{ number_format($totals['offerings'], 2) }}</td>
+                    <td class="pt-2 text-right">{{ $currencySymbol }} {{ number_format($totals['offerings'], 2) }}</td>
                 </tr>
             </tfoot>
         </table>
@@ -145,16 +145,16 @@
             <tbody class="text-sm">
                 @foreach($donations as $donation)
                 <tr class="border-b border-gray-100">
-                    <td class="py-2">{{ $donation->payment_date->format('M d, Y') }}</td>
+                    <td class="py-2">{{ $donation->payment_date->format($dateFormat) }}</td>
                     <td class="py-2">{{ $donation->project?->name ?? 'General Fund' }}</td>
-                    <td class="py-2 text-right">GH₵ {{ number_format($donation->amount, 2) }}</td>
+                    <td class="py-2 text-right">{{ $currencySymbol }} {{ number_format($donation->amount, 2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr class="font-bold">
                     <td colspan="2" class="pt-2">Total Donations</td>
-                    <td class="pt-2 text-right">GH₵ {{ number_format($totals['donations'], 2) }}</td>
+                    <td class="pt-2 text-right">{{ $currencySymbol }} {{ number_format($totals['donations'], 2) }}</td>
                 </tr>
             </tfoot>
         </table>
@@ -167,7 +167,7 @@
     <div class="border-t-2 border-gray-300 pt-4">
         <div class="flex justify-between items-center text-xl font-bold">
             <span>Grand Total</span>
-            <span class="text-blue-600">GH₵ {{ number_format($totals['grand_total'], 2) }}</span>
+            <span class="text-blue-600">{{ $currencySymbol }} {{ number_format($totals['grand_total'], 2) }}</span>
         </div>
     </div>
 

@@ -18,27 +18,6 @@
         <div id="reader" class="w-full rounded-lg overflow-hidden" style="min-height: 280px;"></div>
 
         <div id="scan-status" class="mt-3 text-center text-sm text-gray-400">Initialising camera…</div>
-
-        {{-- Divider --}}
-        <div class="relative my-6">
-            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
-            <div class="relative flex justify-center">
-                <span class="px-3 bg-white text-xs text-gray-400 uppercase tracking-wide">or enter code manually</span>
-            </div>
-        </div>
-
-        {{-- Manual token entry --}}
-        <form action="{{ route('member.attendance.verify', ['token' => '__TOKEN__']) }}" method="GET" id="manual-form">
-            <div class="flex space-x-2">
-                <input type="text" id="manual-token" name="_manual"
-                       placeholder="Paste the attendance token here"
-                       class="flex-1 rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                <button type="submit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
-                    Verify
-                </button>
-            </div>
-        </form>
     </div>
 
     {{-- Recent Attendance --}}
@@ -55,11 +34,11 @@
                         {{ $record->session->serviceType->name ?? 'Service' }}
                     </p>
                     <p class="text-xs text-gray-400">
-                        {{ $record->session->service_date->format('M d, Y') }}
+                        {{ $record->session->service_date->format($dateFormat) }}
                     </p>
                 </div>
                 <div class="text-right">
-                    <span class="text-xs text-gray-500">{{ $record->check_in_time->format('g:i A') }}</span>
+                    <span class="text-xs text-gray-500">{{ $record->check_in_time->format($timeFormat) }}</span>
                     @if($record->is_late)
                     <span class="ml-1 px-1.5 py-0.5 text-xs bg-yellow-100 text-yellow-700 rounded-full">Late</span>
                     @else
@@ -80,38 +59,63 @@
 </div>
 
 @push('scripts')
-<script src="https://unpkg.com/html5-qrcode@2.3.4/html5-qrcode.min.js"></script>
+<script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 <script>
-const verifyBase = @json(route('member.attendance.scan'));  // base URL to build verify URL
 let scanner;
 let scanned = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     startScanner();
-    setupManualForm();
 });
 
-function startScanner() {
-    Html5Qrcode.getCameras().then(cameras => {
-        if (!cameras || cameras.length === 0) {
-            document.getElementById('scan-status').textContent = 'No camera found. Use manual entry below.';
-            return;
+async function startScanner() {
+    const status = document.getElementById('scan-status');
+
+    // Camera API requires a secure context (HTTPS or localhost)
+    if (!window.isSecureContext || !navigator.mediaDevices) {
+        status.innerHTML = 'Camera requires <strong>HTTPS</strong>. Contact the admin to mark your attendance.';
+        return;
+    }
+
+    // Step 1: trigger the browser permission prompt and populate device labels
+    let stream;
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    } catch (err) {
+        const msg = String(err).toLowerCase();
+        if (msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied')) {
+            status.innerHTML = 'Camera access was blocked. Click the <strong>camera icon</strong> in your browser\'s address bar to allow access, then reload.';
+        } else {
+            status.textContent = 'No camera found on this device. Contact the admin to mark your attendance.';
         }
+        return;
+    }
+    // Release the test stream so html5-qrcode can open the camera cleanly
+    stream.getTracks().forEach(t => t.stop());
 
-        scanner = new Html5Qrcode('reader');
-        const cameraId = cameras[cameras.length - 1].id; // prefer back camera
+    // Step 2: enumerate cameras (labels are now available after permission grant)
+    let cameras = [];
+    try {
+        cameras = await Html5Qrcode.getCameras();
+    } catch (_) {}
 
-        scanner.start(cameraId, { fps: 10, qrbox: { width: 250, height: 250 } },
-            onScanSuccess,
-            () => { /* ignore frame errors */ }
-        ).then(() => {
-            document.getElementById('scan-status').textContent = 'Camera active — point at the QR code.';
-        }).catch(() => {
-            document.getElementById('scan-status').textContent = 'Camera permission denied. Use manual entry.';
-        });
-    }).catch(() => {
-        document.getElementById('scan-status').textContent = 'Camera not available. Use manual entry.';
-    });
+    if (!cameras || cameras.length === 0) {
+        status.textContent = 'No camera found on this device. Contact the admin to mark your attendance.';
+        return;
+    }
+
+    // Prefer rear camera on mobile; fall back to last in list
+    const chosen = cameras.find(c => /back|rear|environment/i.test(c.label)) ?? cameras[cameras.length - 1];
+
+    // Step 3: start the scanner
+    scanner = new Html5Qrcode('reader');
+    try {
+        await scanner.start(chosen.id, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {});
+        status.textContent = 'Camera active — point at the QR code.';
+    } catch (err) {
+        status.textContent = 'Could not start camera. Contact the admin to mark your attendance.';
+        console.error('QR scanner error:', err);
+    }
 }
 
 function onScanSuccess(decodedText) {
@@ -127,17 +131,7 @@ function onScanSuccess(decodedText) {
     window.location.href = decodedText;
 }
 
-function setupManualForm() {
-    document.getElementById('manual-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const token = document.getElementById('manual-token').value.trim();
-        if (!token) return;
 
-        // Build verify URL: replace __TOKEN__ in action with actual token
-        const base = '{{ rtrim(url("/member/attendance/verify"), "/") }}/';
-        window.location.href = base + encodeURIComponent(token);
-    });
-}
 </script>
 @endpush
 @endsection
