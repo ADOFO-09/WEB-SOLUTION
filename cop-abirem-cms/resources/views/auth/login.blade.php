@@ -285,6 +285,11 @@
             background: var(--white);
             transition: all 0.3s ease;
         }
+
+        /* Extra right padding for inputs that have a toggle button */
+        .input-wrapper input.has-toggle {
+            padding-right: 3rem;
+        }
         
         .input-wrapper input:focus {
             outline: none;
@@ -353,7 +358,13 @@
         }
         
         .remember-me input {
-            display: none;
+            position: absolute;
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
         }
         
         .checkbox-custom {
@@ -555,6 +566,17 @@
                 <span>{{ $errors->first() }}</span>
             </div>
             @endif
+
+            @if (session('error'))
+            <div class="error-message">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span>{{ session('error') }}</span>
+            </div>
+            @endif
             
             @if (session('status'))
             <div class="success-message">
@@ -573,8 +595,8 @@
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <div class="input-wrapper">
-                        <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus placeholder="Enter your email">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                        <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="Enter your email">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true" focusable="false">
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                             <polyline points="22,6 12,13 2,6"/>
                         </svg>
@@ -584,13 +606,13 @@
                 <div class="form-group">
                     <label for="password">Password</label>
                     <div class="input-wrapper">
-                        <input type="password" id="password" name="password" required placeholder="Enter your password">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                        <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password" class="has-toggle">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true" focusable="false">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                             <path d="M7 11V7a5 5 0 0110 0v4"/>
                         </svg>
-                        <button type="button" class="password-toggle" onclick="togglePassword()">
-                            <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                        <button type="button" class="password-toggle" onclick="togglePassword()" aria-label="Toggle password visibility" aria-controls="password">
+                            <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true" focusable="false">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                 <circle cx="12" cy="12" r="3"/>
                             </svg>

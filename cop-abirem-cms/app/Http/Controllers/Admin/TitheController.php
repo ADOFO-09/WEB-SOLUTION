@@ -26,7 +26,11 @@ class TitheController extends Controller implements HasMiddleware
             new Middleware(middleware: 'permission:tithes.view', only: [
                 'index', 'show', 'memberHistory', 'printReceipt', 'monthlyReport'
             ]),
-            new Middleware(middleware: 'permission:tithes.create', only: ['create', 'store', 'createForSession', 'storeForSession']),
+            new Middleware(middleware: 'permission:tithes.create', only: [
+                'create', 'store',
+                'createForSession', 'storeForSession',
+                'createIndividualForSession', 'storeIndividualForSession',
+            ]),
             new Middleware(middleware: 'permission:tithes.edit', only: ['edit', 'update']),
             new Middleware(middleware: 'permission:tithes.delete', only: ['destroy']),
         ];
@@ -243,6 +247,56 @@ class TitheController extends Controller implements HasMiddleware
             ->get();
 
         return view('admin.finance.tithes.create-session', compact('sessions'));
+    }
+
+    /**
+     * Show per-member tithe entry form locked to a specific session.
+     */
+    public function createIndividualForSession(AttendanceSession $session)
+    {
+        $session->load('serviceType');
+        $members = Member::active()->orderBy('first_name')->get();
+
+        $sessionTithes = Tithe::where('attendance_session_id', $session->id)
+            ->whereNotNull('member_id')
+            ->with('member')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('admin.finance.tithes.session-individual', compact('session', 'members', 'sessionTithes'));
+    }
+
+    /**
+     * Store an individual member tithe linked to a specific session.
+     */
+    public function storeIndividualForSession(Request $request, AttendanceSession $session)
+    {
+        $validated = $request->validate([
+            'member_id'        => 'required|exists:members,id',
+            'amount'           => 'required|numeric|min:0.01',
+            'payment_method'   => 'required|in:cash,mobile_money,bank_transfer,cheque',
+            'payment_reference'=> 'nullable|string|max:100',
+            'notes'            => 'nullable|string|max:500',
+        ]);
+
+        $tithe = Tithe::create([
+            'member_id'             => $validated['member_id'],
+            'attendance_session_id' => $session->id,
+            'collection_type'       => 'individual',
+            'amount'                => $validated['amount'],
+            'payment_date'          => $session->service_date,
+            'payment_method'        => $validated['payment_method'],
+            'payment_reference'     => $validated['payment_reference'] ?? null,
+            'month_for'             => $session->service_date->startOfMonth()->format('Y-m-d'),
+            'notes'                 => $validated['notes'] ?? null,
+            'recorded_by'           => auth()->id(),
+        ]);
+
+        $this->sendTitheSms($tithe);
+
+        return redirect()
+            ->route('admin.tithes.session.individual', $session)
+            ->with('success', 'Tithe of ' . SettingHelper::currencySymbol() . ' ' . number_format($tithe->amount, 2) . ' recorded for ' . $tithe->member->full_name . '.');
     }
 
     /**

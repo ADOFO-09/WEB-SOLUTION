@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tithe;
 use App\Models\Offering;
 use App\Models\Donation;
+use App\Models\PledgePayment;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -224,7 +225,7 @@ class GivingController extends Controller
                     ucfirst($tithe->payment_method),
                 ]);
             }
-            fputcsv($handle, ['', '', 'Total: GH₵ ' . number_format($tithes->sum('amount'), 2), '']);
+            fputcsv($handle, ['', '', 'Total: ' . SettingHelper::currencySymbol() . ' ' . number_format($tithes->sum('amount'), 2), '']);
             fputcsv($handle, []);
             
             // Offerings
@@ -238,7 +239,7 @@ class GivingController extends Controller
                     ucfirst($offering->payment_method),
                 ]);
             }
-            fputcsv($handle, ['', '', 'Total: GH₵ ' . number_format($offerings->sum('amount'), 2), '']);
+            fputcsv($handle, ['', '', 'Total: ' . SettingHelper::currencySymbol() . ' ' . number_format($offerings->sum('amount'), 2), '']);
             fputcsv($handle, []);
             
             // Donations
@@ -252,7 +253,7 @@ class GivingController extends Controller
                     $donation->project?->name ?? 'General',
                 ]);
             }
-            fputcsv($handle, ['', '', 'Total: GH₵ ' . number_format($donations->sum('amount'), 2), '']);
+            fputcsv($handle, ['', '', 'Total: ' . SettingHelper::currencySymbol() . ' ' . number_format($donations->sum('amount'), 2), '']);
             fputcsv($handle, []);
             
             // Grand Total
@@ -263,5 +264,97 @@ class GivingController extends Controller
         }, $filename, [
             'Content-Type' => 'text/csv',
         ]);
+    }
+
+    /**
+     * Consolidated contributions report (tithes, offerings, donations, pledge payments).
+     */
+    public function contributionsReport(Request $request)
+    {
+        $member = $request->user()->member;
+        $year   = (int) $request->input('year', now()->year);
+        $month  = $request->input('month');
+
+        if ($month) {
+            $start       = Carbon::create($year, $month)->startOfMonth();
+            $end         = Carbon::create($year, $month)->endOfMonth();
+            $periodLabel = Carbon::create($year, $month)->format('F Y');
+        } else {
+            $start       = Carbon::create($year)->startOfYear();
+            $end         = Carbon::create($year)->endOfYear();
+            $periodLabel = "Year $year";
+        }
+
+        $tithes = Tithe::where('member_id', $member->id)
+            ->whereBetween('payment_date', [$start, $end])
+            ->orderBy('payment_date', 'desc')
+            ->get();
+
+        $offerings = Offering::where('member_id', $member->id)
+            ->whereBetween('payment_date', [$start, $end])
+            ->with('offeringType')
+            ->orderBy('payment_date', 'desc')
+            ->get();
+
+        $donations = Donation::where('member_id', $member->id)
+            ->where('donation_type', 'cash')
+            ->whereBetween('payment_date', [$start, $end])
+            ->with('project')
+            ->orderBy('payment_date', 'desc')
+            ->get();
+
+        $pledgePayments = PledgePayment::whereHas('pledge', fn ($q) => $q->where('member_id', $member->id))
+            ->whereBetween('payment_date', [$start, $end])
+            ->with('pledge')
+            ->orderBy('payment_date', 'desc')
+            ->get();
+
+        $totals = [
+            'tithes'   => $tithes->sum('amount'),
+            'offerings'=> $offerings->sum('amount'),
+            'donations'=> $donations->sum('amount'),
+            'pledges'  => $pledgePayments->sum('amount'),
+        ];
+        $totals['grand'] = array_sum($totals);
+
+        // Previous period comparison
+        if ($month) {
+            $prevStart = Carbon::create($year, $month)->subMonth()->startOfMonth();
+            $prevEnd   = Carbon::create($year, $month)->subMonth()->endOfMonth();
+        } else {
+            $prevStart = Carbon::create($year - 1)->startOfYear();
+            $prevEnd   = Carbon::create($year - 1)->endOfYear();
+        }
+
+        $prevTotal = Tithe::where('member_id', $member->id)->whereBetween('payment_date', [$prevStart, $prevEnd])->sum('amount')
+            + Offering::where('member_id', $member->id)->whereBetween('payment_date', [$prevStart, $prevEnd])->sum('amount')
+            + Donation::where('member_id', $member->id)->where('donation_type', 'cash')->whereBetween('payment_date', [$prevStart, $prevEnd])->sum('amount')
+            + PledgePayment::whereHas('pledge', fn ($q) => $q->where('member_id', $member->id))->whereBetween('payment_date', [$prevStart, $prevEnd])->sum('amount');
+
+        $change = $prevTotal > 0
+            ? round((($totals['grand'] - $prevTotal) / $prevTotal) * 100, 1)
+            : null;
+
+        // Monthly breakdown (full-year view only)
+        $monthlyBreakdown = [];
+        if (!$month) {
+            for ($m = 1; $m <= 12; $m++) {
+                $monthlyBreakdown[] = [
+                    'month'     => Carbon::create($year, $m)->format('M'),
+                    'tithes'    => Tithe::where('member_id', $member->id)->whereYear('payment_date', $year)->whereMonth('payment_date', $m)->sum('amount'),
+                    'offerings' => Offering::where('member_id', $member->id)->whereYear('payment_date', $year)->whereMonth('payment_date', $m)->sum('amount'),
+                    'donations' => Donation::where('member_id', $member->id)->where('donation_type', 'cash')->whereYear('payment_date', $year)->whereMonth('payment_date', $m)->sum('amount'),
+                    'pledges'   => PledgePayment::whereHas('pledge', fn ($q) => $q->where('member_id', $member->id))->whereYear('payment_date', $year)->whereMonth('payment_date', $m)->sum('amount'),
+                ];
+            }
+        }
+
+        $years = range(now()->year, now()->year - 5);
+
+        return view('member.reports.contributions', compact(
+            'member', 'tithes', 'offerings', 'donations', 'pledgePayments',
+            'totals', 'prevTotal', 'change', 'periodLabel',
+            'year', 'month', 'years', 'monthlyBreakdown'
+        ));
     }
 }

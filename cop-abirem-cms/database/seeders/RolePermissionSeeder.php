@@ -129,26 +129,48 @@ class RolePermissionSeeder extends Seeder
 
         // ============================================
         // 4. FINANCIAL SECRETARY
-        //    All finance, limited members, no users/settings
+        //    Same financial permissions as admin
         // ============================================
         $addPermissions('finance', [
             // Dashboard
             'dashboard.view', 'dashboard.stats',
 
-            // Members — names only (limited)
+            // Members — view names for linking to finance records
             'members.view', 'members.view_names',
 
-            // Finance — full CRUD except approve
+            // Tithes — full
             'tithes.view', 'tithes.create', 'tithes.edit', 'tithes.delete',
+
+            // Offerings — full
             'offerings.view', 'offerings.create', 'offerings.edit', 'offerings.delete',
+
+            // Donations — full
             'donations.view', 'donations.create', 'donations.edit', 'donations.delete',
+
+            // Pledges — full
             'pledges.view', 'pledges.create', 'pledges.edit', 'pledges.delete', 'pledges.payments',
-            'expenses.view', 'expenses.create', 'expenses.edit',
+
+            // Expenses — full including delete & approve
+            'expenses.view', 'expenses.create', 'expenses.edit', 'expenses.delete', 'expenses.approve',
+
+            // Finance management — full
             'finance.view', 'finance.manage', 'finance.receipts',
+            'finance.approve', 'finance.delete',
+            'finance.tithe', 'finance.offering', 'finance.donation',
+            'finance.expense', 'finance.pledge', 'finance.years',
+
+            // Receipts — full
             'receipts.view', 'receipts.issue', 'receipts.print',
 
-            // Reports — financial only
-            'reports.view', 'reports.generate', 'reports.export', 'reports.financial',
+            // Ledger corrections — full
+            'corrections.view', 'corrections.void', 'corrections.adjust', 'corrections.restore',
+
+            // Reports — all financial reports
+            'reports.view', 'reports.generate', 'reports.export',
+            'reports.financial', 'reports.monthly',
+
+            // SMS — send contribution confirmations
+            'sms.view', 'sms.send',
         ]);
 
         // ============================================

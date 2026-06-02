@@ -74,11 +74,9 @@ class AttendanceController extends Controller
         }
         
         $years = range(now()->year, now()->year - 3);
-        $months = [
-            1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
-            5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
-            9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
-        ];
+        $months = collect(range(1, 12))
+            ->mapWithKeys(fn ($m) => [$m => Carbon::create(null, $m, 1)->format('F')])
+            ->all();
         
         return view('member.attendance.index', compact(
             'records', 'monthlySummary', 'stats', 'year', 'month', 'years', 'months'

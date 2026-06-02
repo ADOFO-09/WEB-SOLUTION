@@ -399,7 +399,23 @@
                 <h3 style="font-weight: 600; color: #1e3a5f;">Quick Actions</h3>
             </div>
             <div class="card-body">
-                <a href="{{ route('admin.tithes.session.create') }}" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">Record Session Tithe</a>
+                <a href="{{ route('admin.tithes.session.create') }}" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">Record Session Tithe (Total)</a>
+                {{-- Individual tithes per session: pick from recent sessions --}}
+                @if($sessions->isNotEmpty())
+                <div style="margin-bottom: 0.5rem;">
+                    <div style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin-bottom: 0.25rem;">Individual Tithes by Session</div>
+                    <select id="individual-session-select" class="form-select" style="font-size: 0.8rem;"
+                            onchange="if(this.value) window.location.href='{{ url('admin/tithes/session') }}/' + this.value + '/individual'">
+                        <option value="">— Pick a session —</option>
+                        @foreach($sessions as $s)
+                        <option value="{{ $s->id }}">
+                            {{ $s->serviceType->name ?? 'Service' }} — {{ $s->service_date->format('D, M d') }}
+                            @if($s->status === 'open') ●@endif
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
                 <a href="{{ route('admin.tithes.index') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">View All Tithes</a>
                 <a href="{{ route('admin.pledges.index') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">Manage Pledges</a>
                 <a href="{{ route('admin.expenses.create') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">New Expense</a>

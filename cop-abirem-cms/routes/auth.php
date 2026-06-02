@@ -51,3 +51,13 @@ Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
 });
+
+// Handle direct GET visits to /logout (bookmarks, typed URLs, expired form submissions)
+Route::get('logout', function () {
+    if (auth()->check()) {
+        auth()->logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+    }
+    return redirect()->route('login');
+});

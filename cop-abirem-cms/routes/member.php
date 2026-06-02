@@ -41,6 +41,11 @@ Route::middleware(['auth', 'member.access'])->prefix('member')->name('member.')-
         Route::get('/statement', [GivingController::class, 'statement'])->name('statement');
         Route::get('/statement/download', [GivingController::class, 'downloadStatement'])->name('statement.download');
     });
+
+    // Reports
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/contributions', [GivingController::class, 'contributionsReport'])->name('contributions');
+    });
     
     // Pledges
     Route::prefix('pledges')->name('pledges.')->group(function () {
