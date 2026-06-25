@@ -234,7 +234,7 @@
                             {{ $adj?->reference_number ?? '—' }}
                         </td>
                         <td class="px-4 py-3 font-mono text-green-700 font-semibold">
-                            {{ $adj ? '{{ \ }} ' . number_format($adj->amount, 2) : '—' }}
+                            {{ $adj ? $currencySymbol . ' ' . number_format($adj->amount, 2) : '—' }}
                         </td>
                         <td class="px-4 py-3 text-right">
                             <a href="{{ route('admin.finance.corrections.history', [$row['type'], $e->id]) }}"

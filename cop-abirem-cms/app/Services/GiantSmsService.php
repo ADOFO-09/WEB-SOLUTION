@@ -132,14 +132,27 @@ class GiantSmsService
      */
     public function getBalance(): array
     {
-        $response = Http::withBasicAuth($this->username, $this->password)
-            ->timeout(10)
-            ->get(self::BASE_URL . '/balance');
+        $response = Http::timeout(10)
+            ->get(self::BASE_URL . '/balance', [
+                'username' => $this->username,
+                'password' => $this->password,
+            ]);
 
         $data = $response->json() ?? [];
 
-        if (!$response->successful() || ($data['status'] ?? false) === false) {
-            throw new \RuntimeException("GiantSMS balance check failed (HTTP {$response->status()})");
+        $authOk = $response->successful() && !(isset($data['status']) && $data['status'] === false);
+
+        \Illuminate\Support\Facades\Log::log($authOk ? 'debug' : 'warning', 'GiantSMS balance response', [
+            'http_status'    => $response->status(),
+            'body'           => $data,
+            'username_len'   => strlen($this->username),
+            'username_prefix'=> substr($this->username, 0, 3) . '***',
+            'sender_id'      => $this->senderId,
+        ]);
+
+        if (!$authOk) {
+            $err = $data['message'] ?? "GiantSMS balance check failed (HTTP {$response->status()})";
+            throw new \RuntimeException($err);
         }
 
         // GiantSMS returns the credit count in the "message" field.

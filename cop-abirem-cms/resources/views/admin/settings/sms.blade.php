@@ -88,18 +88,26 @@
                             <label for="sms_api_key" class="block text-sm font-medium text-gray-700"
                                    x-text="provider === 'giantsms' ? 'Username' : 'API Key'"></label>
                             <input type="password" name="sms_api_key" id="sms_api_key"
-                                   value="{{ old('sms_api_key', $settings['sms_api_key'] ?? '') }}"
-                                   :placeholder="provider === 'giantsms' ? 'GiantSMS username' : ''"
+                                   value="{{ old('sms_api_key') }}"
+                                   placeholder="{{ !empty($settings['sms_api_key']) ? 'Leave blank to keep saved value' : 'GiantSMS username' }}"
+                                   autocomplete="new-password"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            @if(!empty($settings['sms_api_key']))
+                                <p class="mt-1 text-xs text-green-600">&#10003; Username saved — enter a new value to replace it</p>
+                            @endif
                         </div>
 
                         <div>
                             <label for="sms_api_secret" class="block text-sm font-medium text-gray-700"
                                    x-text="provider === 'giantsms' ? 'Password' : 'API Secret'"></label>
                             <input type="password" name="sms_api_secret" id="sms_api_secret"
-                                   value="{{ old('sms_api_secret', $settings['sms_api_secret'] ?? '') }}"
-                                   :placeholder="provider === 'giantsms' ? 'GiantSMS password' : ''"
+                                   value="{{ old('sms_api_secret') }}"
+                                   placeholder="{{ !empty($settings['sms_api_secret']) ? 'Leave blank to keep saved value' : 'GiantSMS password' }}"
+                                   autocomplete="new-password"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            @if(!empty($settings['sms_api_secret']))
+                                <p class="mt-1 text-xs text-green-600">&#10003; Password saved — enter a new value to replace it</p>
+                            @endif
                         </div>
                     </div>
 
