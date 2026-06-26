@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Sign In - Church of Pentecost Abirem CMS</title>
+    <title>Sign In - {{ \App\Helpers\SettingHelper::churchName() }}</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -507,11 +507,18 @@
             <div class="shape shape-3"></div>
         </div>
         <div class="brand-content">
+            @php
+                $_loginLogo    = \App\Helpers\SettingHelper::churchLogo();
+                $_loginName    = \App\Helpers\SettingHelper::churchName();
+                $_loginSlogan  = \App\Helpers\SettingHelper::churchSlogan();
+            @endphp
             <div class="brand-logo">
-                <img src="{{ asset('images/cop-logo.png') }}" alt="COP Logo" onerror="this.style.display='none'">
+                <img src="{{ $_loginLogo ?? asset('images/cop-logo.png') }}" alt="{{ $_loginName }}" onerror="this.style.display='none'">
             </div>
-            <h1>Church of Pentecost</h1>
-            <div class="subtitle">Abirem Assembly</div>
+            <h1>{{ $_loginName }}</h1>
+            @if($_loginSlogan)
+            <div class="subtitle">{{ $_loginSlogan }}</div>
+            @endif
             <p>Empowering our church community with modern tools for efficient administration, member care, and spiritual growth.</p>
             
             <div class="brand-features">

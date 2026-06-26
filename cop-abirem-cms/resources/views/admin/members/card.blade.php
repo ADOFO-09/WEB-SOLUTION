@@ -274,8 +274,8 @@
         <div class="card-back">
             <h4>Member Information Card</h4>
             <p>
-                This card certifies that the holder is a member in good standing of 
-                The Church of Pentecost, Abirem Central Assembly.
+                This card certifies that the holder is a member in good standing of
+                {{ \App\Helpers\SettingHelper::churchName() }}.
             </p>
             <p>
                 If found, please return to the church address below or contact us.

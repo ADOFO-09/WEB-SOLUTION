@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class SettingsController extends Controller
@@ -33,22 +34,56 @@ class SettingsController extends Controller
     public function updateGeneral(Request $request)
     {
         $validated = $request->validate([
-            'church_name' => 'required|string|max:255',
-            'church_address' => 'nullable|string|max:500',
-            'church_city' => 'nullable|string|max:100',
-            'church_region' => 'nullable|string|max:100',
-            'church_phone' => 'nullable|string|max:20',
-            'church_email' => 'nullable|email|max:255',
-            'church_website' => 'nullable|url|max:255',
-            'pastor_name' => 'nullable|string|max:255',
-            'pastor_phone' => 'nullable|string|max:20',
-            'district' => 'nullable|string|max:255',
-            'area' => 'nullable|string|max:255',
-            'member_id_prefix' => 'nullable|string|max:10|alpha_num',
+            'church_name'        => 'required|string|max:255',
+            'church_short_name'  => 'nullable|string|max:100',
+            'church_slogan'      => 'nullable|string|max:255',
+            'church_address'     => 'nullable|string|max:500',
+            'church_city'        => 'nullable|string|max:100',
+            'church_region'      => 'nullable|string|max:100',
+            'church_country'     => 'nullable|string|max:100',
+            'church_phone'       => 'nullable|string|max:20',
+            'church_email'       => 'nullable|email|max:255',
+            'church_website'     => 'nullable|url|max:255',
+            'pastor_name'        => 'nullable|string|max:255',
+            'pastor_phone'       => 'nullable|string|max:20',
+            'district'           => 'nullable|string|max:255',
+            'area'               => 'nullable|string|max:255',
+            'member_id_prefix'   => 'nullable|string|max:10|alpha_num',
+            'report_header'      => 'nullable|string|max:1000',
+            'church_logo'        => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:2048',
         ]);
 
+        // Sanitize fields that will be rendered as HTML
+        if (isset($validated['church_slogan'])) {
+            $validated['church_slogan'] = strip_tags($validated['church_slogan']);
+        }
+        if (isset($validated['report_header'])) {
+            $validated['report_header'] = strip_tags($validated['report_header'], '<b><i><em><strong><br>');
+        }
+
+        // Handle logo removal before handling upload
+        if ($request->boolean('remove_church_logo')) {
+            $existingPath = Setting::get('church_logo', '');
+            if ($existingPath) {
+                Storage::disk('public')->delete($existingPath);
+            }
+            Setting::set('church_logo', '', 'general');
+        }
+
+        // Handle logo upload (replaces existing)
+        if ($request->hasFile('church_logo')) {
+            $existingPath = Setting::get('church_logo', '');
+            if ($existingPath) {
+                Storage::disk('public')->delete($existingPath);
+            }
+            $path = $request->file('church_logo')->store('branding', 'public');
+            Setting::set('church_logo', $path, 'general');
+        }
+
+        // Persist all scalar fields (skip file field — handled above)
+        unset($validated['church_logo']);
         foreach ($validated as $key => $value) {
-            Setting::set($key, $value, 'general');
+            Setting::set($key, $value ?? '', 'general');
         }
 
         return back()->with('success', 'General settings updated successfully.');
@@ -177,7 +212,7 @@ class SettingsController extends Controller
         $phone = $service->normalizePhone($request->input('test_phone'));
 
         try {
-            $service->send($phone, 'Test message from COP Abirem CMS. Your SMS integration is working correctly.');
+            $service->send($phone, 'Test message from ' . \App\Helpers\SettingHelper::churchName() . ' CMS. Your SMS integration is working correctly.');
             return back()->with('sms_test_success', "Test SMS sent successfully to {$phone}.");
         } catch (\Exception $e) {
             Log::error('SMS test send failed: ' . $e->getMessage());

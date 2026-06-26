@@ -16,6 +16,7 @@ class SmsMessage extends Model
         'category',
         'subject',
         'message_content',
+        'manual_placeholder_values',
         'recipient_count',
         'successful_count',
         'failed_count',
@@ -27,9 +28,10 @@ class SmsMessage extends Model
     ];
 
     protected $casts = [
-        'cost' => 'decimal:2',
-        'scheduled_at' => 'datetime',
-        'sent_at' => 'datetime',
+        'cost'                      => 'decimal:2',
+        'scheduled_at'              => 'datetime',
+        'sent_at'                   => 'datetime',
+        'manual_placeholder_values' => 'array',
     ];
 
     // ==========================================

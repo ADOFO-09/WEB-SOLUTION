@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome - Church of Pentecost Abirem CMS</title>
+    <title>Welcome - {{ \App\Helpers\SettingHelper::churchName() }}</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -391,14 +391,18 @@
     <div class="floating-shape shape-2"></div>
     <div class="floating-shape shape-3"></div>
     
+    @php
+        $_welcomeLogo = \App\Helpers\SettingHelper::churchLogo();
+        $_welcomeName = \App\Helpers\SettingHelper::churchName();
+    @endphp
     <header class="header">
-        <div class="logo">            
+        <div class="logo">
             <div class="logo-icon">
-                <img src="{{ asset('images/cop-logo.png') }}" alt="COP Abirem">
+                <img src="{{ $_welcomeLogo ?? asset('images/cop-logo.png') }}" alt="{{ $_welcomeName }}">
             </div>
 
             <div class="logo-text">
-                <h1>COP Abirem</h1>
+                <h1>{{ $_welcomeName }}</h1>
                 <span>Church Management System</span>
             </div>
         </div>
@@ -487,7 +491,7 @@
     </main>
     
     <footer class="footer">
-        <p>&copy; {{ date('Y') }} Church of Pentecost - Abirem. Surely the Lord is in this place🙏</p>
+        <p>&copy; {{ date('Y') }} {{ \App\Helpers\SettingHelper::churchName() }}. Surely the Lord is in this place.</p>
     </footer>
 </body>
 </html>

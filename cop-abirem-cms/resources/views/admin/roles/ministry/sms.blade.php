@@ -146,7 +146,7 @@
                         Your message will appear here...
                     </p>
                     <div style="font-size: 0.625rem; color: #9ca3af; text-align: right; margin-top: 0.5rem;">
-                        COP Abirem Central
+                        {{ \App\Helpers\SettingHelper::churchShortName() }}
                     </div>
                 </div>
             </div>

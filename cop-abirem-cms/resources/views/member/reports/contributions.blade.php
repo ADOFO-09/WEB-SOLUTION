@@ -52,7 +52,7 @@
 @section('content')
 @php
     $sym = $currencySymbol;
-    $churchName = \App\Models\Setting::get('church_name', 'Church of Pentecost - Abirem');
+    $churchName = \App\Helpers\SettingHelper::churchName();
     $fmt = fn($n) => $sym . ' ' . number_format($n, 2);
 @endphp
 

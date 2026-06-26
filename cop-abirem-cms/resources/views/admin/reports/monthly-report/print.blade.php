@@ -192,7 +192,7 @@
 
     {{-- ── Document Header ─────────────────────────────────────── --}}
     <div class="doc-header">
-        <h1>The Church of Pentecost – Abirem District</h1>
+        <h1>{{ \App\Helpers\SettingHelper::reportHeader() ?: \App\Helpers\SettingHelper::churchName() }}</h1>
         <h2>Local Assembly Monthly Report Form</h2>
         <div class="local-line">
             LOCAL:&nbsp;<span>{{ \App\Models\Setting::get('church_name', '') }}</span>

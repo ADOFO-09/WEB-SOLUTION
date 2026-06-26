@@ -46,13 +46,19 @@
     <!-- Header -->
     <div class="sidebar-logo">
         <div style="display:flex;align-items:center;gap:0.75rem;">
+            @if(!empty($churchLogo))
+            <div style="width:38px;height:38px;border-radius:10px;overflow:hidden;flex-shrink:0;background:#fff;display:flex;align-items:center;justify-content:center;">
+                <img src="{{ $churchLogo }}" alt="{{ $churchName }}" style="width:100%;height:100%;object-fit:contain;">
+            </div>
+            @else
             <div style="width:38px;height:38px;background:linear-gradient(135deg,#d4af37,#b8962e);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(212,175,55,0.4);">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="white" style="width:20px;height:20px;">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
                 </svg>
             </div>
+            @endif
             <div>
-                <div style="color:#fff;font-weight:700;font-size:1rem;line-height:1.2;letter-spacing:-0.01em;">COP Abirem</div>
+                <div style="color:#fff;font-weight:700;font-size:1rem;line-height:1.2;letter-spacing:-0.01em;">{{ $churchName }}</div>
                 <div style="color:rgba(255,255,255,0.5);font-size:0.675rem;text-transform:uppercase;letter-spacing:0.08em;margin-top:1px;">Church Management</div>
             </div>
         </div>

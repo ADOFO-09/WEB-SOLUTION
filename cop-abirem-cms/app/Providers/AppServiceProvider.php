@@ -48,23 +48,26 @@ class AppServiceProvider extends ServiceProvider
             } catch (\Exception $e) {}
         });
 
-        // Share currency symbol and payment methods with all admin views.
+        // Share currency symbol, payment methods, and church branding with all admin views.
         View::composer('admin.*', function ($view) {
             if (!Schema::hasTable('settings')) return;
             try {
                 $view->with('currencySymbol', SettingHelper::currencySymbol());
                 $view->with('paymentMethods', SettingHelper::paymentMethods());
+                $view->with('churchName', SettingHelper::churchName());
+                $view->with('churchLogo', SettingHelper::churchLogo());
             } catch (\Exception $e) {}
         });
 
-        // Share currency, date/time format, and church name with all member views.
+        // Share currency, date/time format, and church branding with all member views.
         View::composer('member.*', function ($view) {
             if (!Schema::hasTable('settings')) return;
             try {
                 $view->with('currencySymbol', SettingHelper::currencySymbol());
                 $view->with('dateFormat', SettingHelper::dateFormat());
                 $view->with('timeFormat', SettingHelper::timeFormat());
-                $view->with('churchName', Setting::get('church_name', 'Church of Pentecost - Abirem'));
+                $view->with('churchName', SettingHelper::churchName());
+                $view->with('churchLogo', SettingHelper::churchLogo());
             } catch (\Exception $e) {}
         });
 

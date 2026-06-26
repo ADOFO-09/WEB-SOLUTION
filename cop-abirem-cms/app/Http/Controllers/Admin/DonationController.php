@@ -128,7 +128,7 @@ class DonationController extends Controller implements HasMiddleware
         ]);
 
         $validated['is_anonymous'] = $request->boolean('is_anonymous');
-        $validated['recorded_by'] = auth()->id();
+        $validated['recorded_by'] = auth()->user()?->id;
 
         // If anonymous, clear member_id and donor info
         if ($validated['is_anonymous']) {
@@ -270,10 +270,11 @@ class DonationController extends Controller implements HasMiddleware
                     'receipt_no'  => $receiptNo,
                 ]);
             } else {
+                $churchName = \App\Helpers\SettingHelper::churchShortName();
                 $message = 'Dear ' . $donorName . ', your donation of ' . $amount
                     . ' towards ' . $purpose
                     . ' has been received. Receipt #' . $receiptNo
-                    . '. God bless you! - COP Abirem Central';
+                    . '. God bless you! - ' . $churchName;
             }
 
             $sms->send($phone, $message);

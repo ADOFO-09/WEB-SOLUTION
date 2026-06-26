@@ -589,9 +589,10 @@ class MemberController extends Controller implements HasMiddleware
                     'member_id'   => $member->member_id,
                 ]);
             } else {
-                $message = 'Dear ' . $member->first_name . ', welcome to COP Abirem Central Assembly!'
+                $churchName = \App\Helpers\SettingHelper::churchShortName();
+                $message = 'Dear ' . $member->first_name . ', welcome to ' . $churchName . '!'
                     . ' Your member ID is ' . $member->member_id . '.'
-                    . ' We are glad to have you. God bless you! - COP Abirem Central';
+                    . ' We are glad to have you. God bless you! - ' . $churchName;
             }
 
             $sms->send($phone, $message);

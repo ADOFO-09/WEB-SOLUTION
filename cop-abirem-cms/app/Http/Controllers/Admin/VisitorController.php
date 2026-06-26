@@ -349,9 +349,10 @@ class VisitorController extends Controller implements HasMiddleware
                     'date' => $visitor->first_visit_date->format('d M Y'),
                 ]);
             } else {
-                $message = 'Dear ' . $visitor->first_name . ', welcome to COP Abirem Central Assembly!'
+                $churchName = \App\Helpers\SettingHelper::churchShortName();
+                $message = 'Dear ' . $visitor->first_name . ', welcome to ' . $churchName . '!'
                     . ' We are glad you visited us on ' . $visitor->first_visit_date->format('d M Y')
-                    . '. We hope to see you again. God bless you! - COP Abirem Central';
+                    . '. We hope to see you again. God bless you! - ' . $churchName;
             }
 
             $sms->send($visitor->phone, $message);
@@ -386,10 +387,11 @@ class VisitorController extends Controller implements HasMiddleware
                     'notes' => $notesLine,
                 ]);
             } else {
-                $message = 'Dear ' . $visitor->first_name . ', greetings from COP Abirem!'
+                $churchName = \App\Helpers\SettingHelper::churchShortName();
+                $message = 'Dear ' . $visitor->first_name . ', greetings from ' . $churchName . '!'
                     . ' We are following up on your visit with us. '
                     . $notesLine
-                    . 'We would love to see you again. God bless you! - COP Abirem Central';
+                    . 'We would love to see you again. God bless you! - ' . $churchName;
             }
 
             $sms->send($visitor->phone, $message);

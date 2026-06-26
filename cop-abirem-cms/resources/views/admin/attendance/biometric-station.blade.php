@@ -182,7 +182,7 @@
 
     {{-- Header --}}
     <div class="header">
-        <div class="header-church">COP Abirem Church</div>
+        <div class="header-church">{{ \App\Helpers\SettingHelper::churchName() }}</div>
         <div class="header-title">Biometric Attendance</div>
         <div class="header-sub">
             {{ $session->serviceType->name ?? 'Service' }}

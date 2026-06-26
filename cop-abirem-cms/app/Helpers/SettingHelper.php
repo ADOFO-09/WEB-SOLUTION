@@ -120,6 +120,38 @@ class SettingHelper
     }
 
     // ==========================================
+    // CHURCH BRANDING
+    // ==========================================
+
+    public static function churchName(): string
+    {
+        return Setting::get('church_name', 'Church Management System');
+    }
+
+    public static function churchShortName(): string
+    {
+        $short = Setting::get('church_short_name', '');
+        return $short ?: self::churchName();
+    }
+
+    public static function churchLogo(): ?string
+    {
+        $path = Setting::get('church_logo', '');
+        if (!$path) return null;
+        return \Illuminate\Support\Facades\Storage::url($path);
+    }
+
+    public static function churchSlogan(): string
+    {
+        return Setting::get('church_slogan', '');
+    }
+
+    public static function reportHeader(): string
+    {
+        return Setting::get('report_header', '');
+    }
+
+    // ==========================================
     // RECEIPT / VOUCHER PREFIXES
     // ==========================================
 

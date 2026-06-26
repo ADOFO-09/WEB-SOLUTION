@@ -87,7 +87,7 @@
 
 @section('content')
 @php
-    $churchName = \App\Models\Setting::get('church_name', 'Church of Pentecost - Abirem');
+    $churchName = \App\Helpers\SettingHelper::churchName();
 @endphp
 
 <div class="report-wrapper max-w-4xl mx-auto space-y-6">

@@ -45,7 +45,18 @@
                 </span>
             </div>
             <div class="p-6">
-                <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-900 whitespace-pre-wrap">{{ $smsMessage->message_content }}</div>
+                <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-900 whitespace-pre-wrap font-mono">{{ $smsMessage->message_content }}</div>
+                @if(!empty($smsMessage->manual_placeholder_values))
+                <div class="mt-3 rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    <p class="font-semibold mb-1">Message fields used:</p>
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                        @foreach($smsMessage->manual_placeholder_values as $key => $val)
+                        <dt class="font-mono text-amber-700">{{'{'.$key.'}'}}</dt>
+                        <dd class="text-amber-900">{{ $val ?: '—' }}</dd>
+                        @endforeach
+                    </dl>
+                </div>
+                @endif
                 
                 <dl class="mt-4 grid grid-cols-2 gap-4 text-sm">
                     <div>
@@ -85,6 +96,7 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message Sent</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sent At</th>
                         </tr>
@@ -92,9 +104,16 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($smsMessage->recipients as $recipient)
                         <tr>
-                            <td class="px-6 py-4 text-sm text-gray-900">{{ $recipient->recipient_name ?? 'Unknown' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500">{{ $recipient->phone_number }}</td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $recipient->recipient_name ?? 'Unknown' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">{{ $recipient->phone_number }}</td>
+                            <td class="px-6 py-4 text-xs text-gray-700 max-w-xs">
+                                @if($recipient->resolved_message)
+                                    <span class="line-clamp-2" title="{{ $recipient->resolved_message }}">{{ $recipient->resolved_message }}</span>
+                                @else
+                                    <span class="text-gray-400 italic">{{ Str::limit($smsMessage->message_content, 80) }}</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $recipient->status_badge }}">
                                     {{ ucfirst($recipient->status) }}
                                 </span>
@@ -102,7 +121,7 @@
                                 <p class="text-xs text-red-500 mt-1">{{ $recipient->error_message }}</p>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-500">
+                            <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                                 {{ $recipient->sent_at?->format('g:i A') ?? '-' }}
                             </td>
                         </tr>

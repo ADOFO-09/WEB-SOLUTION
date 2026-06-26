@@ -273,10 +273,11 @@ class PledgeController extends Controller implements HasMiddleware
                     ? ' Remaining balance: ' . $balance . '.'
                     : ' Your pledge is now fully paid. Thank you!';
 
+                $churchName = \App\Helpers\SettingHelper::churchShortName();
                 $message = 'Dear ' . $memberName . ', your pledge payment of ' . $amount
                     . ' has been received. Receipt #' . $payment->receipt_number . '.'
                     . $remaining
-                    . ' God bless you! - COP Abirem Central';
+                    . ' God bless you! - ' . $churchName;
             }
 
             $sms->send($phone, $message);

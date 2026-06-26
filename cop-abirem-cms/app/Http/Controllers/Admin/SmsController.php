@@ -9,6 +9,7 @@ use App\Models\SmsTemplate;
 use App\Models\Member;
 use App\Models\Ministry;
 use App\Services\GiantSmsService;
+use App\Services\PlaceholderService;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Http\Request;
@@ -16,15 +17,12 @@ use App\Helpers\SettingHelper;
 
 class SmsController extends Controller implements HasMiddleware
 {
-    /**
-     * Get the middleware that should be assigned to the controller.
-     */
     public static function middleware(): array
     {
         return [
             'auth',
-            new Middleware('permission:sms.view', only: ['index', 'show']),
-            new Middleware('permission:sms.send', only: ['compose', 'store', 'send']),
+            new Middleware('permission:sms.view',      only: ['index', 'show']),
+            new Middleware('permission:sms.send',      only: ['compose', 'store', 'send']),
             new Middleware('permission:sms.templates', only: ['templates', 'createTemplate', 'storeTemplate', 'editTemplate', 'updateTemplate', 'destroyTemplate']),
         ];
     }
@@ -56,11 +54,11 @@ class SmsController extends Controller implements HasMiddleware
         $messages = $query->paginate(SettingHelper::perPage())->withQueryString();
 
         $stats = [
-            'total_sent' => SmsMessage::whereIn('status', ['sent', 'partially_sent'])->count(),
+            'total_sent'       => SmsMessage::whereIn('status', ['sent', 'partially_sent'])->count(),
             'total_recipients' => SmsMessage::sum('recipient_count'),
-            'total_delivered' => SmsMessage::sum('successful_count'),
-            'this_month' => SmsMessage::whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->count(),
-            'drafts' => SmsMessage::where('status', 'draft')->count(),
+            'total_delivered'  => SmsMessage::sum('successful_count'),
+            'this_month'       => SmsMessage::whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->count(),
+            'drafts'           => SmsMessage::where('status', 'draft')->count(),
         ];
 
         $balanceAlert = $this->buildBalanceAlert();
@@ -71,12 +69,12 @@ class SmsController extends Controller implements HasMiddleware
     public function show(SmsMessage $smsMessage)
     {
         $smsMessage->load(['sentBy', 'recipients' => fn($q) => $q->orderBy('status')->limit(100)]);
-        
+
         $recipientStats = [
-            'pending' => $smsMessage->recipients()->where('status', 'pending')->count(),
-            'sent' => $smsMessage->recipients()->where('status', 'sent')->count(),
+            'pending'   => $smsMessage->recipients()->where('status', 'pending')->count(),
+            'sent'      => $smsMessage->recipients()->where('status', 'sent')->count(),
             'delivered' => $smsMessage->recipients()->where('status', 'delivered')->count(),
-            'failed' => $smsMessage->recipients()->where('status', 'failed')->count(),
+            'failed'    => $smsMessage->recipients()->where('status', 'failed')->count(),
         ];
 
         return view('admin.sms.show', compact('smsMessage', 'recipientStats'));
@@ -84,8 +82,8 @@ class SmsController extends Controller implements HasMiddleware
 
     public function compose(Request $request)
     {
-        $templates = SmsTemplate::where('is_active', true)->orderBy('name')->get();
-        $ministries = Ministry::where('is_active', true)->orderBy('name')->get();
+        $templates   = SmsTemplate::where('is_active', true)->orderBy('name')->get();
+        $ministries  = Ministry::where('is_active', true)->orderBy('name')->get();
         $memberCount = Member::where('membership_status', 'active')->whereNotNull('phone_primary')->count();
 
         $selectedTemplate = $request->has('template_id')
@@ -94,45 +92,71 @@ class SmsController extends Controller implements HasMiddleware
 
         $balanceAlert = $this->buildBalanceAlert();
 
-        return view('admin.sms.compose', compact('templates', 'ministries', 'memberCount', 'selectedTemplate', 'balanceAlert'));
+        // Build registry + live system preview values for the compose UI
+        $svc          = new PlaceholderService();
+        $uiRegistry   = $svc->uiRegistry();
+        $systemPreview = $svc->resolveSystemValues();
+
+        return view('admin.sms.compose', compact(
+            'templates', 'ministries', 'memberCount',
+            'selectedTemplate', 'balanceAlert',
+            'uiRegistry', 'systemPreview'
+        ));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'subject' => 'nullable|string|max:255',
-            'message_content' => 'required|string|max:320',
-            'category' => 'required|in:general,financial,attendance,event,reminder,birthday',
-            'recipient_type' => 'required|in:all,ministry,custom',
-            'ministry_id' => 'required_if:recipient_type,ministry|nullable|exists:ministries,id',
-            'custom_numbers' => 'required_if:recipient_type,custom|nullable|string',
+            'subject'          => 'nullable|string|max:255',
+            'message_content'  => 'required|string|max:320',
+            'category'         => 'required|in:general,financial,attendance,event,reminder,birthday',
+            'recipient_type'   => 'required|in:all,ministry,custom',
+            'ministry_id'      => 'required_if:recipient_type,ministry|nullable|exists:ministries,id',
+            'custom_numbers'   => 'required_if:recipient_type,custom|nullable|string',
         ]);
 
-        // Create the message
+        $manualValues = $request->input('placeholders', []);
+        $isSending    = $request->input('action') === 'send';
+
+        // Block send when unknown placeholders are present
+        if ($isSending) {
+            $svc      = new PlaceholderService();
+            $problems = array_filter(
+                $svc->validate($validated['message_content'], $manualValues),
+                fn($w) => $w['level'] === 'error'
+            );
+            if (!empty($problems)) {
+                $messages = array_column(array_values($problems), 'message');
+                return back()
+                    ->withErrors(['message_content' => $messages])
+                    ->withInput();
+            }
+        }
+
         $message = SmsMessage::create([
-            'message_type' => 'bulk',
-            'category' => $validated['category'],
-            'subject' => $validated['subject'],
-            'message_content' => $validated['message_content'],
-            'status' => 'draft',
-            'sent_by' => auth()->id(),
+            'message_type'               => 'bulk',
+            'category'                   => $validated['category'],
+            'subject'                    => $validated['subject'],
+            'message_content'            => $validated['message_content'],
+            'manual_placeholder_values'  => $manualValues ?: null,
+            'status'                     => 'draft',
+            'sent_by'                    => auth()->user()?->id,
         ]);
 
-        // Add recipients
         $recipients = $this->resolveRecipients($validated);
-        
+
         foreach ($recipients as $recipient) {
             $message->recipients()->create([
-                'member_id' => $recipient['member_id'] ?? null,
-                'phone_number' => $recipient['phone'],
+                'member_id'      => $recipient['member_id'] ?? null,
+                'phone_number'   => $recipient['phone'],
                 'recipient_name' => $recipient['name'] ?? null,
-                'status' => 'pending',
+                'status'         => 'pending',
             ]);
         }
 
         $message->update(['recipient_count' => $message->recipients()->count()]);
 
-        if ($request->input('action') === 'send') {
+        if ($isSending) {
             $this->sendMessage($message);
             return redirect()->route('admin.sms.show', $message)
                 ->with('success', "Message sent to {$message->recipient_count} recipients.");
@@ -178,22 +202,22 @@ class SmsController extends Controller implements HasMiddleware
 
     public function createTemplate()
     {
-        return view('admin.sms.templates.create');
+        $uiRegistry = (new PlaceholderService())->uiRegistry();
+        return view('admin.sms.templates.create', compact('uiRegistry'));
     }
 
     public function storeTemplate(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'category' => 'required|in:general,financial,attendance,event,reminder,birthday',
-            'content' => 'required|string|max:480',
+            'name'      => 'required|string|max:100',
+            'category'  => 'required|in:general,financial,attendance,event,reminder,birthday',
+            'content'   => 'required|string|max:480',
             'is_active' => 'boolean',
         ]);
 
-        $validated['is_active'] = $request->boolean('is_active', true);
-        $validated['created_by'] = auth()->id();
+        $validated['is_active']   = $request->boolean('is_active', true);
+        $validated['created_by']  = auth()->user()?->id;
 
-        // Extract variables from content
         preg_match_all('/\{(\w+)\}/', $validated['content'], $matches);
         $validated['variables'] = $matches[1] ?? [];
 
@@ -205,15 +229,16 @@ class SmsController extends Controller implements HasMiddleware
 
     public function editTemplate(SmsTemplate $smsTemplate)
     {
-        return view('admin.sms.templates.edit', ['smsTemplate' => $smsTemplate]);
+        $uiRegistry = (new PlaceholderService())->uiRegistry();
+        return view('admin.sms.templates.edit', compact('smsTemplate', 'uiRegistry'));
     }
 
     public function updateTemplate(Request $request, SmsTemplate $smsTemplate)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'category' => 'required|in:general,financial,attendance,event,reminder,birthday',
-            'content' => 'required|string|max:480',
+            'name'      => 'required|string|max:100',
+            'category'  => 'required|in:general,financial,attendance,event,reminder,birthday',
+            'content'   => 'required|string|max:480',
             'is_active' => 'boolean',
         ]);
 
@@ -239,10 +264,6 @@ class SmsController extends Controller implements HasMiddleware
     // PRIVATE HELPERS
     // ==========================================
 
-    /**
-     * Build the low-balance alert payload for SMS views.
-     * Returns null when no balance data has been cached yet, or when balance is above threshold.
-     */
     private function buildBalanceAlert(): ?array
     {
         $lastBalance = Setting::get('sms_last_balance');
@@ -273,12 +294,14 @@ class SmsController extends Controller implements HasMiddleware
 
         switch ($data['recipient_type']) {
             case 'all':
-                $members = Member::where('membership_status', 'active')->whereNotNull('phone_primary')->get();
+                $members = Member::where('membership_status', 'active')
+                    ->whereNotNull('phone_primary')
+                    ->get(['id', 'member_id', 'first_name', 'middle_name', 'last_name', 'phone_primary']);
                 foreach ($members as $member) {
                     $recipients[] = [
                         'member_id' => $member->id,
-                        'phone' => $member->phone_primary,
-                        'name' => $member->full_name,
+                        'phone'     => $member->phone_primary,
+                        'name'      => $member->full_name,
                     ];
                 }
                 break;
@@ -289,12 +312,12 @@ class SmsController extends Controller implements HasMiddleware
                     $members = $ministry->members()
                         ->whereNotNull('phone_primary')
                         ->where('membership_status', 'active')
-                        ->get();
+                        ->get(['members.id', 'member_id', 'first_name', 'middle_name', 'last_name', 'phone_primary']);
                     foreach ($members as $member) {
                         $recipients[] = [
                             'member_id' => $member->id,
-                            'phone' => $member->phone_primary,
-                            'name' => $member->full_name,
+                            'phone'     => $member->phone_primary,
+                            'name'      => $member->full_name,
                         ];
                     }
                 }
@@ -308,8 +331,8 @@ class SmsController extends Controller implements HasMiddleware
                         $member = Member::where('phone_primary', $number)->first();
                         $recipients[] = [
                             'member_id' => $member?->id,
-                            'phone' => $number,
-                            'name' => $member?->full_name ?? 'Unknown',
+                            'phone'     => $number,
+                            'name'      => $member?->full_name ?? 'Unknown',
                         ];
                     }
                 }
@@ -319,36 +342,64 @@ class SmsController extends Controller implements HasMiddleware
         return $recipients;
     }
 
+    /**
+     * Core send loop — resolves placeholders per recipient before dispatching.
+     *
+     * Per-recipient (Type A) values differ for each person.
+     * Manual (Type B) and system (Type C) values are consistent across the batch.
+     * The resolved text is stored on the sms_recipients row for audit purposes.
+     */
     private function sendMessage(SmsMessage $message): void
     {
         $message->update([
-            'status' => 'sending',
+            'status'  => 'sending',
             'sent_at' => now(),
         ]);
 
         $successCount = 0;
         $failCount    = 0;
 
-        $provider   = Setting::get('sms_provider', '');
-        $smsService = $provider === 'giantsms' ? new GiantSmsService() : null;
+        $provider    = Setting::get('sms_provider', '');
+        $smsService  = $provider === 'giantsms' ? new GiantSmsService() : null;
+        $svc         = new PlaceholderService();
+        $manualValues = $message->manual_placeholder_values ?? [];
 
-        foreach ($message->recipients()->where('status', 'pending')->get() as $recipient) {
+        // Eager-load the member relationship to avoid N+1 queries
+        $pendingRecipients = $message->recipients()
+            ->where('status', 'pending')
+            ->with('member')
+            ->get();
+
+        foreach ($pendingRecipients as $recipient) {
+            // Resolve this recipient's personalised message
+            $resolved = $svc->resolve(
+                $message->message_content,
+                $recipient->member,
+                $manualValues
+            );
+
             try {
                 if ($smsService) {
-                    $result = $smsService->send($recipient->phone_number, $message->message_content);
+                    $result = $smsService->send($recipient->phone_number, $resolved);
                     $recipient->update([
                         'status'             => 'sent',
+                        'resolved_message'   => $resolved,
                         'sent_at'            => now(),
                         'gateway_message_id' => $result['message_id'] ?? null,
                     ]);
                 } else {
-                    $recipient->update(['status' => 'sent', 'sent_at' => now()]);
+                    $recipient->update([
+                        'status'           => 'sent',
+                        'resolved_message' => $resolved,
+                        'sent_at'          => now(),
+                    ]);
                 }
                 $successCount++;
             } catch (\Exception $e) {
                 $recipient->update([
-                    'status'        => 'failed',
-                    'error_message' => $e->getMessage(),
+                    'status'           => 'failed',
+                    'resolved_message' => $resolved,
+                    'error_message'    => $e->getMessage(),
                 ]);
                 $failCount++;
             }
@@ -363,10 +414,6 @@ class SmsController extends Controller implements HasMiddleware
         $this->cacheBalanceAfterSend($smsService);
     }
 
-    /**
-     * After a send, silently refresh the cached balance so low-balance
-     * warnings on the SMS pages reflect the current credit level.
-     */
     private function cacheBalanceAfterSend(?GiantSmsService $smsService): void
     {
         if (!$smsService) {
@@ -378,7 +425,7 @@ class SmsController extends Controller implements HasMiddleware
             Setting::set('sms_last_balance', (string) $balance, 'sms');
             Setting::set('sms_last_balance_at', now()->toDateTimeString(), 'sms');
         } catch (\Exception) {
-            // Non-critical — ignore balance check failures silently
+            // Non-critical — balance refresh failure should never block a send
         }
     }
 }

@@ -81,7 +81,7 @@
         <div class="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-5">
             <h4 class="text-sm font-semibold text-blue-800 mb-3">Member Instructions</h4>
             <ol class="text-sm text-blue-700 space-y-1 list-decimal list-inside">
-                <li>Open the <strong>COP Abirem Member Portal</strong> on your phone</li>
+                <li>Open the <strong>{{ \App\Helpers\SettingHelper::churchName() }} Member Portal</strong> on your phone</li>
                 <li>Tap <strong>Scan Attendance</strong> in the sidebar</li>
                 <li>Point your camera at this QR code</li>
                 <li>Confirm to record your attendance</li>

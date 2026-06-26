@@ -15,6 +15,7 @@ class SmsRecipient extends Model
         'member_id',
         'phone_number',
         'recipient_name',
+        'resolved_message',
         'status',
         'gateway_message_id',
         'sent_at',

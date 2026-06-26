@@ -26,14 +26,16 @@ class ResetPasswordNotification extends Notification
 
         $expiry = config('auth.passwords.users.expire', 60);
 
+        $churchName = \App\Helpers\SettingHelper::churchName();
+
         return (new MailMessage)
-            ->subject('Password Reset Request — COP Abirem CMS')
+            ->subject('Password Reset Request — ' . $churchName . ' CMS')
             ->greeting('Hello ' . $notifiable->name . ',')
-            ->line('We received a request to reset the password for your Church of Pentecost Abirem CMS account.')
+            ->line('We received a request to reset the password for your ' . $churchName . ' CMS account.')
             ->action('Reset My Password', $resetUrl)
             ->line('This link will expire in **' . $expiry . ' minutes**.')
             ->line('If you did not request a password reset, no action is needed — your password will remain unchanged.')
             ->line('For security, never share this link with anyone.')
-            ->salutation('God bless you, ' . PHP_EOL . 'COP Abirem Admin Team');
+            ->salutation('God bless you, ' . PHP_EOL . $churchName . ' Admin Team');
     }
 }
