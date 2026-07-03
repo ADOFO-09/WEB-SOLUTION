@@ -169,6 +169,14 @@ class RolePermissionSeeder extends Seeder
             'reports.view', 'reports.generate', 'reports.export',
             'reports.financial', 'reports.monthly',
 
+            // Welfare — full
+            'welfare.view', 'welfare.create', 'welfare.edit', 'welfare.delete',
+            'welfare.benefits.manage', 'welfare.rates.manage',
+
+            // Funeral — full
+            'funeral.view', 'funeral.create', 'funeral.edit', 'funeral.delete',
+            'funeral.benefits.manage', 'funeral.rates.manage',
+
             // SMS — send contribution confirmations
             'sms.view', 'sms.send',
         ]);

@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Member;
+use App\Models\SmsTemplate;
 use App\Models\FuneralContribution;
 use App\Helpers\SettingHelper;
+use App\Services\GiantSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Log;
 
 class FuneralContributionController extends Controller implements HasMiddleware
 {
@@ -90,6 +93,8 @@ class FuneralContributionController extends Controller implements HasMiddleware
 
         $contribution = FuneralContribution::create($validated);
 
+        $this->sendContributionSms($contribution);
+
         return redirect()->route('admin.funeral.contributions.show', $contribution)
             ->with('success', 'Funeral due contribution recorded successfully. Ref: ' . $contribution->reference_number);
     }
@@ -130,5 +135,51 @@ class FuneralContributionController extends Controller implements HasMiddleware
 
         return redirect()->route('admin.funeral.contributions.index')
             ->with('success', 'Funeral due contribution deleted successfully.');
+    }
+
+    private function sendContributionSms(FuneralContribution $contribution): void
+    {
+        if (!\App\Models\Setting::get('sms_auto_funeral_confirmation', false)) {
+            return;
+        }
+
+        $member = $contribution->member ?? $contribution->load('member')->member;
+        $phone  = $member?->phone_primary;
+
+        if (!$phone) {
+            return;
+        }
+
+        try {
+            $sms = new GiantSmsService();
+
+            if (!$sms->isConfigured()) {
+                return;
+            }
+
+            $sym    = SettingHelper::currencySymbol();
+            $amount = $sym . ' ' . number_format((float) $contribution->amount, 2);
+            $period = date('F Y', mktime(0, 0, 0, $contribution->period_month, 1, $contribution->period_year));
+
+            $template = SmsTemplate::where('slug', 'funeral-contribution-confirmation')->where('is_active', true)->first();
+
+            if ($template) {
+                $message = $template->renderContent([
+                    'member_name'      => $member->first_name,
+                    'amount'           => $amount,
+                    'period'           => $period,
+                    'reference_number' => $contribution->reference_number,
+                ]);
+            } else {
+                $message = 'Dear ' . $member->first_name . ', your funeral due of ' . $amount
+                    . ' for ' . $period . ' has been received. Ref: ' . $contribution->reference_number
+                    . '. Thank you. God bless you.';
+            }
+
+            $sms->send($phone, $message);
+
+        } catch (\Throwable $e) {
+            Log::warning('Funeral contribution SMS failed for ref ' . $contribution->reference_number . ': ' . $e->getMessage());
+        }
     }
 }

@@ -34,27 +34,33 @@ class SettingSeeder extends Seeder
             ['key' => 'expense_voucher_prefix', 'value' => 'EXP', 'group' => 'finance', 'type' => 'text'],
             
             // Attendance Settings
-            ['key' => 'attendance_manual_enabled', 'value' => 'true', 'group' => 'attendance', 'type' => 'boolean'],
-            ['key' => 'attendance_qr_enabled', 'value' => 'true', 'group' => 'attendance', 'type' => 'boolean'],
-            ['key' => 'attendance_biometric_enabled', 'value' => 'false', 'group' => 'attendance', 'type' => 'boolean'],
-            ['key' => 'attendance_face_enabled', 'value' => 'false', 'group' => 'attendance', 'type' => 'boolean'],
+            ['key' => 'attendance_manual_enabled', 'value' => '1', 'group' => 'attendance', 'type' => 'boolean'],
+            ['key' => 'attendance_qr_enabled', 'value' => '1', 'group' => 'attendance', 'type' => 'boolean'],
+            ['key' => 'attendance_biometric_enabled', 'value' => '0', 'group' => 'attendance', 'type' => 'boolean'],
+            ['key' => 'attendance_face_enabled', 'value' => '0', 'group' => 'attendance', 'type' => 'boolean'],
             ['key' => 'late_arrival_minutes', 'value' => '30', 'group' => 'attendance', 'type' => 'number'],
-            
+
             // Member Settings
             ['key' => 'member_id_prefix', 'value' => 'COP', 'group' => 'members', 'type' => 'text'],
-            ['key' => 'auto_generate_member_id', 'value' => 'true', 'group' => 'members', 'type' => 'boolean'],
-            ['key' => 'require_photo', 'value' => 'false', 'group' => 'members', 'type' => 'boolean'],
-            
+            ['key' => 'auto_generate_member_id', 'value' => '1', 'group' => 'members', 'type' => 'boolean'],
+            ['key' => 'require_photo', 'value' => '0', 'group' => 'members', 'type' => 'boolean'],
+
             // SMS Settings
-            ['key' => 'sms_enabled', 'value' => 'true', 'group' => 'sms', 'type' => 'boolean'],
-            ['key' => 'sms_auto_tithe_confirmation', 'value' => 'true', 'group' => 'sms', 'type' => 'boolean'],
-            ['key' => 'sms_auto_donation_confirmation', 'value' => 'true', 'group' => 'sms', 'type' => 'boolean'],
-            ['key' => 'sms_auto_pledge_reminder', 'value' => 'true', 'group' => 'sms', 'type' => 'boolean'],
-            ['key' => 'sms_auto_birthday', 'value' => 'true', 'group' => 'sms', 'type' => 'boolean'],
+            ['key' => 'sms_enabled', 'value' => '1', 'group' => 'sms', 'type' => 'boolean'],
+            ['key' => 'sms_auto_tithe_confirmation', 'value' => '1', 'group' => 'sms', 'type' => 'boolean'],
+            ['key' => 'sms_auto_donation_confirmation', 'value' => '1', 'group' => 'sms', 'type' => 'boolean'],
+            ['key' => 'sms_auto_pledge_reminder', 'value' => '1', 'group' => 'sms', 'type' => 'boolean'],
+            ['key' => 'sms_auto_birthday', 'value' => '1', 'group' => 'sms', 'type' => 'boolean'],
+            ['key' => 'sms_auto_welfare_confirmation', 'value' => '1', 'group' => 'sms', 'type' => 'boolean'],
+            ['key' => 'sms_auto_funeral_confirmation', 'value' => '1', 'group' => 'sms', 'type' => 'boolean'],
+            ['key' => 'sms_auto_offering_confirmation', 'value' => '1', 'group' => 'sms', 'type' => 'boolean'],
+            ['key' => 'sms_auto_pledge_confirmation', 'value' => '1', 'group' => 'sms', 'type' => 'boolean'],
+            ['key' => 'sms_auto_welfare_benefit', 'value' => '1', 'group' => 'sms', 'type' => 'boolean'],
+            ['key' => 'sms_auto_funeral_benefit', 'value' => '1', 'group' => 'sms', 'type' => 'boolean'],
             ['key' => 'sms_pledge_reminder_days', 'value' => '7', 'group' => 'sms', 'type' => 'number'],
-            
+
             // Backup Settings
-            ['key' => 'auto_backup_enabled', 'value' => 'true', 'group' => 'backup', 'type' => 'boolean'],
+            ['key' => 'auto_backup_enabled', 'value' => '1', 'group' => 'backup', 'type' => 'boolean'],
             ['key' => 'backup_frequency', 'value' => 'daily', 'group' => 'backup', 'type' => 'text'],
             ['key' => 'backup_retention_days', 'value' => '30', 'group' => 'backup', 'type' => 'number'],
         ];

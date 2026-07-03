@@ -8,10 +8,13 @@ use App\Models\Member;
 use App\Models\IncomeCategory;
 use App\Models\AttendanceSession;
 use App\Models\Pledge;
+use App\Models\SmsTemplate;
+use App\Services\GiantSmsService;
+use App\Helpers\SettingHelper;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use App\Helpers\SettingHelper;
+use Illuminate\Support\Facades\Log;
 
 class OfferingController extends Controller implements HasMiddleware
 {
@@ -148,6 +151,8 @@ class OfferingController extends Controller implements HasMiddleware
 
         $offering = Offering::create($validated);
 
+        $this->sendOfferingSms($offering);
+
         // Update pledge amount paid when linked to a special offering
         if ($offering->pledge_id) {
             $pledge = Pledge::find($offering->pledge_id);
@@ -273,6 +278,61 @@ class OfferingController extends Controller implements HasMiddleware
 
         return redirect()->route('admin.offerings.index')
             ->with('success', 'Offering deleted successfully.');
+    }
+
+    private function sendOfferingSms(Offering $offering): void
+    {
+        if ($offering->is_anonymous || !$offering->member_id) {
+            return;
+        }
+
+        if (!\App\Models\Setting::get('sms_auto_offering_confirmation', false)) {
+            return;
+        }
+
+        $member = $offering->member ?? $offering->load('member')->member;
+        $phone  = $member?->phone_primary;
+
+        if (!$phone) {
+            return;
+        }
+
+        try {
+            $sms = new GiantSmsService();
+
+            if (!$sms->isConfigured()) {
+                return;
+            }
+
+            $sym      = SettingHelper::currencySymbol();
+            $amount   = $sym . ' ' . number_format((float) $offering->amount, 2);
+            $category = $offering->incomeCategory?->name ?? 'Offering';
+            $date     = $offering->payment_date instanceof \Carbon\Carbon
+                ? $offering->payment_date->format('d M Y')
+                : date('d M Y', strtotime($offering->payment_date));
+
+            $template = SmsTemplate::where('slug', 'offering-confirmation')->where('is_active', true)->first();
+
+            if ($template) {
+                $message = $template->renderContent([
+                    'member_name'      => $member->first_name,
+                    'amount'           => $amount,
+                    'category'         => $category,
+                    'date'             => $date,
+                    'reference_number' => $offering->reference_number,
+                ]);
+            } else {
+                $message = 'Dear ' . $member->first_name . ', your offering of ' . $amount
+                    . ' (' . $category . ') on ' . $date
+                    . ' has been received. Ref: ' . $offering->reference_number
+                    . '. Thank you. God bless you.';
+            }
+
+            $sms->send($phone, $message);
+
+        } catch (\Throwable $e) {
+            Log::warning('Offering SMS failed for ref ' . $offering->reference_number . ': ' . $e->getMessage());
+        }
     }
 
     /**

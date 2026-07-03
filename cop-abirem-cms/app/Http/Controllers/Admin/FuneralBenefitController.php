@@ -4,13 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Member;
+use App\Models\SmsTemplate;
 use App\Models\FuneralBenefit;
 use App\Models\FuneralBenefitExpense;
 use App\Helpers\SettingHelper;
+use App\Services\GiantSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class FuneralBenefitController extends Controller implements HasMiddleware
 {
@@ -83,7 +86,8 @@ class FuneralBenefitController extends Controller implements HasMiddleware
             'expenses.*.amount'      => 'required|numeric|min:0.01',
         ]);
 
-        DB::transaction(function () use ($validated, $expenses) {
+        $benefit = null;
+        DB::transaction(function () use ($validated, $expenses, &$benefit) {
             $benefit = FuneralBenefit::create($validated);
 
             foreach ($expenses as $item) {
@@ -94,6 +98,8 @@ class FuneralBenefitController extends Controller implements HasMiddleware
                 ]);
             }
         });
+
+        $this->sendBenefitSms($benefit);
 
         return redirect()->route('admin.funeral.benefits.index')
             ->with('success', 'Funeral benefit recorded successfully.');
@@ -165,5 +171,56 @@ class FuneralBenefitController extends Controller implements HasMiddleware
 
         return redirect()->route('admin.funeral.benefits.index')
             ->with('success', 'Funeral benefit deleted successfully.');
+    }
+
+    private function sendBenefitSms(?FuneralBenefit $benefit): void
+    {
+        if (!$benefit || !$benefit->member_id) {
+            return;
+        }
+
+        if (!\App\Models\Setting::get('sms_auto_funeral_benefit', false)) {
+            return;
+        }
+
+        $member = $benefit->member ?? $benefit->load('member')->member;
+        $phone  = $member?->phone_primary;
+
+        if (!$phone) {
+            return;
+        }
+
+        try {
+            $sms = new GiantSmsService();
+
+            if (!$sms->isConfigured()) {
+                return;
+            }
+
+            $sym    = SettingHelper::currencySymbol();
+            $amount = $sym . ' ' . number_format((float) $benefit->amount_donated, 2);
+            $date   = $benefit->funeral_date instanceof \Carbon\Carbon
+                ? $benefit->funeral_date->format('d M Y')
+                : date('d M Y', strtotime($benefit->funeral_date));
+
+            $template = SmsTemplate::where('slug', 'funeral-benefit-disbursement')->where('is_active', true)->first();
+
+            if ($template) {
+                $message = $template->renderContent([
+                    'member_name' => $member->first_name,
+                    'amount'      => $amount,
+                    'date'        => $date,
+                ]);
+            } else {
+                $message = 'Dear ' . $member->first_name . ', a funeral support of ' . $amount
+                    . ' has been disbursed to you on ' . $date
+                    . '. We stand with you in this time. God bless you.';
+            }
+
+            $sms->send($phone, $message);
+
+        } catch (\Throwable $e) {
+            Log::warning('Funeral benefit SMS failed for benefit #' . $benefit->id . ': ' . $e->getMessage());
+        }
     }
 }

@@ -67,5 +67,6 @@
     </div>
 
     @stack('scripts')
+    @include('partials.unsaved-changes')
 </body>
 </html>

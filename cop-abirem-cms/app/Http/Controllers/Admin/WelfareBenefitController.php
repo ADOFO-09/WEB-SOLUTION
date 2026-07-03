@@ -4,13 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Member;
+use App\Models\SmsTemplate;
 use App\Models\WelfareBenefit;
 use App\Models\WelfareBenefitExpense;
 use App\Helpers\SettingHelper;
+use App\Services\GiantSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class WelfareBenefitController extends Controller implements HasMiddleware
 {
@@ -87,7 +90,8 @@ class WelfareBenefitController extends Controller implements HasMiddleware
             'expenses.*.amount'      => 'required|numeric|min:0.01',
         ]);
 
-        DB::transaction(function () use ($validated, $expenses) {
+        $benefit = null;
+        DB::transaction(function () use ($validated, $expenses, &$benefit) {
             $benefit = WelfareBenefit::create($validated);
 
             foreach ($expenses as $item) {
@@ -98,6 +102,8 @@ class WelfareBenefitController extends Controller implements HasMiddleware
                 ]);
             }
         });
+
+        $this->sendBenefitSms($benefit);
 
         return redirect()->route('admin.welfare.benefits.index')
             ->with('success', 'Welfare benefit recorded successfully.');
@@ -169,5 +175,58 @@ class WelfareBenefitController extends Controller implements HasMiddleware
 
         return redirect()->route('admin.welfare.benefits.index')
             ->with('success', 'Welfare benefit deleted successfully.');
+    }
+
+    private function sendBenefitSms(?WelfareBenefit $benefit): void
+    {
+        if (!$benefit || !$benefit->member_id) {
+            return;
+        }
+
+        if (!\App\Models\Setting::get('sms_auto_welfare_benefit', false)) {
+            return;
+        }
+
+        $member = $benefit->member ?? $benefit->load('member')->member;
+        $phone  = $member?->phone_primary;
+
+        if (!$phone) {
+            return;
+        }
+
+        try {
+            $sms = new GiantSmsService();
+
+            if (!$sms->isConfigured()) {
+                return;
+            }
+
+            $sym     = SettingHelper::currencySymbol();
+            $amount  = $sym . ' ' . number_format((float) $benefit->amount, 2);
+            $purpose = WelfareBenefit::PURPOSES[$benefit->purpose] ?? ucfirst($benefit->purpose);
+            $date    = $benefit->benefit_date instanceof \Carbon\Carbon
+                ? $benefit->benefit_date->format('d M Y')
+                : date('d M Y', strtotime($benefit->benefit_date));
+
+            $template = SmsTemplate::where('slug', 'welfare-benefit-disbursement')->where('is_active', true)->first();
+
+            if ($template) {
+                $message = $template->renderContent([
+                    'member_name' => $member->first_name,
+                    'amount'      => $amount,
+                    'purpose'     => $purpose,
+                    'date'        => $date,
+                ]);
+            } else {
+                $message = 'Dear ' . $member->first_name . ', a welfare benefit of ' . $amount
+                    . ' for ' . $purpose . ' has been disbursed to you on ' . $date
+                    . '. God bless you.';
+            }
+
+            $sms->send($phone, $message);
+
+        } catch (\Throwable $e) {
+            Log::warning('Welfare benefit SMS failed for benefit #' . $benefit->id . ': ' . $e->getMessage());
+        }
     }
 }

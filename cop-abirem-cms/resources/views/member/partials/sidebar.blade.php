@@ -147,6 +147,37 @@
             </div>
         </div>
 
+        {{-- Welfare & Funeral Funds --}}
+        @php $fundsOpen = request()->routeIs('member.welfare.*') || request()->routeIs('member.funeral.*'); @endphp
+        <div class="nav-section" x-data="{ open: {{ $fundsOpen ? 'true' : 'false' }} }">
+            <button type="button"
+                    class="m-nav-section-toggle"
+                    :class="{ 'section-open': open }"
+                    @click.stop="open = !open">
+                Welfare &amp; Funeral
+                <svg class="m-nav-section-chevron" :class="{ 'rotate-180': open }"
+                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+            </button>
+            <div x-show="open" x-transition style="overflow:hidden;">
+                <a href="{{ route('member.welfare.index') }}"
+                   class="nav-link {{ request()->routeIs('member.welfare.*') ? 'active' : '' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    Welfare Fund
+                </a>
+                <a href="{{ route('member.funeral.index') }}"
+                   class="nav-link {{ request()->routeIs('member.funeral.*') ? 'active' : '' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Funeral Fund
+                </a>
+            </div>
+        </div>
+
         {{-- Giving --}}
         @php
             $givingOpen = request()->routeIs('member.giving.*')

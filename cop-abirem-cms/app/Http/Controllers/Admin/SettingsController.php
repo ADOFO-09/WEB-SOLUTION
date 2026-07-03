@@ -164,6 +164,12 @@ class SettingsController extends Controller
             'sms_auto_tithe_confirmation' => 'boolean',
             'sms_auto_donation_confirmation' => 'boolean',
             'sms_auto_pledge_reminder' => 'boolean',
+            'sms_auto_welfare_confirmation' => 'boolean',
+            'sms_auto_funeral_confirmation' => 'boolean',
+            'sms_auto_offering_confirmation' => 'boolean',
+            'sms_auto_pledge_confirmation' => 'boolean',
+            'sms_auto_welfare_benefit' => 'boolean',
+            'sms_auto_funeral_benefit' => 'boolean',
         ]);
 
         $validated['enable_sms_notifications'] = $request->boolean('enable_sms_notifications');
@@ -171,6 +177,12 @@ class SettingsController extends Controller
         $validated['sms_auto_tithe_confirmation'] = $request->boolean('sms_auto_tithe_confirmation');
         $validated['sms_auto_donation_confirmation'] = $request->boolean('sms_auto_donation_confirmation');
         $validated['sms_auto_pledge_reminder'] = $request->boolean('sms_auto_pledge_reminder');
+        $validated['sms_auto_welfare_confirmation'] = $request->boolean('sms_auto_welfare_confirmation');
+        $validated['sms_auto_funeral_confirmation'] = $request->boolean('sms_auto_funeral_confirmation');
+        $validated['sms_auto_offering_confirmation'] = $request->boolean('sms_auto_offering_confirmation');
+        $validated['sms_auto_pledge_confirmation'] = $request->boolean('sms_auto_pledge_confirmation');
+        $validated['sms_auto_welfare_benefit'] = $request->boolean('sms_auto_welfare_benefit');
+        $validated['sms_auto_funeral_benefit'] = $request->boolean('sms_auto_funeral_benefit');
 
         // Encrypt credentials before storing; skip if blank (preserve existing value)
         foreach (['sms_api_key', 'sms_api_secret'] as $credKey) {

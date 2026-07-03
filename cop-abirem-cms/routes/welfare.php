@@ -35,6 +35,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
 
         Route::get('/reports/balances', [WelfareReportController::class, 'balances'])->name('reports.balances');
         Route::get('/reports/spending', [WelfareReportController::class, 'spending'])->name('reports.spending');
+        Route::get('/reports/spending/export', [WelfareReportController::class, 'exportSpending'])->name('reports.spending.export');
         Route::get('/reports/fund', [WelfareReportController::class, 'fundSummary'])->name('reports.fund');
     });
 
@@ -60,6 +61,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::delete('/benefits/{funeralBenefit}', [FuneralBenefitController::class, 'destroy'])->name('benefits.destroy');
 
         Route::get('/reports/spending', [FuneralReportController::class, 'spending'])->name('reports.spending');
+        Route::get('/reports/spending/export', [FuneralReportController::class, 'exportSpending'])->name('reports.spending.export');
         Route::get('/reports/fund', [FuneralReportController::class, 'fundSummary'])->name('reports.fund');
     });
 });

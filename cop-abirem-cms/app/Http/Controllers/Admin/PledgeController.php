@@ -124,6 +124,8 @@ class PledgeController extends Controller implements HasMiddleware
 
         $pledge = Pledge::create($validated);
 
+        $this->sendPledgeCreationSms($pledge);
+
         return redirect()->route('admin.pledges.show', $pledge)
             ->with('success', 'Pledge created successfully. Pledge #' . $pledge->pledge_number);
     }
@@ -286,6 +288,56 @@ class PledgeController extends Controller implements HasMiddleware
 
         } catch (\Throwable $e) {
             Log::warning('Pledge payment SMS failed for payment #' . $payment->id . ': ' . $e->getMessage());
+        }
+    }
+
+    private function sendPledgeCreationSms(Pledge $pledge): void
+    {
+        if (!\App\Models\Setting::get('sms_auto_pledge_confirmation', false)) {
+            return;
+        }
+
+        $member = $pledge->member ?? $pledge->load('member')->member;
+        $phone  = $member?->phone_primary;
+
+        if (!$phone) {
+            return;
+        }
+
+        try {
+            $sms = new GiantSmsService();
+
+            if (!$sms->isConfigured()) {
+                return;
+            }
+
+            $sym      = SettingHelper::currencySymbol();
+            $amount   = $sym . ' ' . number_format((float) $pledge->total_amount, 2);
+            $dueDate  = $pledge->due_date
+                ? (is_string($pledge->due_date) ? date('d M Y', strtotime($pledge->due_date)) : $pledge->due_date->format('d M Y'))
+                : 'no fixed date';
+
+            $template = SmsTemplate::where('slug', 'pledge-creation-confirmation')->where('is_active', true)->first();
+
+            if ($template) {
+                $message = $template->renderContent([
+                    'member_name'  => $member->first_name,
+                    'amount'       => $amount,
+                    'purpose'      => $pledge->purpose,
+                    'due_date'     => $dueDate,
+                    'pledge_number' => $pledge->pledge_number,
+                ]);
+            } else {
+                $message = 'Dear ' . $member->first_name . ', your pledge of ' . $amount
+                    . ' for ' . $pledge->purpose . ' (Pledge #' . $pledge->pledge_number . ')'
+                    . ' has been recorded. Due: ' . $dueDate
+                    . '. Thank you for your commitment! God bless you.';
+            }
+
+            $sms->send($phone, $message);
+
+        } catch (\Throwable $e) {
+            Log::warning('Pledge creation SMS failed for pledge #' . $pledge->pledge_number . ': ' . $e->getMessage());
         }
     }
 

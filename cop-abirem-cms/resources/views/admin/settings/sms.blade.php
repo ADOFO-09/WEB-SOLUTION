@@ -211,6 +211,84 @@
                         </label>
                     </div>
 
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Auto Welfare Due Confirmation</h4>
+                            <p class="text-sm text-gray-500">Send SMS to member when a welfare due contribution is recorded.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="sms_auto_welfare_confirmation" value="1"
+                                   {{ ($settings['sms_auto_welfare_confirmation'] ?? '0') == '1' ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Auto Funeral Due Confirmation</h4>
+                            <p class="text-sm text-gray-500">Send SMS to member when a funeral due contribution is recorded.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="sms_auto_funeral_confirmation" value="1"
+                                   {{ ($settings['sms_auto_funeral_confirmation'] ?? '0') == '1' ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Auto Offering Confirmation</h4>
+                            <p class="text-sm text-gray-500">Send SMS to member when an offering is recorded (non-anonymous only).</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="sms_auto_offering_confirmation" value="1"
+                                   {{ ($settings['sms_auto_offering_confirmation'] ?? '0') == '1' ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Auto Pledge Creation Confirmation</h4>
+                            <p class="text-sm text-gray-500">Send SMS to member when a new pledge is created.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="sms_auto_pledge_confirmation" value="1"
+                                   {{ ($settings['sms_auto_pledge_confirmation'] ?? '0') == '1' ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Auto Welfare Benefit Disbursement</h4>
+                            <p class="text-sm text-gray-500">Send SMS to member when a welfare benefit is disbursed to them.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="sms_auto_welfare_benefit" value="1"
+                                   {{ ($settings['sms_auto_welfare_benefit'] ?? '0') == '1' ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Auto Funeral Benefit Disbursement</h4>
+                            <p class="text-sm text-gray-500">Send SMS to member when funeral support is disbursed to them.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="sms_auto_funeral_benefit" value="1"
+                                   {{ ($settings['sms_auto_funeral_benefit'] ?? '0') == '1' ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+
                     <div x-data="{ count: {{ strlen(old('sms_birthday_template', $settings['sms_birthday_template'] ?? '')) }} }">
                         <div class="flex items-center justify-between mb-1">
                             <label for="sms_birthday_template" class="block text-sm font-medium text-gray-700">Birthday Message Template</label>

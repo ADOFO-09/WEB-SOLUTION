@@ -84,183 +84,63 @@
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-    <!-- Quick Entry: Session Tithe -->
-    <div class="card">
-        <div class="card-header">
-            <h3 style="font-weight: 600; color: #1e3a5f;">Record Session Tithe</h3>
-            <span style="font-size: 0.75rem; color: #64748b;">Total tithe for a service</span>
-        </div>
-        <div class="card-body">
-            @if(session('error'))
-            <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:.5rem;padding:.75rem;margin-bottom:1rem;font-size:.875rem;color:#991b1b;">
-                {{ session('error') }}
-            </div>
-            @endif
-            <form action="{{ route('admin.tithes.session.store') }}" method="POST">
-                @csrf
-                <div class="form-group">
-                    <label class="form-label">Service / Session</label>
-                    <select name="attendance_session_id" class="form-select" required>
-                        <option value="">Select Session</option>
-                        @foreach($sessions as $session)
-                        <option value="{{ $session->id }}" {{ old('attendance_session_id') == $session->id ? 'selected' : '' }}>
-                            {{ $session->serviceType->name ?? 'Service' }} — {{ $session->service_date->format('D, M d, Y') }}
-                            @if($session->status === 'open') (Open) @endif
-                        </option>
-                        @endforeach
-                    </select>
-                    @if($sessions->isEmpty())
-                    <p style="font-size: 0.75rem; color: #d97706; margin-top: 0.25rem;">
-                        No sessions found. <a href="{{ route('admin.attendance.create') }}" style="text-decoration: underline;">Create one</a>.
-                    </p>
-                    @endif
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Tithe Particular</label>
-                    <select name="income_category_id" class="form-select">
-                        <option value="">— Select Particular (optional) —</option>
-                        @foreach($titheCategories as $cat)
-                        <option value="{{ $cat->id }}" {{ old('income_category_id') == $cat->id ? 'selected' : '' }}>
-                            {{ $cat->name }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.25rem;">
-                        Determines the label shown in the Income Ledger (e.g. "1st Sunday Tithe")
-                    </p>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="form-group">
-                        <label class="form-label">Total Amount ({{ $currencySymbol }})</label>
-                        <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required
-                               placeholder="0.00" value="{{ old('amount') }}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Payment Method</label>
-                        <select name="payment_method" class="form-select" required>
-                            @include('admin.partials.payment-method-options')
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Notes (Optional)</label>
-                    <input type="text" name="notes" class="form-input" placeholder="Any notes about this collection..."
-                           value="{{ old('notes') }}">
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Record Session Tithe</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Quick Entry: Offering -->
-    <div class="card">
-        <div class="card-header">
-            <h3 style="font-weight: 600; color: #1e3a5f;">Quick Record Offering</h3>
-        </div>
-        <div class="card-body">
-            <form action="{{ route('admin.finance.quick-offering') }}" method="POST">
-                @csrf
-                <div class="form-group">
-                    <label class="form-label">Offering Particular</label>
-                    <select name="income_category_id" class="form-select" required>
-                        <option value="">— Select particular —</option>
-                        @php
-                        $typeLabels = ['offering' => 'Regular Offerings', 'special' => 'Special Offerings', 'donation' => 'Donations'];
-                        @endphp
-                        @foreach($typeLabels as $type => $label)
-                        @if(isset($offeringCategories[$type]) && $offeringCategories[$type]->count())
-                        <optgroup label="{{ $label }}">
-                            @foreach($offeringCategories[$type] as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                            @endforeach
-                        </optgroup>
-                        @endif
-                        @endforeach
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="form-group">
-                        <label class="form-label">Amount ({{ $currencySymbol }})</label>
-                        <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required placeholder="0.00">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Date</label>
-                        <input type="date" name="payment_date" class="form-input" value="{{ date('Y-m-d') }}" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Payment Method</label>
-                    <select name="payment_method" class="form-select">
-                            @include('admin.partials.payment-method-options')
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Record Offering</button>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Entry: Expense -->
-<div class="card" style="margin-bottom: 2rem;">
+<!-- Quick Entry Navigation -->
+<div class="card mb-8">
     <div class="card-header">
-        <h3 style="font-weight: 600; color: #1e3a5f;">Record Expense</h3>
-        <span style="font-size: 0.75rem; color: #64748b;">Submitted for approval — reflects on Expense Ledger once approved</span>
+        <h3 style="font-weight: 600; color: #1e3a5f;">Record New Entry</h3>
+        <span style="font-size: 0.75rem; color: #64748b;">Select a module to open its full entry form</span>
     </div>
     <div class="card-body">
-        <form action="{{ route('admin.finance.quick-expense') }}" method="POST">
-            @csrf
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="form-group">
-                    <label class="form-label">Expense Category</label>
-                    <select name="expense_category_id" class="form-select" required>
-                        <option value="">— Select category —</option>
-                        @foreach($expenseCategories as $cat)
-                        <option value="{{ $cat->id }}" {{ old('expense_category_id') == $cat->id ? 'selected' : '' }}>
-                            {{ $cat->name }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.25rem;">
-                        Determines the column in the Expense Ledger
-                    </p>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Payee Name</label>
-                    <input type="text" name="payee_name" class="form-input" required
-                           placeholder="Who is being paid?" value="{{ old('payee_name') }}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <input type="text" name="description" class="form-input" required
-                           placeholder="Brief description of expense" value="{{ old('description') }}">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="form-group">
-                    <label class="form-label">Amount ({{ $currencySymbol }})</label>
-                    <input type="number" name="amount" class="form-input" step="0.01" min="0.01" required
-                           placeholder="0.00" value="{{ old('amount') }}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Date</label>
-                    <input type="date" name="expense_date" class="form-input"
-                           value="{{ old('expense_date', date('Y-m-d')) }}" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Payment Method</label>
-                    <select name="payment_method" class="form-select" required>
-                            @include('admin.partials.payment-method-options')
-                    </select>
-                </div>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-                <p style="font-size: 0.75rem; color: #d97706;">
-                    ⚠ Expense will be submitted as <strong>pending</strong> — it appears on the Expense Ledger only after approval.
-                </p>
-                <button type="submit" class="btn btn-primary">Submit Expense for Approval</button>
-            </div>
-        </form>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <a href="{{ route('admin.tithes.session.create') }}" class="btn btn-primary" style="justify-content: center; text-align: center; padding: 0.75rem 0.5rem;">
+                <svg style="width: 1rem; height: 1rem; margin-right: 0.375rem; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Session Tithe
+            </a>
+            <a href="{{ route('admin.tithes.create') }}" class="btn btn-secondary" style="justify-content: center; text-align: center; padding: 0.75rem 0.5rem;">
+                <svg style="width: 1rem; height: 1rem; margin-right: 0.375rem; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Individual Tithe
+            </a>
+            <a href="{{ route('admin.offerings.create') }}" class="btn btn-secondary" style="justify-content: center; text-align: center; padding: 0.75rem 0.5rem;">
+                <svg style="width: 1rem; height: 1rem; margin-right: 0.375rem; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21" />
+                </svg>
+                Offering
+            </a>
+            <a href="{{ route('admin.donations.create') }}" class="btn btn-secondary" style="justify-content: center; text-align: center; padding: 0.75rem 0.5rem;">
+                <svg style="width: 1rem; height: 1rem; margin-right: 0.375rem; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+                Donation
+            </a>
+            <a href="{{ route('admin.pledges.create') }}" class="btn btn-secondary" style="justify-content: center; text-align: center; padding: 0.75rem 0.5rem;">
+                <svg style="width: 1rem; height: 1rem; margin-right: 0.375rem; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+                Pledge
+            </a>
+            <a href="{{ route('admin.expenses.create') }}" class="btn btn-secondary" style="justify-content: center; text-align: center; padding: 0.75rem 0.5rem;">
+                <svg style="width: 1rem; height: 1rem; margin-right: 0.375rem; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                </svg>
+                Expense
+            </a>
+            <a href="{{ route('admin.welfare.contributions.create') }}" class="btn btn-secondary" style="justify-content: center; text-align: center; padding: 0.75rem 0.5rem;">
+                <svg style="width: 1rem; height: 1rem; margin-right: 0.375rem; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                Welfare Due
+            </a>
+            <a href="{{ route('admin.funeral.contributions.create') }}" class="btn btn-secondary" style="justify-content: center; text-align: center; padding: 0.75rem 0.5rem;">
+                <svg style="width: 1rem; height: 1rem; margin-right: 0.375rem; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Funeral Due
+            </a>
+        </div>
     </div>
 </div>
 

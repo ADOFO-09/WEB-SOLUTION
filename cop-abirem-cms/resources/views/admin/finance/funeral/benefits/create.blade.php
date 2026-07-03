@@ -133,7 +133,7 @@
                                        x-model="mainAmount"
                                        value="{{ old('amount_donated', $funeralBenefit->amount_donated ?? '') }}"
                                        required
-                                       class="pl-8 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                       class="pl-12 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                        placeholder="0.00">
                             </div>
                             @error('amount_donated') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror

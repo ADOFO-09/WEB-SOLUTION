@@ -17,7 +17,7 @@
             </a>
             @endif
             @if($expense->status === 'pending')
-            @can('finance.edit')
+            @can('expenses.edit')
             <a href="{{ route('admin.expenses.edit', $expense) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Edit</a>
             @endcan
             @endif
@@ -159,7 +159,7 @@
 
         <!-- Approve/Reject Actions -->
         @if($expense->can_approve)
-        @can('finance.edit')
+        @can('expenses.approve')
         <div class="bg-white shadow rounded-lg p-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Review</h3>
             
@@ -188,7 +188,7 @@
 
         <!-- Mark as Paid -->
         @if($expense->can_pay)
-        @can('finance.edit')
+        @can('expenses.approve')
         <div class="bg-white shadow rounded-lg p-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Record Payment</h3>
             <form action="{{ route('admin.expenses.mark-paid', $expense) }}" method="POST">
@@ -214,7 +214,7 @@
 
         <!-- Delete -->
         @if(in_array($expense->status, ['pending', 'rejected']))
-        @can('finance.delete')
+        @can('expenses.delete')
         <div class="bg-white shadow rounded-lg p-6">
             <form action="{{ route('admin.expenses.destroy', $expense) }}" method="POST" onsubmit="return confirm('Delete this expense?');">
                 @csrf @method('DELETE')

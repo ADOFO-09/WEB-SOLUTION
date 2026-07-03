@@ -73,7 +73,7 @@
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-sm">{{ $currencySymbol }}</span>
                         <input type="number" name="amount" value="{{ old('amount') }}" step="0.01" min="0.01"
-                               class="pl-8 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                               class="pl-12 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                placeholder="0.00">
                     </div>
                     @error('amount') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror

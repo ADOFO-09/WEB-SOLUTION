@@ -5,7 +5,7 @@
 @section('header')
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h1 class="text-2xl font-bold text-gray-900">Financial Years</h1>
-        @can('settings.manage')
+        @can('finance.manage')
         <a href="{{ route('admin.finance.years.create') }}"
            class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white"
            style="background-color: #1e3a5f;">
@@ -83,7 +83,7 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div class="flex items-center justify-end space-x-2">
-                            @can('settings.manage')
+                            @can('finance.manage')
                             @if(!$year->is_closed)
                             <a href="{{ route('admin.finance.years.edit', $year) }}"
                                class="text-indigo-600 hover:text-indigo-900">Edit</a>
@@ -128,7 +128,7 @@
                 <tr>
                     <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                         No financial years found.
-                        @can('settings.manage')
+                        @can('finance.manage')
                         <a href="{{ route('admin.finance.years.create') }}" class="ml-1 text-indigo-600 hover:underline">Create one now.</a>
                         @endcan
                     </td>

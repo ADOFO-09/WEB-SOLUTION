@@ -5,6 +5,7 @@ use App\Http\Controllers\Member\ProfileController;
 use App\Http\Controllers\Member\GivingController;
 use App\Http\Controllers\Member\PledgeController;
 use App\Http\Controllers\Member\AttendanceController;
+use App\Http\Controllers\Member\FundController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -53,6 +54,16 @@ Route::middleware(['auth', 'member.access'])->prefix('member')->name('member.')-
         Route::get('/{pledge}', [PledgeController::class, 'show'])->name('show');
     });
     
+    // Welfare Fund
+    Route::prefix('welfare')->name('welfare.')->group(function () {
+        Route::get('/', [FundController::class, 'welfare'])->name('index');
+    });
+
+    // Funeral Fund
+    Route::prefix('funeral')->name('funeral.')->group(function () {
+        Route::get('/', [FundController::class, 'funeral'])->name('index');
+    });
+
     // Attendance History & QR Scanning
     Route::prefix('attendance')->name('attendance.')->group(function () {
         Route::get('/', [AttendanceController::class, 'index'])->name('index');
