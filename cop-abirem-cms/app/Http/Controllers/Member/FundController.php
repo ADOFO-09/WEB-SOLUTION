@@ -9,9 +9,16 @@ use App\Models\FuneralContribution;
 use App\Models\WelfareBenefit;
 use App\Models\FuneralBenefit;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
-class FundController extends Controller
+class FundController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return ['auth'];
+    }
+
+
     public function welfare(Request $request)
     {
         $member = $request->user()->member;

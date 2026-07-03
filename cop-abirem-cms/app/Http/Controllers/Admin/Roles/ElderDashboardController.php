@@ -119,9 +119,13 @@ class ElderDashboardController extends Controller
     public function approveExpense(Request $request, $id)
     {
         $expense = Expense::findOrFail($id);
-        
+
+        if ($expense->status !== 'pending') {
+            return back()->with('error', 'Only pending expenses can be approved.');
+        }
+
         $expense->update([
-            'status' => 'approved',
+            'status'      => 'approved',
             'approved_by' => auth()->id(),
             'approved_at' => now(),
         ]);
@@ -146,7 +150,11 @@ class ElderDashboardController extends Controller
         $request->validate(['reason' => 'required|string|max:500']);
 
         $expense = Expense::findOrFail($id);
-        
+
+        if ($expense->status !== 'pending') {
+            return back()->with('error', 'Only pending expenses can be rejected.');
+        }
+
         $expense->update([
             'status' => 'rejected',
             'approved_by' => auth()->id(),

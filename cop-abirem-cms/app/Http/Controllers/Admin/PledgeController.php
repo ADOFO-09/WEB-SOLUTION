@@ -233,7 +233,7 @@ class PledgeController extends Controller implements HasMiddleware
 
         $this->sendPledgePaymentSms($pledge, $payment);
 
-        return back()->with('success', 'Payment of GH₵ ' . number_format($validated['amount'], 2) . ' recorded. Receipt #' . $payment->receipt_number);
+        return back()->with('success', 'Payment of ' . SettingHelper::currencySymbol() . ' ' . number_format($validated['amount'], 2) . ' recorded. Receipt #' . $payment->receipt_number);
     }
 
     /**
@@ -259,8 +259,9 @@ class PledgeController extends Controller implements HasMiddleware
             }
 
             $memberName = $pledge->member->first_name;
-            $amount     = 'GH' . "\u{20B5}" . number_format((float) $payment->amount, 2);
-            $balance    = 'GH' . "\u{20B5}" . number_format((float) $pledge->balance, 2);
+            $sym        = SettingHelper::currencySymbol();
+            $amount     = $sym . ' ' . number_format((float) $payment->amount, 2);
+            $balance    = $sym . ' ' . number_format((float) $pledge->balance, 2);
 
             $template = SmsTemplate::where('slug', 'pledge-payment-confirmation')->where('is_active', true)->first();
 

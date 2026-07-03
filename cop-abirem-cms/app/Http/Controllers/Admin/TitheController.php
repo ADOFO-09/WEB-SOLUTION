@@ -342,7 +342,7 @@ class TitheController extends Controller implements HasMiddleware
         $sessionDate = $session->service_date->format('M d, Y');
 
         return redirect()->route('admin.tithes.index')
-            ->with('success', "Session tithe of GH₵" . number_format($request->amount, 2) . " recorded for {$serviceName} on {$sessionDate}.");
+            ->with('success', 'Session tithe of ' . SettingHelper::currencySymbol() . number_format($request->amount, 2) . " recorded for {$serviceName} on {$sessionDate}.");
     }
 
     /**
@@ -379,7 +379,7 @@ class TitheController extends Controller implements HasMiddleware
             if ($template) {
                 $message = $template->renderContent([
                     'member_name' => $member->first_name,
-                    'amount'      => 'GH' . "\u{20B5}" . number_format((float) $tithe->amount, 2),
+                    'amount'      => SettingHelper::currencySymbol() . ' ' . number_format((float) $tithe->amount, 2),
                     'date'        => $tithe->month_for->format('F Y'),
                     'receipt_no'  => $tithe->receipt_number,
                 ]);

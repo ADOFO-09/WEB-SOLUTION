@@ -9,10 +9,17 @@ use App\Models\Donation;
 use App\Models\Pledge;
 use App\Models\AttendanceRecord;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Carbon\Carbon;
 
-class PortalController extends Controller
+class PortalController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return ['auth'];
+    }
+
+
     /**
      * Display the member dashboard.
      */

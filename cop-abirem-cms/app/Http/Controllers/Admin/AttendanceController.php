@@ -115,20 +115,25 @@ class AttendanceController extends Controller implements HasMiddleware
     {
         $session->load(['serviceType', 'createdBy', 'records.member', 'records.visitor']);
 
-        $memberRecords = $session->records()->whereNotNull('member_id')->with('member')->get();
-        $visitorRecords = $session->records()->whereNotNull('visitor_id')->with('visitor')->get();
-        
+        $memberRecords  = $session->records->filter(fn($r) => !is_null($r->member_id))->values();
+        $visitorRecords = $session->records->filter(fn($r) => !is_null($r->visitor_id))->values();
+
+        $qrCount  = $session->records->where('attendance_method', 'qr_code')->count();
+        $bioCount = $session->records->where('attendance_method', 'biometric')->count();
+
         $stats = [
-            'total' => $memberRecords->count() + $visitorRecords->count(),
-            'members' => $memberRecords->count(),
+            'total'    => $memberRecords->count() + $visitorRecords->count(),
+            'members'  => $memberRecords->count(),
             'visitors' => $visitorRecords->count(),
             'children' => $session->total_children ?? 0,
-            'late' => $session->records()->where('is_late', true)->count(),
+            'late'     => $session->records->where('is_late', true)->count(),
         ];
-        
+
         $attendance = $session;
 
-        return view('admin.attendance.show', compact('attendance', 'memberRecords', 'visitorRecords', 'stats'));
+        return view('admin.attendance.show', compact(
+            'attendance', 'memberRecords', 'visitorRecords', 'stats', 'qrCount', 'bioCount'
+        ));
     }
 
     /**

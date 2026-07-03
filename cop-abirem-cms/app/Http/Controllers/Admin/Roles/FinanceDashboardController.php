@@ -13,6 +13,7 @@ use App\Models\Expense;
 use App\Models\ServiceType;
 use App\Models\ExpenseCategory;
 use App\Models\IncomeCategory;
+use App\Helpers\SettingHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -186,22 +187,24 @@ class FinanceDashboardController extends Controller
             'payment_method' => 'required|in:cash,cheque,mobile_money,bank_transfer',
         ]);
 
-        $receiptNumber = 'TT-' . date('Ymd') . '-' . str_pad(
-            Tithe::whereDate('created_at', today())->count() + 1, 
-            4, '0', STR_PAD_LEFT
-        );
-
-        Tithe::create([
-            'member_id' => $validated['member_id'],
-            'amount' => $validated['amount'],
-            'payment_date' => $validated['payment_date'],
-            'payment_method' => $validated['payment_method'],
-            'receipt_number' => $receiptNumber,
-            'recorded_by' => auth()->id(),
-        ]);
+        $receiptNumber = DB::transaction(function () use ($validated) {
+            $count  = Tithe::whereDate('created_at', today())->lockForUpdate()->count();
+            $receipt = SettingHelper::titheReceiptPrefix() . '-' . date('Ymd') . '-' . str_pad(
+                $count + 1, 4, '0', STR_PAD_LEFT
+            );
+            Tithe::create([
+                'member_id'      => $validated['member_id'],
+                'amount'         => $validated['amount'],
+                'payment_date'   => $validated['payment_date'],
+                'payment_method' => $validated['payment_method'],
+                'receipt_number' => $receipt,
+                'recorded_by'    => auth()->id(),
+            ]);
+            return $receipt;
+        });
 
         return redirect()->route('admin.finance.dashboard')
-            ->with('success', 'Tithe of GH₵' . number_format($validated['amount'], 2) . ' recorded. Receipt: ' . $receiptNumber);
+            ->with('success', 'Tithe of ' . SettingHelper::currencySymbol() . number_format($validated['amount'], 2) . ' recorded. Receipt: ' . $receiptNumber);
     }
 
     /**
@@ -225,7 +228,7 @@ class FinanceDashboardController extends Controller
         ]);
 
         return redirect()->route('admin.finance.dashboard')
-            ->with('success', 'Offering of GH₵' . number_format($validated['amount'], 2) . ' recorded. Receipt: ' . $offering->reference_number);
+            ->with('success', 'Offering of ' . SettingHelper::currencySymbol() . number_format($validated['amount'], 2) . ' recorded. Receipt: ' . $offering->reference_number);
     }
 
     /**
@@ -242,23 +245,25 @@ class FinanceDashboardController extends Controller
             'payment_method'      => 'required|in:cash,cheque,mobile_money,bank_transfer',
         ]);
 
-        $voucherNumber = 'EXP-' . date('Ymd') . '-' . str_pad(
-            Expense::whereDate('created_at', today())->count() + 1,
-            4, '0', STR_PAD_LEFT
-        );
-
-        Expense::create([
-            'expense_category_id' => $validated['expense_category_id'],
-            'payee_name'          => $validated['payee_name'],
-            'amount'              => $validated['amount'],
-            'expense_date'        => $validated['expense_date'],
-            'description'         => $validated['description'],
-            'payment_method'      => $validated['payment_method'],
-            'voucher_number'      => $voucherNumber,
-            'status'              => 'pending',
-        ]);
+        $voucherNumber = DB::transaction(function () use ($validated) {
+            $count   = Expense::whereDate('created_at', today())->lockForUpdate()->count();
+            $voucher = SettingHelper::expenseVoucherPrefix() . '-' . date('Ymd') . '-' . str_pad(
+                $count + 1, 4, '0', STR_PAD_LEFT
+            );
+            Expense::create([
+                'expense_category_id' => $validated['expense_category_id'],
+                'payee_name'          => $validated['payee_name'],
+                'amount'              => $validated['amount'],
+                'expense_date'        => $validated['expense_date'],
+                'description'         => $validated['description'],
+                'payment_method'      => $validated['payment_method'],
+                'voucher_number'      => $voucher,
+                'status'              => 'pending',
+            ]);
+            return $voucher;
+        });
 
         return redirect()->route('admin.finance.dashboard')
-            ->with('success', 'Expense of GH₵' . number_format($validated['amount'], 2) . ' submitted for approval. Voucher: ' . $voucherNumber);
+            ->with('success', 'Expense of ' . SettingHelper::currencySymbol() . number_format($validated['amount'], 2) . ' submitted for approval. Voucher: ' . $voucherNumber);
     }
 }

@@ -7,11 +7,18 @@ use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
-class AttendanceController extends Controller
+class AttendanceController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return ['auth'];
+    }
+
+
     /**
      * Display member's attendance history.
      */

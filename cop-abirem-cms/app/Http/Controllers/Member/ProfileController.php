@@ -5,12 +5,19 @@ namespace App\Http\Controllers\Member;
 use App\Http\Controllers\Controller;
 use App\Models\Member;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
-class ProfileController extends Controller
+class ProfileController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return ['auth'];
+    }
+
+
     /**
      * Display member profile.
      */

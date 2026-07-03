@@ -285,7 +285,7 @@
                     @endif
                 </div>
                 <p class="text-2xl font-bold text-blue-600 mb-3">
-                    {{ $attendance->records()->where('attendance_method', 'qr_code')->count() }}
+                    {{ $qrCount }}
                     <span class="text-sm font-normal text-gray-500 ml-1">via QR</span>
                 </p>
                 <div class="space-y-2">
@@ -309,7 +309,6 @@
             <div class="bg-white rounded-lg shadow p-5">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-base font-semibold text-gray-900">Biometric</h3>
-                    @php $bioCount = $attendance->records()->where('attendance_method', 'biometric')->count(); @endphp
                     @if($bioCount > 0)
                     <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">{{ $bioCount }} scanned</span>
                     @endif
@@ -456,7 +455,7 @@ let scanning = false;
 let bridgeConnected = false;
 let enrolledMembers = [];
 const checkedIn = new Set();
-let bioCount = {{ $attendance->records()->where('attendance_method','biometric')->count() }};
+let bioCount = {{ $bioCount }};
 
 // ── Panel open / close ─────────────────────────────────────────────────────
 function openBiometricPanel() {

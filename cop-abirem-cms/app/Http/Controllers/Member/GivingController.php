@@ -9,11 +9,18 @@ use App\Models\Offering;
 use App\Models\Donation;
 use App\Models\PledgePayment;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class GivingController extends Controller
+class GivingController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return ['auth'];
+    }
+
+
     /**
      * Display giving overview.
      */

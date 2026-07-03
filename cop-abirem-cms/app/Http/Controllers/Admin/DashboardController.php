@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Helpers\RoleHelper;
+use App\Helpers\SettingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\FinancialYear;
 use App\Models\Member;
@@ -149,7 +150,7 @@ class DashboardController extends Controller implements HasMiddleware
         $quickStats = [
             ['label' => 'Total Members', 'value' => number_format($memberStats['total']), 'icon' => 'users', 'color' => 'blue'],
             ['label' => 'This Period Attendance', 'value' => number_format($attendanceStats['total_attendance']), 'icon' => 'calendar', 'color' => 'green'],
-            ['label' => 'Total Income', 'value' => 'GH₵ ' . number_format($financeStats['total_income'], 2), 'icon' => 'currency', 'color' => 'emerald'],
+            ['label' => 'Total Income', 'value' => SettingHelper::currencySymbol() . ' ' . number_format($financeStats['total_income'], 2), 'icon' => 'currency', 'color' => 'emerald'],
             ['label' => 'Pending Expenses', 'value' => Expense::pending()->count(), 'icon' => 'receipt', 'color' => 'yellow'],
         ];
 

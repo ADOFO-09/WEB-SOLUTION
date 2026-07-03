@@ -6,10 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\Member;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use ZipArchive;
 
-class BiometricController extends Controller
+class BiometricController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:members.edit', only: [
+                'showEnrollment', 'enroll', 'enrolledTemplates', 'allEnrolledTemplates', 'remove',
+            ]),
+            new Middleware('permission:settings.manage', only: ['downloadBridge']),
+        ];
+    }
+
+
     /**
      * Show the biometric enrollment page for a member.
      */

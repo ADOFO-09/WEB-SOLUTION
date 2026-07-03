@@ -7,9 +7,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Pledge;
 use App\Models\PledgePayment;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
-class PledgeController extends Controller
+class PledgeController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return ['auth'];
+    }
+
+
     /**
      * Display member's pledges.
      */

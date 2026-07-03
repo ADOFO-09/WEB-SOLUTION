@@ -257,7 +257,7 @@ class DonationController extends Controller implements HasMiddleware
             $purpose    = $donation->project?->name
                        ?? $donation->incomeCategory?->name
                        ?? 'General Donation';
-            $amount     = 'GH' . "\u{20B5}" . number_format((float) $donation->amount, 2);
+            $amount     = SettingHelper::currencySymbol() . ' ' . number_format((float) $donation->amount, 2);
             $receiptNo  = $donation->receipt_number;
 
             $template = SmsTemplate::where('slug', 'donation-confirmation')->where('is_active', true)->first();

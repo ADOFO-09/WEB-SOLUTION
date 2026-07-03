@@ -9,6 +9,8 @@ use App\Models\Ministry;
 use App\Models\AttendanceSession;
 use App\Models\AttendanceRecord;
 use App\Models\SmsMessage;
+use App\Models\Setting;
+use App\Services\GiantSmsService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\SettingHelper;
@@ -290,9 +292,9 @@ class MinistryDashboardController extends Controller
         }
 
         $validated = $request->validate([
-            'message' => 'required|string|max:160',
-            'recipient_ids' => 'nullable|array',
-            'recipient_ids.*' => 'exists:members,id',
+            'message'           => 'required|string|max:160',
+            'recipient_ids'     => 'nullable|array',
+            'recipient_ids.*'   => 'exists:members,id',
         ]);
 
         $recipients = !empty($validated['recipient_ids'])
@@ -300,17 +302,91 @@ class MinistryDashboardController extends Controller
                 ->whereNotNull('phone_primary')
                 ->get()
             : $this->getMinistryMembers($ministry->id)
-                ->whereNotNull('phone_primary');
+                ->filter(fn($m) => !empty($m->phone_primary))
+                ->values();
 
-        SmsMessage::create([
-            'message'         => $validated['message'],
-            'recipient_type'  => 'ministry',
-            'recipient_count' => $recipients->count(),
-            'status'          => 'sent',
-            'created_by'      => auth()->id(),
-            'sent_at'         => now(),
+        if ($recipients->isEmpty()) {
+            return back()->with('error', 'No members with phone numbers found.');
+        }
+
+        // Create the message record and all recipient rows atomically
+        $smsMessage = DB::transaction(function () use ($validated, $recipients, $ministry) {
+            $msg = SmsMessage::create([
+                'message_type'    => 'bulk',
+                'category'        => 'general',
+                'subject'         => $ministry->name . ' Ministry Message',
+                'message_content' => $validated['message'],
+                'status'          => 'draft',
+                'sent_by'         => auth()->id(),
+            ]);
+            foreach ($recipients as $member) {
+                $msg->recipients()->create([
+                    'member_id'      => $member->id,
+                    'phone_number'   => $member->phone_primary,
+                    'recipient_name' => $member->full_name,
+                    'status'         => 'pending',
+                ]);
+            }
+            $msg->update(['recipient_count' => $msg->recipients()->count()]);
+            return $msg;
+        });
+
+        // Send via GiantSMS if configured, otherwise mark as logically sent
+        $smsMessage->update(['status' => 'sending', 'sent_at' => now()]);
+
+        $successCount = 0;
+        $failCount    = 0;
+        $provider     = Setting::get('sms_provider', '');
+        $smsService   = $provider === 'giantsms' ? new GiantSmsService() : null;
+
+        foreach ($smsMessage->recipients()->where('status', 'pending')->get() as $recipient) {
+            try {
+                if ($smsService) {
+                    $result = $smsService->send($recipient->phone_number, $validated['message']);
+                    $recipient->update([
+                        'status'             => 'sent',
+                        'resolved_message'   => $validated['message'],
+                        'sent_at'            => now(),
+                        'gateway_message_id' => $result['message_id'] ?? null,
+                    ]);
+                } else {
+                    $recipient->update([
+                        'status'           => 'sent',
+                        'resolved_message' => $validated['message'],
+                        'sent_at'          => now(),
+                    ]);
+                }
+                $successCount++;
+            } catch (\Throwable $e) {
+                $recipient->update([
+                    'status'        => 'failed',
+                    'error_message' => $e->getMessage(),
+                ]);
+                $failCount++;
+            }
+        }
+
+        $finalStatus = match(true) {
+            $failCount === 0                    => 'sent',
+            $successCount === 0                 => 'failed',
+            default                             => 'partially_sent',
+        };
+
+        $smsMessage->update([
+            'successful_count' => $successCount,
+            'failed_count'     => $failCount,
+            'status'           => $finalStatus,
         ]);
 
-        return back()->with('success', 'SMS sent to '.$recipients->count().' members.');
+        if ($successCount === 0) {
+            return back()->with('error', 'SMS sending failed for all recipients. Please check SMS configuration.');
+        }
+
+        $msg = "SMS sent to {$successCount} of {$smsMessage->recipient_count} members.";
+        if ($failCount > 0) {
+            $msg .= " {$failCount} failed.";
+        }
+
+        return back()->with('success', $msg);
     }
 }
