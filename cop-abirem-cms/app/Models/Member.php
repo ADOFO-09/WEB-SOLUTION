@@ -53,6 +53,10 @@ class Member extends Model
         'notes',
         'created_by',
         'updated_by',
+        'welfare_enrolled',
+        'welfare_start_date',
+        'funeral_enrolled',
+        'funeral_start_date',
     ];
 
     protected $casts = [
@@ -64,6 +68,10 @@ class Member extends Model
         'biometric_enrolled_at'  => 'datetime',
         'fingerprint_template_1' => 'encrypted',
         'fingerprint_template_2' => 'encrypted',
+        'welfare_enrolled'       => 'boolean',
+        'welfare_start_date'     => 'date',
+        'funeral_enrolled'       => 'boolean',
+        'funeral_start_date'     => 'date',
     ];
 
     protected $appends = ['full_name', 'age'];
@@ -176,6 +184,26 @@ class Member extends Model
     public function referredVisitors(): HasMany
     {
         return $this->hasMany(Visitor::class, 'referred_by_member_id');
+    }
+
+    public function welfareContributions(): HasMany
+    {
+        return $this->hasMany(WelfareContribution::class);
+    }
+
+    public function funeralContributions(): HasMany
+    {
+        return $this->hasMany(FuneralContribution::class);
+    }
+
+    public function welfareBenefits(): HasMany
+    {
+        return $this->hasMany(WelfareBenefit::class);
+    }
+
+    public function funeralBenefits(): HasMany
+    {
+        return $this->hasMany(FuneralBenefit::class);
     }
 
     // ==========================================

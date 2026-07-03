@@ -169,6 +169,22 @@ class PermissionSeeder extends Seeder
             ['name' => 'View Own Contributions (Portal)', 'slug' => 'portal.contributions.view', 'module' => 'portal', 'description' => 'View own contribution history via portal'],
             ['name' => 'Download Statements', 'slug' => 'portal.statements.download', 'module' => 'portal', 'description' => 'Download contribution statements'],
             ['name' => 'View Own Attendance (Portal)', 'slug' => 'portal.attendance.view', 'module' => 'portal', 'description' => 'View own attendance history via portal'],
+
+            // Finance - Welfare
+            ['name' => 'View Welfare', 'slug' => 'welfare.view', 'module' => 'finance', 'description' => 'View welfare contributions and benefits'],
+            ['name' => 'Create Welfare Contributions', 'slug' => 'welfare.create', 'module' => 'finance', 'description' => 'Record welfare contributions'],
+            ['name' => 'Edit Welfare Contributions', 'slug' => 'welfare.edit', 'module' => 'finance', 'description' => 'Edit welfare contributions'],
+            ['name' => 'Delete Welfare Contributions', 'slug' => 'welfare.delete', 'module' => 'finance', 'description' => 'Delete welfare contributions'],
+            ['name' => 'Manage Welfare Benefits', 'slug' => 'welfare.benefits.manage', 'module' => 'finance', 'description' => 'Record and manage welfare benefit payments'],
+            ['name' => 'Manage Welfare Rates', 'slug' => 'welfare.rates.manage', 'module' => 'finance', 'description' => 'Add new welfare due rate effective dates'],
+
+            // Finance - Funeral
+            ['name' => 'View Funeral Dues', 'slug' => 'funeral.view', 'module' => 'finance', 'description' => 'View funeral dues contributions and benefits'],
+            ['name' => 'Create Funeral Contributions', 'slug' => 'funeral.create', 'module' => 'finance', 'description' => 'Record funeral due contributions'],
+            ['name' => 'Edit Funeral Contributions', 'slug' => 'funeral.edit', 'module' => 'finance', 'description' => 'Edit funeral contributions'],
+            ['name' => 'Delete Funeral Contributions', 'slug' => 'funeral.delete', 'module' => 'finance', 'description' => 'Delete funeral contributions'],
+            ['name' => 'Manage Funeral Benefits', 'slug' => 'funeral.benefits.manage', 'module' => 'finance', 'description' => 'Record and manage funeral benefit payments'],
+            ['name' => 'Manage Funeral Rates', 'slug' => 'funeral.rates.manage', 'module' => 'finance', 'description' => 'Add new funeral due rate effective dates'],
         ];
 
         foreach ($permissions as &$permission) {
