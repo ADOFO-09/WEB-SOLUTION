@@ -13,8 +13,33 @@ return new class extends Migration
             'UPDATE ministries SET leader_id = NULL WHERE leader_id IS NOT NULL AND leader_id NOT IN (SELECT id FROM members)'
         );
 
-        Schema::table('ministries', function (Blueprint $table) {
-            $table->index('leader_id');
+        // Idempotent: skip if FK was already applied (prevents errno 121 on re-run)
+        $fkExists = \Illuminate\Support\Facades\DB::select("
+            SELECT CONSTRAINT_NAME
+            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME   = 'ministries'
+              AND CONSTRAINT_NAME = 'ministries_leader_id_foreign'
+              AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+        ");
+
+        if (!empty($fkExists)) {
+            return;
+        }
+
+        $indexExists = \Illuminate\Support\Facades\DB::select("
+            SELECT INDEX_NAME
+            FROM INFORMATION_SCHEMA.STATISTICS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME  = 'ministries'
+              AND INDEX_NAME  = 'ministries_leader_id_index'
+            LIMIT 1
+        ");
+
+        Schema::table('ministries', function (Blueprint $table) use ($indexExists) {
+            if (empty($indexExists)) {
+                $table->index('leader_id');
+            }
             $table->foreign('leader_id')
                   ->references('id')
                   ->on('members')

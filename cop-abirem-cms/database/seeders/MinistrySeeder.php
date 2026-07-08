@@ -11,7 +11,7 @@ class MinistrySeeder extends Seeder
     {
         $ministries = [
             ['name' => "Men's Ministry (Deacons)", 'slug' => 'mens-ministry', 'description' => 'Ministry for adult male members', 'meeting_day' => 'Saturday', 'meeting_time' => '07:00:00'],
-            ['name' => "Women's Ministry (Deaconesses)", 'slug' => 'womens-ministry', 'description' => 'Ministry for adult female members', 'meeting_day' => 'Saturday', 'meeting_time' => '07:00:00'],
+            ['name' => "Women's Ministry", 'slug' => 'womens-ministry', 'description' => 'Ministry for adult female members', 'meeting_day' => 'Saturday', 'meeting_time' => '07:00:00'],
             ['name' => 'Youth Ministry (PENSA/Youth)', 'slug' => 'youth-ministry', 'description' => 'Ministry for young adults and students', 'meeting_day' => 'Saturday', 'meeting_time' => '15:00:00'],
             ['name' => "Children's Ministry", 'slug' => 'childrens-ministry', 'description' => 'Ministry for children', 'meeting_day' => 'Sunday', 'meeting_time' => '08:00:00'],
             ['name' => 'Choir/Music Ministry', 'slug' => 'choir-ministry', 'description' => 'Ministry for worship and music', 'meeting_day' => 'Friday', 'meeting_time' => '18:00:00'],

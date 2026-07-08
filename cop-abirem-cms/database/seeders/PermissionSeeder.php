@@ -149,6 +149,13 @@ class PermissionSeeder extends Seeder
             ['name' => 'Delete Ministries', 'slug' => 'ministries.delete', 'module' => 'ministries', 'description' => 'Delete ministry groups'],
             ['name' => 'Manage Ministries', 'slug' => 'ministries.manage', 'module' => 'ministries', 'description' => 'Create, edit, delete ministry groups'],
 
+            // Ministry Sub-Groups
+            ['name' => 'View Ministry Groups', 'slug' => 'ministry.groups.view', 'module' => 'ministries', 'description' => 'View sub-groups of a ministry'],
+            ['name' => 'Create Ministry Groups', 'slug' => 'ministry.groups.create', 'module' => 'ministries', 'description' => 'Create sub-groups within a ministry'],
+            ['name' => 'Edit Ministry Groups', 'slug' => 'ministry.groups.edit', 'module' => 'ministries', 'description' => 'Edit and deactivate ministry sub-groups'],
+            ['name' => 'Delete Ministry Groups', 'slug' => 'ministry.groups.delete', 'module' => 'ministries', 'description' => 'Delete ministry sub-groups'],
+            ['name' => 'Assign Members to Groups', 'slug' => 'ministry.groups.assign', 'module' => 'ministries', 'description' => 'Assign ministry members to sub-groups'],
+
             // Ministry Leader — own ministry only
             ['name' => 'View Own Ministry', 'slug' => 'ministry.own.view', 'module' => 'ministries', 'description' => 'View own ministry details'],
             ['name' => 'Own Ministry Attendance', 'slug' => 'ministry.own.attendance', 'module' => 'ministries', 'description' => 'Mark attendance for own ministry'],

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\VisitorController;
 use App\Http\Controllers\Admin\MinistryController;
+use App\Http\Controllers\Admin\MinistryGroupController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\BiometricController;
 use Illuminate\Support\Facades\Route;
@@ -89,5 +90,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::get('/{ministry}/members', [MinistryController::class, 'members'])->name('members');
         Route::post('/{ministry}/members', [MinistryController::class, 'members'])->name('members.add');
         Route::delete('/{ministry}/members', [MinistryController::class, 'members'])->name('members.remove');
+
+        // ---- Sub-Groups (declare fixed-segment routes before wildcard {group}) ----
+        Route::prefix('/{ministry}/groups')->name('groups.')->group(function () {
+            Route::get('/assign', [MinistryGroupController::class, 'assign'])->name('assign');
+            Route::post('/assign', [MinistryGroupController::class, 'saveAssignments'])->name('assign.save');
+            Route::get('/create', [MinistryGroupController::class, 'create'])->name('create');
+            Route::post('/', [MinistryGroupController::class, 'store'])->name('store');
+            Route::get('/', [MinistryGroupController::class, 'index'])->name('index');
+            Route::get('/{group}/edit', [MinistryGroupController::class, 'edit'])->name('edit');
+            Route::put('/{group}', [MinistryGroupController::class, 'update'])->name('update');
+            Route::delete('/{group}', [MinistryGroupController::class, 'destroy'])->name('destroy');
+            Route::get('/{group}/report', [MinistryGroupController::class, 'report'])->name('report');
+            Route::get('/{group}/export', [MinistryGroupController::class, 'export'])->name('export');
+        });
     });
 });

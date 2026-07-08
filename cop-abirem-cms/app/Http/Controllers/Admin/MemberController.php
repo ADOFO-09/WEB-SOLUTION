@@ -190,7 +190,7 @@ class MemberController extends Controller implements HasMiddleware
 
             $member = Member::create($validated);
 
-            // Assign ministries
+            // Assign ministries selected in form
             if (!empty($validated['ministries'])) {
                 foreach ($validated['ministries'] as $ministryId) {
                     $member->ministries()->attach($ministryId, [
@@ -200,6 +200,9 @@ class MemberController extends Controller implements HasMiddleware
                     ]);
                 }
             }
+
+            // Auto-enroll in gender-matched base ministry (Men's/Women's) by type column
+            $this->autoAssignGenderMinistry($member);
 
             // Generate QR Code
             $this->generateQrCode($member);
@@ -310,17 +313,32 @@ class MemberController extends Controller implements HasMiddleware
             }
 
             $validated['updated_by'] = auth()->id();
-            
+
+            $oldGender = $member->gender;
             $member->update($validated);
+
+            // If gender changed, swap gender-based ministry enrollment
+            if (isset($validated['gender']) && $validated['gender'] !== $oldGender) {
+                $this->syncGenderMinistry($member, $oldGender);
+            }
 
             // Update ministry assignments
             if (isset($validated['ministries'])) {
+                // Gender ministries are managed automatically — exclude from manual add/remove
+                $genderMinistryIds = Ministry::whereIn('type', ['men', 'women'])
+                    ->where('is_active', true)
+                    ->pluck('id')
+                    ->toArray();
+
                 // Get current active ministries
                 $currentMinistries = $member->activeMinistries->pluck('id')->toArray();
                 $newMinistries = $validated['ministries'];
 
-                // Remove from ministries no longer selected
-                $toRemove = array_diff($currentMinistries, $newMinistries);
+                // Remove from ministries no longer selected (never touch gender ministries)
+                $toRemove = array_diff(
+                    array_diff($currentMinistries, $genderMinistryIds),
+                    $newMinistries
+                );
                 foreach ($toRemove as $ministryId) {
                     $member->ministries()->updateExistingPivot($ministryId, [
                         'is_active' => false,
@@ -561,6 +579,93 @@ class MemberController extends Controller implements HasMiddleware
             ->get();
 
         return view('admin.members.family', compact('member', 'availableMembers'));
+    }
+
+    /**
+     * Find the active ministry whose type matches a gender value.
+     * 'male' → type='men', 'female' → type='women'. Returns null if none found.
+     */
+    private function genderMinistry(string $gender): ?Ministry
+    {
+        $type = match ($gender) {
+            'male'   => 'men',
+            'female' => 'women',
+            default  => null,
+        };
+
+        if (!$type) {
+            return null;
+        }
+
+        return Ministry::where('type', $type)->where('is_active', true)->first();
+    }
+
+    /**
+     * Enroll a new member in their gender-matched ministry.
+     * Skips silently if the ministry doesn't exist or the member is already enrolled
+     * (e.g. the admin also checked it in the creation form).
+     */
+    private function autoAssignGenderMinistry(Member $member): void
+    {
+        $ministry = $this->genderMinistry($member->gender);
+
+        if (!$ministry) {
+            return;
+        }
+
+        $alreadyActive = DB::table('member_ministry')
+            ->where('member_id', $member->id)
+            ->where('ministry_id', $ministry->id)
+            ->where('is_active', true)
+            ->exists();
+
+        if ($alreadyActive) {
+            return;
+        }
+
+        $member->ministries()->attach($ministry->id, [
+            'role'        => 'member',
+            'joined_date' => now()->toDateString(),
+            'is_active'   => true,
+        ]);
+    }
+
+    /**
+     * When a member's gender is corrected, deactivate the old gender ministry
+     * and enroll them in the new one (reactivating a prior row if it exists).
+     */
+    private function syncGenderMinistry(Member $member, string $oldGender): void
+    {
+        $oldMinistry = $this->genderMinistry($oldGender);
+        if ($oldMinistry) {
+            $member->ministries()->updateExistingPivot($oldMinistry->id, [
+                'is_active' => false,
+                'left_date' => now()->toDateString(),
+            ]);
+        }
+
+        $newMinistry = $this->genderMinistry($member->gender);
+        if (!$newMinistry) {
+            return;
+        }
+
+        $existing = DB::table('member_ministry')
+            ->where('member_id', $member->id)
+            ->where('ministry_id', $newMinistry->id)
+            ->first();
+
+        if ($existing) {
+            DB::table('member_ministry')
+                ->where('member_id', $member->id)
+                ->where('ministry_id', $newMinistry->id)
+                ->update(['is_active' => true, 'left_date' => null, 'joined_date' => now()->toDateString()]);
+        } else {
+            $member->ministries()->attach($newMinistry->id, [
+                'role'        => 'member',
+                'joined_date' => now()->toDateString(),
+                'is_active'   => true,
+            ]);
+        }
     }
 
     /**

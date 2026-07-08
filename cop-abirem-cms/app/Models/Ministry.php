@@ -78,13 +78,23 @@ class Ministry extends Model
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(Member::class, 'member_ministry')
-            ->withPivot('role', 'joined_date', 'left_date', 'is_active')
+            ->withPivot('role', 'joined_date', 'left_date', 'is_active', 'ministry_group_id')
             ->withTimestamps();
     }
 
     public function activeMembers(): BelongsToMany
     {
         return $this->members()->wherePivot('is_active', true);
+    }
+
+    public function groups(): HasMany
+    {
+        return $this->hasMany(MinistryGroup::class);
+    }
+
+    public function activeGroups(): HasMany
+    {
+        return $this->groups()->where('is_active', true);
     }
 
     public function assets(): HasMany
@@ -159,5 +169,15 @@ class Ministry extends Model
         return $this->activeMembers()
             ->wherePivotIn('role', ['leader', 'assistant_leader'])
             ->get();
+    }
+
+    public function totalGroupedMembers(): int
+    {
+        return $this->activeMembers()->wherePivotNotNull('ministry_group_id')->count();
+    }
+
+    public function totalUngroupedMembers(): int
+    {
+        return $this->activeMembers()->wherePivotNull('ministry_group_id')->count();
     }
 }

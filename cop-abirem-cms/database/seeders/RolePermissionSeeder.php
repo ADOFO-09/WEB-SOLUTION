@@ -80,6 +80,8 @@ class RolePermissionSeeder extends Seeder
 
             // Ministries — full CRUD
             'ministries.view', 'ministries.create', 'ministries.edit', 'ministries.delete',
+            'ministry.groups.view', 'ministry.groups.create', 'ministry.groups.edit',
+            'ministry.groups.delete', 'ministry.groups.assign',
 
             // Reports — full
             'reports.view', 'reports.generate', 'reports.export',
@@ -121,6 +123,8 @@ class RolePermissionSeeder extends Seeder
 
             // Ministries — create & edit, no delete
             'ministries.view', 'ministries.create', 'ministries.edit',
+            'ministry.groups.view', 'ministry.groups.create', 'ministry.groups.edit',
+            'ministry.groups.delete', 'ministry.groups.assign',
 
             // Reports — membership & attendance
             'reports.view', 'reports.generate', 'reports.export',
@@ -192,6 +196,9 @@ class RolePermissionSeeder extends Seeder
             // Own ministry only
             'ministry.own.view', 'ministry.own.attendance',
             'ministry.own.members', 'ministry.own.sms', 'ministry.own.reports',
+            // Sub-group management for own ministry (ownership enforced in controller)
+            'ministry.groups.view', 'ministry.groups.create', 'ministry.groups.edit',
+            'ministry.groups.delete', 'ministry.groups.assign',
 
             // Legacy compatibility
             'attendance.view', 'attendance.ministry_only',

@@ -240,16 +240,22 @@
             <!-- Ministries -->
             <div class="mt-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Assign to Ministries</label>
+                <p class="text-xs text-gray-400 mb-2">The Men's or Women's ministry is auto-managed based on gender.</p>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     @php
                         $memberMinistryIds = old('ministries', $member->activeMinistries->pluck('id')->toArray());
                     @endphp
                     @foreach($ministries as $ministry)
+                    @php $isGenderMinistry = in_array($ministry->type, ['men', 'women']); @endphp
                     <label class="inline-flex items-center">
                         <input type="checkbox" name="ministries[]" value="{{ $ministry->id }}"
                                {{ in_array($ministry->id, $memberMinistryIds) ? 'checked' : '' }}
+                               @if($isGenderMinistry) data-gender-type="{{ $ministry->type }}" @endif
                                class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <span class="ml-2 text-sm text-gray-700">{{ $ministry->name }}</span>
+                        @if($isGenderMinistry)
+                        <span class="ml-1 text-xs text-indigo-500 font-medium gender-auto-badge hidden">(auto)</span>
+                        @endif
                     </label>
                     @endforeach
                 </div>
@@ -395,6 +401,35 @@ function previewImage(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+// ── Gender ministry auto-management ──────────────────────────────────────────
+(function () {
+    const genderSelect = document.getElementById('gender');
+    if (!genderSelect) return;
+
+    function syncGenderMinistries() {
+        const gender = genderSelect.value;
+        const targetType = gender === 'male' ? 'men' : (gender === 'female' ? 'women' : null);
+
+        document.querySelectorAll('[data-gender-type]').forEach(function (cb) {
+            const type = cb.dataset.genderType;
+            const badge = cb.closest('label').querySelector('.gender-auto-badge');
+
+            if (type === targetType) {
+                cb.checked  = true;
+                cb.disabled = true;
+                if (badge) badge.classList.remove('hidden');
+            } else {
+                cb.checked  = false;
+                cb.disabled = true;
+                if (badge) badge.classList.add('hidden');
+            }
+        });
+    }
+
+    genderSelect.addEventListener('change', syncGenderMinistries);
+    syncGenderMinistries(); // apply on page load
+}());
 </script>
 @endpush
 @endsection

@@ -137,13 +137,27 @@ class Member extends Model
     public function ministries(): BelongsToMany
     {
         return $this->belongsToMany(Ministry::class, 'member_ministry')
-            ->withPivot('role', 'joined_date', 'left_date', 'is_active')
+            ->withPivot('role', 'joined_date', 'left_date', 'is_active', 'ministry_group_id')
             ->withTimestamps();
     }
 
     public function activeMinistries(): BelongsToMany
     {
         return $this->ministries()->wherePivot('is_active', true);
+    }
+
+    public function ministryGroup(int $ministryId): ?MinistryGroup
+    {
+        $pivot = $this->ministries()
+            ->wherePivot('ministry_id', $ministryId)
+            ->wherePivot('is_active', true)
+            ->first();
+
+        if (!$pivot || !$pivot->pivot->ministry_group_id) {
+            return null;
+        }
+
+        return MinistryGroup::find($pivot->pivot->ministry_group_id);
     }
 
     public function familyRelationships(): HasMany

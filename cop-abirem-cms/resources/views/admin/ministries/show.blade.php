@@ -15,8 +15,17 @@
                 {{ $ministry->is_active ? 'Active' : 'Inactive' }}
             </span>
         </div>
-        <div class="mt-4 sm:mt-0 flex space-x-3">
-            <a href="{{ route('admin.ministries.members', $ministry) }}" 
+        <div class="mt-4 sm:mt-0 flex flex-wrap gap-2">
+            @can('ministry.groups.view')
+            <a href="{{ route('admin.ministries.groups.index', $ministry) }}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+                Sub-Groups
+            </a>
+            @endcan
+            <a href="{{ route('admin.ministries.members', $ministry) }}"
                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -92,6 +101,36 @@
             </div>
         </div>
         @endif
+
+        {{-- Sub-Groups summary card --}}
+        @can('ministry.groups.view')
+        @php $subGroups = $ministry->activeGroups()->withCount('members')->orderBy('name')->get(); @endphp
+        @if($subGroups->count() > 0)
+        <div class="bg-white rounded-lg shadow p-5">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Sub-Groups</h3>
+                <a href="{{ route('admin.ministries.groups.index', $ministry) }}"
+                   class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Manage</a>
+            </div>
+            <div class="space-y-2">
+                @foreach($subGroups as $sg)
+                <a href="{{ route('admin.ministries.groups.report', [$ministry, $sg]) }}"
+                   class="flex items-center justify-between rounded px-2 py-1.5 hover:bg-indigo-50 transition-colors">
+                    <span class="text-sm text-gray-700">{{ $sg->name }}</span>
+                    <span class="text-sm font-bold text-indigo-600">{{ $sg->members_count }}</span>
+                </a>
+                @endforeach
+                @php $ungrouped = $ministry->totalUngroupedMembers(); @endphp
+                @if($ungrouped > 0)
+                <div class="flex items-center justify-between px-2 py-1.5">
+                    <span class="text-sm text-gray-400 italic">Unassigned</span>
+                    <span class="text-sm font-bold text-amber-600">{{ $ungrouped }}</span>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
+        @endcan
     </div>
 
     <!-- Members List -->
