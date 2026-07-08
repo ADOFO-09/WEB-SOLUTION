@@ -87,7 +87,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::put('/{ministry}', [MinistryController::class, 'update'])->name('update');
         Route::delete('/{ministry}', [MinistryController::class, 'destroy'])->name('destroy');
         Route::get('/{ministry}/members', [MinistryController::class, 'members'])->name('members');
-        Route::post('/{ministry}/members', [MinistryController::class, 'addMember'])->name('members.add');
-        Route::delete('/{ministry}/members/{member}', [MinistryController::class, 'removeMember'])->name('members.remove');
+        Route::post('/{ministry}/members', [MinistryController::class, 'members'])->name('members.add');
+        Route::delete('/{ministry}/members', [MinistryController::class, 'members'])->name('members.remove');
     });
 });

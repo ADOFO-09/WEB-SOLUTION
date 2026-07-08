@@ -76,7 +76,6 @@ class MinistryController extends Controller implements HasMiddleware
             'is_active' => 'boolean',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']);
         $validated['is_active'] = $request->has('is_active');
 
         $ministry = Ministry::create($validated);
@@ -108,7 +107,7 @@ class MinistryController extends Controller implements HasMiddleware
     public function edit(Ministry $ministry)
     {
         $members = Member::active()->orderBy('first_name')->get();
-        return view('admin.ministries.edit', compact('ministry', 'members'));
+        return view('admin.ministries.create', compact('ministry', 'members'));
     }
 
     /**
