@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
+use App\Models\MinistryGroup;
 use App\Models\Tithe;
 use App\Models\Offering;
 use App\Models\Donation;
@@ -26,6 +27,14 @@ class PortalController extends Controller implements HasMiddleware
     public function dashboard(Request $request)
     {
         $member = $request->user()->member;
+        $member->load('activeMinistries');
+
+        // Batch-load sub-groups in one query
+        $groupIds = $member->activeMinistries->pluck('pivot.ministry_group_id')->filter()->unique();
+        $subGroups = $groupIds->isNotEmpty()
+            ? MinistryGroup::whereIn('id', $groupIds)->get()->keyBy('id')
+            : collect();
+
         $currentYear = now()->year;
         
         // Giving Summary
@@ -110,6 +119,7 @@ class PortalController extends Controller implements HasMiddleware
         
         return view('member.dashboard', compact(
             'member',
+            'subGroups',
             'givingSummary',
             'pledgeSummary',
             'attendanceCount',

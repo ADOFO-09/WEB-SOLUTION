@@ -162,6 +162,38 @@
     </div>
 </div>
 
+<!-- Ministries & Sub-Groups -->
+@if($member->activeMinistries->count() > 0)
+<div class="mt-6 bg-white rounded-xl shadow-sm p-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">My Ministries</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        @foreach($member->activeMinistries as $ministry)
+        @php $group = $subGroups[$ministry->pivot->ministry_group_id] ?? null; @endphp
+        <div class="flex items-start gap-3 p-4 rounded-lg border border-gray-100 bg-gray-50">
+            <div class="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </div>
+            <div class="min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">{{ $ministry->name }}</p>
+                @if($group)
+                <p class="mt-0.5 text-xs text-indigo-600 font-medium flex items-center gap-1">
+                    <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    {{ $group->name }}
+                </p>
+                @else
+                <p class="mt-0.5 text-xs text-gray-400">No sub-group</p>
+                @endif
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>

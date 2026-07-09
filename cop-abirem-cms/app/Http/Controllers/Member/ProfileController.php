@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Models\Member;
+use App\Models\MinistryGroup;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Hash;
@@ -24,9 +25,15 @@ class ProfileController extends Controller implements HasMiddleware
     public function show(Request $request)
     {
         $member = $request->user()->member;
-        $member->load('ministries');
-        
-        return view('member.profile.show', compact('member'));
+        $member->load('activeMinistries');
+
+        // Batch-load sub-groups in one query to avoid N+1
+        $groupIds = $member->activeMinistries->pluck('pivot.ministry_group_id')->filter()->unique();
+        $subGroups = $groupIds->isNotEmpty()
+            ? MinistryGroup::whereIn('id', $groupIds)->get()->keyBy('id')
+            : collect();
+
+        return view('member.profile.show', compact('member', 'subGroups'));
     }
     
     /**
