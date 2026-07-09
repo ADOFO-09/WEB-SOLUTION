@@ -5,13 +5,16 @@ use App\Http\Middleware\MemberAccess;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\SecurityHeaders;
+use App\Helpers\RoleHelper;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Session\TokenMismatchException;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -44,5 +47,26 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->renderable(function (TokenMismatchException $_e, $_request) {
             return redirect()->route('login')
                 ->with('error', 'Your session has expired. Please sign in again.');
+        });
+
+        // Redirect permission-denied (403) to the user's own dashboard instead of an error page
+        $redirect403 = function (\Illuminate\Http\Request $request, string $message = '') {
+            if ($request->expectsJson()) {
+                return null; // let the default JSON 403 response through for API/AJAX
+            }
+            $user  = auth()->user();
+            $route = $user ? RoleHelper::getDashboardRoute($user) : 'login';
+            $msg   = $message ?: 'You do not have permission to access that page.';
+            return redirect()->route($route)->with('error', $msg);
+        };
+
+        $exceptions->renderable(function (HttpException $e, \Illuminate\Http\Request $request) use ($redirect403) {
+            if ($e->getStatusCode() === 403) {
+                return $redirect403($request, $e->getMessage());
+            }
+        });
+
+        $exceptions->renderable(function (UnauthorizedException $e, \Illuminate\Http\Request $request) use ($redirect403) {
+            return $redirect403($request, 'You do not have permission to access that page.');
         });
     })->create();
