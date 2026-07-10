@@ -416,6 +416,7 @@ class AttendanceController extends Controller implements HasMiddleware
             'member_id' => $validated['member_id'],
             'check_in_time' => now(),
             'attendance_method' => 'manual',
+            'is_late' => $session->isLateCheckIn(),
             'marked_by' => auth()->id(),
         ]);
 
@@ -435,7 +436,7 @@ class AttendanceController extends Controller implements HasMiddleware
                 'name' => $member->full_name,
                 'type' => 'member',
                 'check_in_time' => $record->check_in_time->format('g:i A'),
-                'is_late' => false,
+                'is_late' => $record->is_late,
             ],
             'totals' => [
                 'total' => $totalMembers + $totalVisitors,
@@ -469,6 +470,7 @@ class AttendanceController extends Controller implements HasMiddleware
             'visitor_id' => $validated['visitor_id'],
             'check_in_time' => now(),
             'attendance_method' => 'manual',
+            'is_late' => $session->isLateCheckIn(),
             'marked_by' => auth()->id(),
         ]);
 
@@ -488,7 +490,7 @@ class AttendanceController extends Controller implements HasMiddleware
                 'name' => "{$visitor->first_name} {$visitor->last_name}",
                 'type' => 'visitor',
                 'check_in_time' => $record->check_in_time->format('g:i A'),
-                'is_late' => false,
+                'is_late' => $record->is_late,
             ],
             'totals' => [
                 'total' => $totalMembers + $totalVisitors,

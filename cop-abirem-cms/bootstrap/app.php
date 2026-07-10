@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminAccess;
+use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\EnsureTwoFactorVerified;
 use App\Http\Middleware\MemberAccess;
 use App\Http\Middleware\CheckRole;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
             SecurityHeaders::class,
+            CheckMaintenanceMode::class,
         ]);
 
         $middleware->alias([

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Setting;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -28,8 +29,9 @@ class CheckMaintenanceMode
 
         if ($maintenanceMode == '1') {
             // Allow admins to bypass maintenance mode
-            if (auth()->check() && auth()->user()->isAdmin()) {
-                // Show a notice to admins that site is in maintenance mode
+            /** @var \App\Models\User|null $user */
+            $user = Auth::user();
+            if ($user && $user->isAdmin()) {
                 session()->flash('maintenance_notice', 'The site is currently in maintenance mode. Only administrators can access the system.');
                 return $next($request);
             }
@@ -39,6 +41,13 @@ class CheckMaintenanceMode
                 if ($request->is($pattern)) {
                     return $next($request);
                 }
+            }
+
+            // Log out any authenticated non-admin so "Login here" works on the maintenance page
+            if (Auth::check()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
             }
 
             // Return maintenance page for everyone else
