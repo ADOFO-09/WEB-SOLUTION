@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\SmsPasswordResetController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,16 @@ Route::middleware('guest')->group(function () {
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store');
+
+    // SMS OTP password reset
+    Route::get('forgot-password/sms', [SmsPasswordResetController::class, 'create'])
+        ->name('password.sms.request');
+    Route::post('forgot-password/sms', [SmsPasswordResetController::class, 'store'])
+        ->name('password.sms.send');
+    Route::get('forgot-password/sms/verify', [SmsPasswordResetController::class, 'showVerify'])
+        ->name('password.sms.verify');
+    Route::post('forgot-password/sms/verify', [SmsPasswordResetController::class, 'verify'])
+        ->name('password.sms.verify.store');
 });
 
 Route::middleware('auth')->group(function () {

@@ -333,6 +333,17 @@
                 </button>
             </form>
 
+            <div style="text-align:center;margin-bottom:1.25rem;">
+                <a href="{{ route('password.sms.request') }}"
+                   style="display:inline-flex;align-items:center;gap:.5rem;font-size:.9rem;font-weight:500;color:var(--primary);text-decoration:none;padding:.6rem 1.2rem;border:1.5px solid rgba(30,58,95,.2);border-radius:10px;transition:all .25s ease;"
+                   onmouseover="this.style.background='rgba(30,58,95,.05)'" onmouseout="this.style.background='transparent'">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" width="17" height="17" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18h3"/>
+                    </svg>
+                    Reset via SMS instead
+                </a>
+            </div>
+
             <div class="back-link">
                 <a href="{{ route('login') }}">
                     <svg fill="none" stroke-width="2" viewBox="0 0 24 24">
