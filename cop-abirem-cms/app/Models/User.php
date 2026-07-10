@@ -27,6 +27,7 @@ class User extends Authenticatable
         'is_active',
         'last_login_at',
         'last_login_ip',
+        'has_completed_tour',
         // must_change_password intentionally excluded — set only via explicit assignment
     ];
 
@@ -48,12 +49,13 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_active' => 'boolean',
-            'must_change_password' => 'boolean',
-            'last_login_at' => 'datetime',
-            'locked_until' => 'datetime',
+            'email_verified_at'   => 'datetime',
+            'password'            => 'hashed',
+            'is_active'           => 'boolean',
+            'must_change_password'=> 'boolean',
+            'has_completed_tour'  => 'boolean',
+            'last_login_at'       => 'datetime',
+            'locked_until'        => 'datetime',
         ];
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\SettingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceSession;
 use App\Models\AttendanceRecord;
@@ -98,6 +99,10 @@ class BiometricAttendanceController extends Controller
             'session_id' => 'required|exists:attendance_sessions,id',
             'member_id'  => 'required|exists:members,id',
         ]);
+
+        if (!SettingHelper::attendanceBiometricEnabled()) {
+            return response()->json(['success' => false, 'message' => 'Biometric attendance is disabled.'], 403);
+        }
 
         $session = AttendanceSession::findOrFail($request->session_id);
         $member  = Member::findOrFail($request->member_id);

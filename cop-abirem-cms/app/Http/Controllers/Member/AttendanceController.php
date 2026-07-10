@@ -172,6 +172,10 @@ class AttendanceController extends Controller implements HasMiddleware
             return back()->with('error', 'No member profile found.');
         }
 
+        if (!SettingHelper::attendanceQrEnabled()) {
+            return back()->with('error', 'QR check-in is currently disabled.');
+        }
+
         $session = AttendanceSession::findOrFail($validated['session_id']);
 
         if (!$session->isQrValid()) {

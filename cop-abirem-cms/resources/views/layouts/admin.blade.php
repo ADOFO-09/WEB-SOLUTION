@@ -68,5 +68,6 @@
 
     @stack('scripts')
     @include('partials.unsaved-changes')
+    @include('partials.tour')
 </body>
 </html>

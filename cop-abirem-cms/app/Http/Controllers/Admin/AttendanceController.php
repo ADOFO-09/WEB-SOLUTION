@@ -401,6 +401,10 @@ class AttendanceController extends Controller implements HasMiddleware
             return response()->json(['success' => false, 'message' => 'Session is closed.'], 400);
         }
 
+        if (!SettingHelper::attendanceManualEnabled()) {
+            return response()->json(['success' => false, 'message' => 'Manual attendance is disabled.'], 403);
+        }
+
         $validated = $request->validate([
             'member_id' => 'required|exists:members,id',
         ]);
@@ -453,6 +457,10 @@ class AttendanceController extends Controller implements HasMiddleware
     {
         if ($session->status === 'closed') {
             return response()->json(['success' => false, 'message' => 'Session is closed.'], 400);
+        }
+
+        if (!SettingHelper::attendanceManualEnabled()) {
+            return response()->json(['success' => false, 'message' => 'Manual attendance is disabled.'], 403);
         }
 
         $validated = $request->validate([

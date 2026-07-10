@@ -24,6 +24,16 @@
     <!-- Right: Actions -->
     <div class="flex items-center gap-3">
 
+        <!-- Take a Tour -->
+        <button onclick="window.startGuidedTour && window.startGuidedTour()"
+                title="Take a guided tour"
+                class="hidden sm:flex items-center gap-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-1.5 hover:bg-indigo-100 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+            </svg>
+            Take a Tour
+        </button>
+
         <!-- Current Date Badge -->
         <div class="hidden md:flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5">
             <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -37,6 +47,7 @@
 
             <button
                 @click="open = !open"
+                data-tour="topnav-account"
                 class="flex items-center gap-2.5 pl-2 pr-3 py-2 rounded-xl hover:bg-gray-100 transition-all duration-200"
                 :aria-expanded="open"
                 type="button"

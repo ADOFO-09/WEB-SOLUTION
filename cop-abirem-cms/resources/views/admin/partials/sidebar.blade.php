@@ -73,6 +73,7 @@
         @endphp
         <div class="nav-section">
             <a href="{{ \App\Helpers\RoleHelper::getDashboardUrl(auth()->user()) }}"
+               data-tour="nav-dashboard"
                class="nav-link {{ $dashboardActive ? 'active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
@@ -85,7 +86,7 @@
         @if(auth()->user()->hasPermission('members.view') || auth()->user()->hasPermission('ministries.view') || auth()->user()->hasPermission('visitors.view'))
         @php $peopleOpen = request()->routeIs('admin.members.*') || request()->routeIs('admin.ministries.*') || request()->routeIs('admin.visitors.*'); @endphp
         <div class="nav-section" x-data="{ open: {{ $peopleOpen ? 'true' : 'false' }} }">
-            <button type="button" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
+            <button type="button" data-tour="nav-people" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
                 People
                 <svg class="nav-section-chevron" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -122,7 +123,7 @@
         @if(auth()->user()->hasPermission('attendance.view'))
         @php $attendanceOpen = request()->routeIs('admin.attendance.*') || request()->routeIs('admin.service-types.*'); @endphp
         <div class="nav-section" x-data="{ open: {{ $attendanceOpen ? 'true' : 'false' }} }">
-            <button type="button" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
+            <button type="button" data-tour="nav-attendance" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
                 Attendance
                 <svg class="nav-section-chevron" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -160,7 +161,7 @@
                 || request()->routeIs('admin.funeral.*');
         @endphp
         <div class="nav-section" x-data="{ open: {{ $financeOpen ? 'true' : 'false' }} }">
-            <button type="button" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
+            <button type="button" data-tour="nav-finance" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
                 Finance
                 <svg class="nav-section-chevron" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -315,7 +316,7 @@
         @if(auth()->user()->hasPermission('sms.view'))
         @php $commOpen = request()->routeIs('admin.sms.*'); @endphp
         <div class="nav-section" x-data="{ open: {{ $commOpen ? 'true' : 'false' }} }">
-            <button type="button" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
+            <button type="button" data-tour="nav-communication" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
                 Communication
                 <svg class="nav-section-chevron" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -354,7 +355,7 @@
                 || request()->routeIs('admin.finance.particulars.*');
         @endphp
         <div class="nav-section" x-data="{ open: {{ $reportsOpen ? 'true' : 'false' }} }">
-            <button type="button" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
+            <button type="button" data-tour="nav-reports" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
                 Reports
                 <svg class="nav-section-chevron" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -469,7 +470,7 @@
         @if(auth()->user()->hasPermission('users.view'))
         @php $usersOpen = request()->routeIs('admin.users.*') || request()->routeIs('admin.staff-positions.*'); @endphp
         <div class="nav-section" x-data="{ open: {{ $usersOpen ? 'true' : 'false' }} }">
-            <button type="button" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
+            <button type="button" data-tour="nav-users" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
                 User Management
                 <svg class="nav-section-chevron" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -499,7 +500,7 @@
         @if(auth()->user()->hasPermission('settings.manage'))
         @php $settingsOpen = request()->routeIs('admin.settings.*'); @endphp
         <div class="nav-section" x-data="{ open: {{ $settingsOpen ? 'true' : 'false' }} }">
-            <button type="button" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
+            <button type="button" data-tour="nav-settings" class="nav-section-title nav-section-toggle" :class="{ 'section-open': open }" @click="open = !open">
                 Settings
                 <svg class="nav-section-chevron" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
