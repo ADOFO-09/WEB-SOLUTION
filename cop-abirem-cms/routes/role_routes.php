@@ -15,7 +15,7 @@ use App\Http\Controllers\Admin\StaffHomeController;
 | Middleware 'auth' is applied at the route group level.
 */
 
-Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'two_fa', 'admin.access'])->prefix('admin')->name('admin.')->group(function () {
 
     // ==========================================
     // STAFF HOME (generic permission-aware dashboard)

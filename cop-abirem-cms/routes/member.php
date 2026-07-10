@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth', 'member.access'])->prefix('member')->name('member.')->group(function () {
+Route::middleware(['auth', 'two_fa', 'member.access'])->prefix('member')->name('member.')->group(function () {
     
     // Dashboard
     Route::get('/', [PortalController::class, 'dashboard'])->name('dashboard');

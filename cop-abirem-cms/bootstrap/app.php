@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminAccess;
+use App\Http\Middleware\EnsureTwoFactorVerified;
 use App\Http\Middleware\MemberAccess;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\CheckPermission;
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             // Access guards
             'admin.access'      => AdminAccess::class,
             'member.access'     => MemberAccess::class,
+            'two_fa'            => EnsureTwoFactorVerified::class,
             'role.redirect'     => \App\Http\Middleware\RedirectBasedOnRole::class,
 
             // Role & permission checks (custom)

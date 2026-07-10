@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Helpers\RoleHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\LoginHistory;
+use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Helpers\RoleHelper;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -30,15 +31,23 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
         LoginHistory::create([
-            'user_id'    => auth()->id(),
+            'user_id'    => $user->id,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'status'     => 'success',
         ]);
 
-        // Redirect based on user role
-        return redirect()->intended($this->redirectPathForRole());
+        // If 2FA is enabled, send code and redirect to the challenge page
+        if ((bool)(int) Setting::get('enable_two_factor', 0)) {
+            TwoFactorController::send($request, $user);
+            return redirect()->route('two-factor.challenge');
+        }
+
+        return redirect()->intended(RoleHelper::getDashboardUrl($user));
     }
 
     /**
@@ -60,6 +69,8 @@ class AuthenticatedSessionController extends Controller
      */
     protected function redirectPathForRole(): string
     {
-        return RoleHelper::getDashboardUrl(auth()->user());
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        return RoleHelper::getDashboardUrl($user);
     }
 }
