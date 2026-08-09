@@ -60,6 +60,7 @@
 
         <!-- Content Area -->
         <main class="content-area">
+            @include('admin.partials.new-year-alert')
             @include('admin.partials.alerts')
             @yield('content')
         </main>

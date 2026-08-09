@@ -14,6 +14,19 @@
 @endsection
 
 @section('content')
+@php
+    $suggestedName  = $prefillYear ? 'Financial Year ' . $prefillYear : '';
+    $suggestedStart = $prefillYear ? $prefillYear . '-01-01' : '';
+    $suggestedEnd   = $prefillYear ? $prefillYear . '-12-31' : '';
+@endphp
+
+@if(isset($prefillYear) && $prefillYear)
+<div style="background:#fef3c7;border:1px solid #fcd34d;border-left:4px solid #f59e0b;color:#92400e;padding:0.75rem 1rem;border-radius:8px;font-size:0.85rem;margin-bottom:1.25rem;">
+    <strong>Quick setup for {{ $prefillYear }}:</strong>
+    Dates and name have been pre-filled for the {{ $prefillYear }} calendar year. Adjust them if your financial year runs on a different schedule, then save.
+</div>
+@endif
+
 <div class="max-w-2xl mx-auto">
     <form action="{{ route('admin.finance.years.store') }}" method="POST" class="bg-white shadow rounded-lg">
         @csrf
@@ -23,8 +36,8 @@
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-700">Year Name <span class="text-red-500">*</span></label>
                 <input type="text" name="name" id="name"
-                       value="{{ old('name') }}" required maxlength="50"
-                       placeholder="e.g., Financial Year 2025"
+                       value="{{ old('name', $suggestedName) }}" required maxlength="50"
+                       placeholder="e.g., Financial Year {{ now()->year }}"
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 @error('name')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -35,7 +48,7 @@
                 <div>
                     <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date <span class="text-red-500">*</span></label>
                     <input type="date" name="start_date" id="start_date"
-                           value="{{ old('start_date') }}" required
+                           value="{{ old('start_date', $suggestedStart) }}" required
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     @error('start_date')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -44,7 +57,7 @@
                 <div>
                     <label for="end_date" class="block text-sm font-medium text-gray-700">End Date <span class="text-red-500">*</span></label>
                     <input type="date" name="end_date" id="end_date"
-                           value="{{ old('end_date') }}" required
+                           value="{{ old('end_date', $suggestedEnd) }}" required
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     @error('end_date')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -54,7 +67,7 @@
 
             <div class="flex items-center">
                 <input type="checkbox" name="is_active" id="is_active" value="1"
-                       {{ old('is_active') ? 'checked' : '' }}
+                       {{ old('is_active', $prefillYear ? '1' : '') ? 'checked' : '' }}
                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                 <label for="is_active" class="ml-2 block text-sm text-gray-900">
                     Set as active financial year

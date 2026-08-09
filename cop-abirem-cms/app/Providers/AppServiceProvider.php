@@ -38,13 +38,14 @@ class AppServiceProvider extends ServiceProvider
             } catch (\Exception $e) {}
         }
 
-        // Share financial years with all admin views so year dropdowns stay in sync.
+        // Share financial years and new-year alert flag with all admin views.
         View::composer('admin.*', function ($view) {
             if (!Schema::hasTable('financial_years')) return;
             try {
                 $view->with('financialYears',
                     FinancialYear::orderBy('start_date', 'desc')->get()
                 );
+                $view->with('newYearSetupNeeded', !FinancialYear::coversToday());
             } catch (\Exception $e) {}
         });
 

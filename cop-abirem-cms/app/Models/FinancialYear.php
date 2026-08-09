@@ -77,8 +77,16 @@ class FinancialYear extends Model
 
     public static function current(): ?self
     {
-        return self::active()->first() 
+        return self::active()->first()
             ?? self::open()->orderBy('start_date', 'desc')->first();
+    }
+
+    public static function coversToday(): bool
+    {
+        return self::where('start_date', '<=', today())
+            ->where('end_date', '>=', today())
+            ->where('is_closed', false)
+            ->exists();
     }
 
     public function getTotalTithes(): float

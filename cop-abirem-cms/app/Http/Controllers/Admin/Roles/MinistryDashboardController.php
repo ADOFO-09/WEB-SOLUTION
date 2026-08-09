@@ -67,23 +67,17 @@ class MinistryDashboardController extends Controller
 
     private function getUserMinistry($user)
     {
-        if ($user->ministry_id) {
-            return Ministry::find($user->ministry_id);
+        if (!$user->member_id) {
+            return null;
         }
 
-        if ($user->member_id) {
-            $ministryId = DB::table('member_ministry')
-                ->where('member_id', $user->member_id)
-                ->where('is_active', 1)
-                ->orderByRaw("role = 'leader' DESC")
-                ->value('ministry_id');
+        $ministryId = DB::table('member_ministry')
+            ->where('member_id', $user->member_id)
+            ->where('is_active', 1)
+            ->orderByRaw("role = 'leader' DESC")
+            ->value('ministry_id');
 
-            if ($ministryId) {
-                return Ministry::find($ministryId);
-            }
-        }
-
-        return null;
+        return $ministryId ? Ministry::find($ministryId) : null;
     }
 
     private function getMinistryMembers($ministryId)

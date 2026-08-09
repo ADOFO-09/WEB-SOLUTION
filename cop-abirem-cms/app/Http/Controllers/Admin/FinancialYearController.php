@@ -32,9 +32,13 @@ class FinancialYearController extends Controller implements HasMiddleware
     /**
      * Show the form for creating a new financial year.
      */
-    public function create()
+    public function create(Request $request)
     {
-        return view('admin.finance.financial-years.create');
+        $prefillYear = $request->query('prefill_year')
+            ? max(2000, min(2099, (int) $request->query('prefill_year')))
+            : null;
+
+        return view('admin.finance.financial-years.create', compact('prefillYear'));
     }
 
     /**
