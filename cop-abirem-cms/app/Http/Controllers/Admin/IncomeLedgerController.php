@@ -31,7 +31,7 @@ class IncomeLedgerController extends Controller
             fprintf($fh, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM for Excel
 
             $monthLabel = \Carbon\Carbon::createFromDate($year, $month, 1)->format('F Y');
-            fputcsv($fh, ["COP ABIREM — Income Ledger — {$monthLabel}"]);
+            fputcsv($fh, [\App\Helpers\SettingHelper::churchName() . " — Income Ledger — {$monthLabel}"]);
             fputcsv($fh, []);
 
             fputcsv($fh, ['DATE', 'PARTICULARS', 'TITHE', 'OFFERING', 'DONATION', 'PLEDGE', 'SPECIAL', 'TOTAL']);

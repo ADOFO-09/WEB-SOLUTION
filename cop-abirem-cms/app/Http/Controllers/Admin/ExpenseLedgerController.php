@@ -62,7 +62,7 @@ class ExpenseLedgerController extends Controller
             fprintf($fh, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM for Excel
 
             $monthLabel = \Carbon\Carbon::createFromDate($year, $month, 1)->format('F Y');
-            fputcsv($fh, ["COP ABIREM — Expense Ledger — {$monthLabel}"]);
+            fputcsv($fh, [\App\Helpers\SettingHelper::churchName() . " — Expense Ledger — {$monthLabel}"]);
             fputcsv($fh, []);
 
             fputcsv($fh, array_merge(['DATE', 'PARTICULARS'], $colLabels, ['TOTAL']));

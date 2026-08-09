@@ -220,6 +220,16 @@ class Member extends Model
         return $this->hasMany(FuneralBenefit::class);
     }
 
+    public function ministryWelfareContributions(): HasMany
+    {
+        return $this->hasMany(MinistryWelfareContribution::class);
+    }
+
+    public function ministryWelfareBenefits(): HasMany
+    {
+        return $this->hasMany(MinistryWelfareBenefit::class);
+    }
+
     // ==========================================
     // SCOPES
     // ==========================================

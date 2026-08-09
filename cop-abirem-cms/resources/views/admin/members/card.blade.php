@@ -231,10 +231,9 @@
         <!-- Front of Card -->
         <div class="member-card">
             <div class="card-header">
-                <div class="church-logo">COP</div>
+                <div class="church-logo">{{ \App\Helpers\SettingHelper::churchShortName() }}</div>
                 <div class="church-name">
-                    THE CHURCH OF PENTECOST<br>
-                    ABIREM CENTRAL ASSEMBLY
+                    {{ strtoupper(\App\Helpers\SettingHelper::churchName()) }}
                 </div>
             </div>
 
@@ -282,10 +281,16 @@
             </p>
 
             <div class="contact">
-                <p><strong>The Church of Pentecost</strong></p>
-                <p>Abirem Central Assembly</p>
-                <p>Abirem, Eastern Region, Ghana</p>
-                <p>Email: info@copabirem.org</p>
+                <p><strong>{{ \App\Helpers\SettingHelper::churchName() }}</strong></p>
+                @if(\App\Models\Setting::get('church_address'))
+                <p>{{ \App\Models\Setting::get('church_address') }}</p>
+                @endif
+                @if(\App\Models\Setting::get('church_phone'))
+                <p>Phone: {{ \App\Models\Setting::get('church_phone') }}</p>
+                @endif
+                @if(\App\Models\Setting::get('church_email'))
+                <p>Email: {{ \App\Models\Setting::get('church_email') }}</p>
+                @endif
             </div>
         </div>
 

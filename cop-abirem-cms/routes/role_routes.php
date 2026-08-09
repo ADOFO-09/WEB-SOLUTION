@@ -91,5 +91,9 @@ Route::middleware(['auth', 'two_fa', 'admin.access'])->prefix('admin')->name('ad
 
         // Welfare Fund Summary
         Route::get('/finance/welfare/fund-summary',         [MinistryFinanceController::class, 'welfareFundSummary'])->name('finance.welfare.fund-summary');
+
+        // Welfare Member Records
+        Route::get('/finance/welfare/member-records',       [MinistryFinanceController::class, 'welfareMembers'])->name('finance.welfare.members');
+        Route::get('/finance/welfare/member-records/{memberId}', [MinistryFinanceController::class, 'welfareMemberShow'])->name('finance.welfare.members.show');
     });
 });

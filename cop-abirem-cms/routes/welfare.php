@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\WelfareBenefitController;
 use App\Http\Controllers\Admin\FuneralBenefitController;
 use App\Http\Controllers\Admin\WelfareReportController;
 use App\Http\Controllers\Admin\FuneralReportController;
+use App\Http\Controllers\Admin\WelfareMemberController;
+use App\Http\Controllers\Admin\FuneralMemberController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->group(function () {
@@ -37,6 +39,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::get('/reports/spending', [WelfareReportController::class, 'spending'])->name('reports.spending');
         Route::get('/reports/spending/export', [WelfareReportController::class, 'exportSpending'])->name('reports.spending.export');
         Route::get('/reports/fund', [WelfareReportController::class, 'fundSummary'])->name('reports.fund');
+
+        Route::get('/members', [WelfareMemberController::class, 'index'])->name('members.index');
+        Route::get('/members/{member}', [WelfareMemberController::class, 'show'])->name('members.show');
     });
 
     // FUNERAL
@@ -63,5 +68,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
         Route::get('/reports/spending', [FuneralReportController::class, 'spending'])->name('reports.spending');
         Route::get('/reports/spending/export', [FuneralReportController::class, 'exportSpending'])->name('reports.spending.export');
         Route::get('/reports/fund', [FuneralReportController::class, 'fundSummary'])->name('reports.fund');
+
+        Route::get('/members', [FuneralMemberController::class, 'index'])->name('members.index');
+        Route::get('/members/{member}', [FuneralMemberController::class, 'show'])->name('members.show');
     });
 });

@@ -505,8 +505,9 @@ class MinistryFinanceController extends Controller
             return redirect()->route('admin.ministry.dashboard')->with('error', 'No ministry assigned.');
         }
 
-        $year = $request->input('year', now()->year);
+        $year = (int) $request->input('year', now()->year);
 
+        // ── General Finance ──────────────────────────────────────────────────
         $incomeByType = MinistryOffering::where('ministry_id', $ministry->id)
             ->whereYear('offering_date', $year)
             ->select('offering_type', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
@@ -517,29 +518,161 @@ class MinistryFinanceController extends Controller
             ->select('category', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
             ->groupBy('category')->get()->keyBy('category');
 
-        $monthlyIncome = $monthlyExpenses = [];
+        // ── Welfare Fund ─────────────────────────────────────────────────────
+        $welfareBenefitsByPurpose = MinistryWelfareBenefit::where('ministry_id', $ministry->id)
+            ->whereYear('benefit_date', $year)
+            ->select('purpose', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+            ->groupBy('purpose')->get()->keyBy('purpose');
+
+        // ── Monthly aggregates (4 queries using GROUP BY instead of 48 loops) ─
+        $rawOfferings   = MinistryOffering::where('ministry_id', $ministry->id)
+            ->whereYear('offering_date', $year)
+            ->selectRaw('MONTH(offering_date) as m, SUM(amount) as total')
+            ->groupBy('m')->pluck('total', 'm')->toArray();
+
+        $rawExpenses    = MinistryExpense::where('ministry_id', $ministry->id)
+            ->whereYear('expense_date', $year)
+            ->selectRaw('MONTH(expense_date) as m, SUM(amount) as total')
+            ->groupBy('m')->pluck('total', 'm')->toArray();
+
+        $rawContribs    = MinistryWelfareContribution::where('ministry_id', $ministry->id)
+            ->where('period_year', $year)
+            ->selectRaw('period_month as m, SUM(amount) as total')
+            ->groupBy('m')->pluck('total', 'm')->toArray();
+
+        $rawBenefits    = MinistryWelfareBenefit::where('ministry_id', $ministry->id)
+            ->whereYear('benefit_date', $year)
+            ->selectRaw('MONTH(benefit_date) as m, SUM(amount) as total')
+            ->groupBy('m')->pluck('total', 'm')->toArray();
+
+        $monthlyIncome = $monthlyExpenses = $monthlyWelfareContribs = $monthlyWelfareBenefits = [];
         for ($m = 1; $m <= 12; $m++) {
-            $monthlyIncome[$m]   = MinistryOffering::where('ministry_id', $ministry->id)->whereYear('offering_date', $year)->whereMonth('offering_date', $m)->sum('amount');
-            $monthlyExpenses[$m] = MinistryExpense::where('ministry_id', $ministry->id)->whereYear('expense_date', $year)->whereMonth('expense_date', $m)->sum('amount');
+            $monthlyIncome[$m]          = (float) ($rawOfferings[$m]  ?? 0);
+            $monthlyExpenses[$m]        = (float) ($rawExpenses[$m]   ?? 0);
+            $monthlyWelfareContribs[$m] = (float) ($rawContribs[$m]   ?? 0);
+            $monthlyWelfareBenefits[$m] = (float) ($rawBenefits[$m]   ?? 0);
         }
 
-        $totalIncome  = array_sum($monthlyIncome);
-        $totalExpense = array_sum($monthlyExpenses);
-        $balance      = $totalIncome - $totalExpense;
+        $totalIncome          = array_sum($monthlyIncome);
+        $totalExpense         = array_sum($monthlyExpenses);
+        $financialBalance     = $totalIncome - $totalExpense;
+        $totalWelfareContribs = array_sum($monthlyWelfareContribs);
+        $totalWelfareBenefits = array_sum($monthlyWelfareBenefits);
+        $welfareFundBalance   = $totalWelfareContribs - $totalWelfareBenefits;
+
+        $memberCount = $ministry->activeMembers()->count();
 
         $availableYears = MinistryOffering::where('ministry_id', $ministry->id)
             ->selectRaw('YEAR(offering_date) as y')->distinct()->pluck('y')
             ->merge(MinistryExpense::where('ministry_id', $ministry->id)->selectRaw('YEAR(expense_date) as y')->distinct()->pluck('y'))
+            ->merge(MinistryWelfareContribution::where('ministry_id', $ministry->id)->selectRaw('period_year as y')->distinct()->pluck('y'))
+            ->merge(MinistryWelfareBenefit::where('ministry_id', $ministry->id)->selectRaw('YEAR(benefit_date) as y')->distinct()->pluck('y'))
             ->unique()->sortDesc()->values();
 
         if ($availableYears->isEmpty()) $availableYears = collect([now()->year]);
 
+        $currencySymbol = SettingHelper::currencySymbol();
+        $purposes       = MinistryWelfareBenefit::PURPOSES;
+
         return view('admin.roles.ministry.finance.report', compact(
-            'ministry', 'year', 'availableYears',
+            'ministry', 'year', 'availableYears', 'memberCount',
             'incomeByType', 'expenseByCategory',
+            'welfareBenefitsByPurpose', 'purposes',
             'monthlyIncome', 'monthlyExpenses',
-            'totalIncome', 'totalExpense', 'balance'
+            'monthlyWelfareContribs', 'monthlyWelfareBenefits',
+            'totalIncome', 'totalExpense', 'financialBalance',
+            'totalWelfareContribs', 'totalWelfareBenefits', 'welfareFundBalance',
+            'currencySymbol'
         ));
+    }
+
+    // ── Welfare Member Records ────────────────────────────────────────────
+
+    public function welfareMembers(\Illuminate\Http\Request $request): \Illuminate\View\View
+    {
+        $ministry = $this->getMinistry();
+        if (!$ministry) abort(403);
+
+        $search  = trim($request->get('search', ''));
+        $members = $ministry->activeMembers()
+            ->when($search, fn($q) => $q->where(fn($q2) =>
+                $q2->where('first_name', 'like', "%{$search}%")
+                   ->orWhere('last_name', 'like', "%{$search}%")
+                   ->orWhere('member_id', 'like', "%{$search}%")
+            ))
+            ->withCount([
+                'ministryWelfareContributions as contrib_count' =>
+                    fn($q) => $q->where('ministry_id', $ministry->id),
+                'ministryWelfareBenefits as benefit_count' =>
+                    fn($q) => $q->where('ministry_id', $ministry->id),
+            ])
+            ->orderBy('last_name')->orderBy('first_name')
+            ->get();
+
+        return view('admin.roles.ministry.finance.welfare.members',
+            compact('ministry', 'members', 'search'));
+    }
+
+    public function welfareMemberShow(\Illuminate\Http\Request $request, int $memberId): \Illuminate\View\View
+    {
+        $ministry = $this->getMinistry();
+        if (!$ministry) abort(403);
+
+        $member = \App\Models\Member::findOrFail($memberId);
+
+        // Rates for this ministry
+        $allRates = MinistryWelfareRate::where('ministry_id', $ministry->id)
+            ->orderByDesc('effective_from')->get();
+
+        $rateFor = function (int $month, int $year) use ($allRates, $ministry): ?float {
+            $cut = \Carbon\Carbon::create($year, $month, 1)->startOfDay();
+            $r   = $allRates->first(fn($r) => $r->effective_from->lte($cut));
+            return $r ? (float) $r->amount : null;
+        };
+
+        $allContribs = MinistryWelfareContribution::where('ministry_id', $ministry->id)
+            ->where('member_id', $member->id)
+            ->get()->groupBy('period_year');
+
+        $years = $allContribs->keys()
+            ->merge([now()->year])
+            ->unique()->sortDesc()->values();
+
+        $yearlyData = [];
+        foreach ($years as $yr) {
+            $byMonth  = $allContribs->get($yr, collect())->keyBy('period_month');
+            $expected = 0;
+            $months   = [];
+
+            for ($m = 1; $m <= 12; $m++) {
+                $rate    = $rateFor($m, $yr);
+                $contrib = $byMonth->get($m);
+                $expected += $rate ?? 0;
+                $months[$m] = [
+                    'rate'    => $rate,
+                    'paid'    => $contrib ? (float) $contrib->amount : null,
+                    'contrib' => $contrib,
+                ];
+            }
+
+            $paid    = (float) $byMonth->sum('amount');
+            $balance = $expected - $paid;
+
+            $yearlyData[] = compact('yr', 'months', 'expected', 'paid', 'balance');
+        }
+
+        $benefits = MinistryWelfareBenefit::with('expenses')
+            ->where('ministry_id', $ministry->id)
+            ->where('member_id', $member->id)
+            ->orderByDesc('benefit_date')->get();
+
+        $totalContributions = (float) MinistryWelfareContribution::where('ministry_id', $ministry->id)
+            ->where('member_id', $member->id)->sum('amount');
+        $totalBenefits = $benefits->sum(fn($b) => (float) $b->total_cost);
+        $purposes      = MinistryWelfareBenefit::PURPOSES;
+
+        return view('admin.roles.ministry.finance.welfare.member-show',
+            compact('ministry', 'member', 'yearlyData', 'benefits', 'totalContributions', 'totalBenefits', 'purposes'));
     }
 
     // ── SMS Helpers ───────────────────────────────────────────────────────
