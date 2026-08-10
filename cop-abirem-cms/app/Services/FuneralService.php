@@ -8,37 +8,33 @@ use App\Models\FuneralContribution;
 use App\Models\FuneralBenefit;
 use App\Models\FuneralBenefitExpense;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class FuneralService
 {
     /**
-     * Return the expected rate for a given month/year.
-     * Uses the funeral_rates row with the latest effective_from <= first day of that month.
-     * Returns null if no rate applies yet.
+     * Find the applicable rate for a given month/year from a pre-loaded collection.
      */
-    public function rateForPeriod(int $month, int $year): ?FuneralRate
+    private function rateForPeriodFromCollection(int $month, int $year, Collection $rates): ?FuneralRate
     {
         $periodStart = Carbon::create($year, $month, 1)->startOfDay();
-        return FuneralRate::where('effective_from', '<=', $periodStart)
-            ->orderByDesc('effective_from')
-            ->first();
+        return $rates
+            ->filter(fn($r) => $r->effective_from->lte($periodStart))
+            ->last();
     }
 
     /**
-     * Calculate a member's funeral dues balance.
-     * Walks each month from member.funeral_start_date (or earliest rate effective_from, or join date)
-     * to the current month. For each month: expected += rateForPeriod. paid = sum of contributions.
-     * balance > 0 means arrears, balance < 0 means credit.
+     * Build a member's balance array using pre-loaded rates and a pre-resolved paid amount.
      */
-    public function calculateMemberBalance(Member $member): array
+    private function buildBalance(Member $member, Collection $allRates, float $paid): array
     {
         if (!$member->funeral_enrolled) {
             return ['expected' => 0, 'paid' => 0, 'balance' => 0, 'months' => [], 'enrolled' => false];
         }
 
-        // Determine start month
         $startDate = $member->funeral_start_date
-            ?? FuneralRate::orderBy('effective_from')->first()?->effective_from
+            ?? $allRates->first()?->effective_from
             ?? $member->date_joined
             ?? Carbon::now()->startOfYear();
 
@@ -46,7 +42,7 @@ class FuneralService
         $now   = Carbon::now()->startOfMonth();
 
         if ($start->gt($now)) {
-            return ['expected' => 0, 'paid' => 0, 'balance' => 0, 'months' => [], 'enrolled' => true];
+            return ['expected' => 0, 'paid' => $paid, 'balance' => round(-$paid, 2), 'months' => [], 'enrolled' => true];
         }
 
         $expected = 0.0;
@@ -54,10 +50,10 @@ class FuneralService
         $current  = $start->copy();
 
         while ($current->lte($now)) {
-            $rate = $this->rateForPeriod($current->month, $current->year);
+            $rate          = $this->rateForPeriodFromCollection($current->month, $current->year, $allRates);
             $monthExpected = $rate ? (float) $rate->amount : 0.0;
-            $expected += $monthExpected;
-            $months[] = [
+            $expected     += $monthExpected;
+            $months[]      = [
                 'year'     => $current->year,
                 'month'    => $current->month,
                 'label'    => $current->format('M Y'),
@@ -67,7 +63,6 @@ class FuneralService
             $current->addMonth();
         }
 
-        $paid = (float) FuneralContribution::where('member_id', $member->id)->sum('amount');
         $balance = round($expected - $paid, 2);
 
         return [
@@ -80,41 +75,82 @@ class FuneralService
     }
 
     /**
-     * Summary of funeral spending within a date range.
-     * Returns ['by_month'=>[...],'total_main'=>float,'total_expenses'=>float,'grand_total'=>float]
+     * Calculate balances for ALL enrolled members in 2 queries total.
+     */
+    public function calculateAllBalances(Collection $members): Collection
+    {
+        $allRates = FuneralRate::orderBy('effective_from')->get();
+
+        $memberIds    = $members->pluck('id');
+        $paidByMember = FuneralContribution::whereIn('member_id', $memberIds)
+            ->select('member_id', DB::raw('SUM(amount) as total'))
+            ->groupBy('member_id')
+            ->pluck('total', 'member_id');
+
+        return $members->map(function (Member $member) use ($allRates, $paidByMember) {
+            $paid = (float) ($paidByMember[$member->id] ?? 0);
+            $data = $this->buildBalance($member, $allRates, $paid);
+            return array_merge(['member' => $member], $data);
+        });
+    }
+
+    /**
+     * Calculate a single member's funeral dues balance (kept for individual lookups).
+     */
+    public function calculateMemberBalance(Member $member): array
+    {
+        $allRates = FuneralRate::orderBy('effective_from')->get();
+        $paid     = (float) FuneralContribution::where('member_id', $member->id)->sum('amount');
+        return $this->buildBalance($member, $allRates, $paid);
+    }
+
+    /**
+     * Summary of funeral spending within a date range using SQL GROUP BY.
      */
     public function spendingSummary(?string $startDate = null, ?string $endDate = null): array
     {
-        $query = FuneralBenefit::with('funeralBenefitExpenses');
-        if ($startDate) $query->where('funeral_date', '>=', $startDate);
-        if ($endDate)   $query->where('funeral_date', '<=', $endDate);
-        $benefits = $query->get();
+        $benefitsQuery = FuneralBenefit::query()
+            ->when($startDate, fn($q) => $q->where('funeral_date', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->where('funeral_date', '<=', $endDate));
+
+        $byMonthBenefits = (clone $benefitsQuery)
+            ->selectRaw("DATE_FORMAT(funeral_date, '%Y-%m') as period_key,
+                          DATE_FORMAT(funeral_date, '%b %Y') as label,
+                          SUM(amount_donated) as main_total,
+                          COUNT(*) as cnt")
+            ->groupBy('period_key', 'label')
+            ->orderBy('period_key')
+            ->get()
+            ->keyBy('period_key');
+
+        $byMonthExpenses = FuneralBenefitExpense::join('funeral_benefits', 'funeral_benefit_expenses.funeral_benefit_id', '=', 'funeral_benefits.id')
+            ->when($startDate, fn($q) => $q->where('funeral_benefits.funeral_date', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->where('funeral_benefits.funeral_date', '<=', $endDate))
+            ->whereNull('funeral_benefits.deleted_at')
+            ->selectRaw("DATE_FORMAT(funeral_benefits.funeral_date, '%Y-%m') as period_key, SUM(funeral_benefit_expenses.amount) as other_total")
+            ->groupBy('period_key')
+            ->pluck('other_total', 'period_key');
 
         $byMonth   = [];
         $totalMain = 0.0;
         $totalExp  = 0.0;
 
-        foreach ($benefits as $b) {
-            $key    = $b->funeral_date->format('Y-m');
-            $label  = $b->funeral_date->format('M Y');
-            $main   = (float) $b->amount_donated;
-            $other  = (float) $b->total_other_expenses;
-            $total  = $main + $other;
-
-            $byMonth[$key] = $byMonth[$key] ?? ['label' => $label, 'main' => 0, 'other' => 0, 'total' => 0, 'count' => 0];
-            $byMonth[$key]['main']  += $main;
-            $byMonth[$key]['other'] += $other;
-            $byMonth[$key]['total'] += $total;
-            $byMonth[$key]['count']++;
-
+        foreach ($byMonthBenefits as $key => $row) {
+            $main  = (float) $row->main_total;
+            $other = (float) ($byMonthExpenses[$key] ?? 0);
+            $byMonth[] = [
+                'label' => $row->label,
+                'main'  => $main,
+                'other' => $other,
+                'total' => $main + $other,
+                'count' => (int) $row->cnt,
+            ];
             $totalMain += $main;
             $totalExp  += $other;
         }
 
-        ksort($byMonth);
-
         return [
-            'by_month'       => array_values($byMonth),
+            'by_month'       => $byMonth,
             'total_main'     => round($totalMain, 2),
             'total_expenses' => round($totalExp, 2),
             'grand_total'    => round($totalMain + $totalExp, 2),

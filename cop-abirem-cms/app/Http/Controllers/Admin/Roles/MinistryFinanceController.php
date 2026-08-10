@@ -17,6 +17,7 @@ use App\Services\GiantSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class MinistryFinanceController extends Controller
@@ -408,31 +409,39 @@ class MinistryFinanceController extends Controller
             return redirect()->route('admin.ministry.dashboard')->with('error', 'No ministry assigned.');
         }
 
-        $year   = $request->input('year', now()->year);
+        $year   = (int) $request->input('year', now()->year);
         $status = $request->input('status', 'all');
 
         $members = Member::whereHas('ministries', fn($q) => $q->where('ministries.id', $ministry->id))
             ->orderBy('first_name')->get();
 
-        $balances = $members->map(function (Member $member) use ($ministry, $year) {
-            $paid = MinistryWelfareContribution::where('ministry_id', $ministry->id)
-                ->where('member_id', $member->id)
-                ->where('period_year', $year)
-                ->sum('amount');
+        // 1 query: all rates for this ministry ordered ascending
+        $allRates = MinistryWelfareRate::where('ministry_id', $ministry->id)
+            ->orderBy('effective_from')->get();
 
-            $expected = 0;
-            for ($m = 1; $m <= 12; $m++) {
-                $rate = MinistryWelfareRate::rateForPeriod($ministry->id, $m, $year);
-                if ($rate) {
-                    $expected += (float) $rate->amount;
-                }
-            }
+        // Pre-compute expected for the year in PHP (same for every member)
+        $monthLabels = [Carbon::create($year, 1, 1)];
+        $expected = 0.0;
+        for ($m = 1; $m <= 12; $m++) {
+            $periodStart = Carbon::create($year, $m, 1)->startOfDay();
+            $rate = $allRates->filter(fn($r) => $r->effective_from->lte($periodStart))->last();
+            if ($rate) $expected += (float) $rate->amount;
+        }
 
+        // 1 query: all contribution sums for this ministry/year grouped by member
+        $paidByMember = MinistryWelfareContribution::where('ministry_id', $ministry->id)
+            ->where('period_year', $year)
+            ->select('member_id', DB::raw('SUM(amount) as total'))
+            ->groupBy('member_id')
+            ->pluck('total', 'member_id');
+
+        $balances = $members->map(function (Member $member) use ($expected, $paidByMember) {
+            $paid = (float) ($paidByMember[$member->id] ?? 0);
             return [
                 'member'   => $member,
                 'expected' => $expected,
-                'paid'     => (float) $paid,
-                'balance'  => round($expected - (float) $paid, 2),
+                'paid'     => $paid,
+                'balance'  => round($expected - $paid, 2),
             ];
         });
 

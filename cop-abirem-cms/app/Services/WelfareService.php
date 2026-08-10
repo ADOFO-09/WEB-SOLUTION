@@ -8,38 +8,35 @@ use App\Models\WelfareContribution;
 use App\Models\WelfareBenefit;
 use App\Models\WelfareBenefitExpense;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class WelfareService
 {
     /**
-     * Return the expected rate for a given month/year.
-     * Uses the welfare_rates row with the latest effective_from <= first day of that month.
-     * Returns null if no rate applies yet.
+     * Find the applicable rate for a given month/year from a pre-loaded collection.
+     * Uses the most recent rate whose effective_from <= first day of that month.
      */
-    public function rateForPeriod(int $month, int $year): ?WelfareRate
+    private function rateForPeriodFromCollection(int $month, int $year, Collection $rates): ?WelfareRate
     {
         $periodStart = Carbon::create($year, $month, 1)->startOfDay();
-        return WelfareRate::where('effective_from', '<=', $periodStart)
-            ->orderByDesc('effective_from')
-            ->first();
+        return $rates
+            ->filter(fn($r) => $r->effective_from->lte($periodStart))
+            ->last();
     }
 
     /**
-     * Calculate a member's welfare balance.
-     * Walks each month from member.welfare_start_date (or earliest rate effective_from, or join date)
-     * to the current month. For each month: expected += rateForPeriod. paid = sum of contributions.
-     * Returns ['expected'=>float,'paid'=>float,'balance'=>float,'months'=>[...]]
-     * balance > 0 means arrears, balance < 0 means credit.
+     * Build a member's balance array using pre-loaded rates and a pre-resolved paid amount.
+     * Used by calculateAllBalances() — avoids any DB queries inside the loop.
      */
-    public function calculateMemberBalance(Member $member): array
+    private function buildBalance(Member $member, Collection $allRates, float $paid): array
     {
         if (!$member->welfare_enrolled) {
             return ['expected' => 0, 'paid' => 0, 'balance' => 0, 'months' => [], 'enrolled' => false];
         }
 
-        // Determine start month
         $startDate = $member->welfare_start_date
-            ?? WelfareRate::orderBy('effective_from')->first()?->effective_from
+            ?? $allRates->first()?->effective_from
             ?? $member->date_joined
             ?? Carbon::now()->startOfYear();
 
@@ -47,7 +44,7 @@ class WelfareService
         $now   = Carbon::now()->startOfMonth();
 
         if ($start->gt($now)) {
-            return ['expected' => 0, 'paid' => 0, 'balance' => 0, 'months' => [], 'enrolled' => true];
+            return ['expected' => 0, 'paid' => $paid, 'balance' => round(-$paid, 2), 'months' => [], 'enrolled' => true];
         }
 
         $expected = 0.0;
@@ -55,10 +52,10 @@ class WelfareService
         $current  = $start->copy();
 
         while ($current->lte($now)) {
-            $rate = $this->rateForPeriod($current->month, $current->year);
+            $rate          = $this->rateForPeriodFromCollection($current->month, $current->year, $allRates);
             $monthExpected = $rate ? (float) $rate->amount : 0.0;
-            $expected += $monthExpected;
-            $months[] = [
+            $expected     += $monthExpected;
+            $months[]      = [
                 'year'     => $current->year,
                 'month'    => $current->month,
                 'label'    => $current->format('M Y'),
@@ -68,7 +65,6 @@ class WelfareService
             $current->addMonth();
         }
 
-        $paid = (float) WelfareContribution::where('member_id', $member->id)->sum('amount');
         $balance = round($expected - $paid, 2);
 
         return [
@@ -81,50 +77,121 @@ class WelfareService
     }
 
     /**
+     * Calculate balances for ALL enrolled members in 2 queries total (rates + contributions).
+     * Returns a Collection of arrays, each merged with the member object.
+     */
+    public function calculateAllBalances(Collection $members): Collection
+    {
+        // 1 query: all rates ordered ascending so rateForPeriodFromCollection can use ->last()
+        $allRates = WelfareRate::orderBy('effective_from')->get();
+
+        // 1 query: sum contributions per member
+        $memberIds = $members->pluck('id');
+        $paidByMember = WelfareContribution::whereIn('member_id', $memberIds)
+            ->select('member_id', DB::raw('SUM(amount) as total'))
+            ->groupBy('member_id')
+            ->pluck('total', 'member_id');
+
+        return $members->map(function (Member $member) use ($allRates, $paidByMember) {
+            $paid = (float) ($paidByMember[$member->id] ?? 0);
+            $data = $this->buildBalance($member, $allRates, $paid);
+            return array_merge(['member' => $member], $data);
+        });
+    }
+
+    /**
+     * Calculate a single member's welfare balance (kept for individual lookups).
+     * Loads rates and contribution in 2 queries.
+     */
+    public function calculateMemberBalance(Member $member): array
+    {
+        $allRates = WelfareRate::orderBy('effective_from')->get();
+        $paid     = (float) WelfareContribution::where('member_id', $member->id)->sum('amount');
+        return $this->buildBalance($member, $allRates, $paid);
+    }
+
+    /**
      * Summary of welfare spending within a date range.
-     * Returns ['by_month'=>[...],'by_purpose'=>[...],'total_main'=>float,'total_expenses'=>float,'grand_total'=>float]
+     * Uses SQL GROUP BY — no PHP aggregation loop over rows.
      */
     public function spendingSummary(?string $startDate = null, ?string $endDate = null): array
     {
-        $query = WelfareBenefit::with('welfareBenefitExpenses');
-        if ($startDate) $query->where('benefit_date', '>=', $startDate);
-        if ($endDate)   $query->where('benefit_date', '<=', $endDate);
-        $benefits = $query->get();
+        // Totals from benefits table
+        $benefitsQuery = WelfareBenefit::query()
+            ->when($startDate, fn($q) => $q->where('benefit_date', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->where('benefit_date', '<=', $endDate));
 
+        // By month — benefits amount grouped
+        $byMonthBenefits = (clone $benefitsQuery)
+            ->selectRaw("DATE_FORMAT(benefit_date, '%Y-%m') as period_key,
+                          DATE_FORMAT(benefit_date, '%b %Y') as label,
+                          SUM(amount) as main_total,
+                          COUNT(*) as cnt")
+            ->groupBy('period_key', 'label')
+            ->orderBy('period_key')
+            ->get()
+            ->keyBy('period_key');
+
+        // By month — extra expenses amount (left join to expenses table)
+        $byMonthExpenses = WelfareBenefitExpense::join('welfare_benefits', 'welfare_benefit_expenses.welfare_benefit_id', '=', 'welfare_benefits.id')
+            ->when($startDate, fn($q) => $q->where('welfare_benefits.benefit_date', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->where('welfare_benefits.benefit_date', '<=', $endDate))
+            ->whereNull('welfare_benefits.deleted_at')
+            ->selectRaw("DATE_FORMAT(welfare_benefits.benefit_date, '%Y-%m') as period_key, SUM(welfare_benefit_expenses.amount) as other_total")
+            ->groupBy('period_key')
+            ->pluck('other_total', 'period_key');
+
+        // By purpose
+        $byPurposeBenefits = (clone $benefitsQuery)
+            ->selectRaw('purpose, SUM(amount) as main_total, COUNT(*) as cnt')
+            ->groupBy('purpose')
+            ->get()
+            ->keyBy('purpose');
+
+        $byPurposeExpenses = WelfareBenefitExpense::join('welfare_benefits', 'welfare_benefit_expenses.welfare_benefit_id', '=', 'welfare_benefits.id')
+            ->when($startDate, fn($q) => $q->where('welfare_benefits.benefit_date', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->where('welfare_benefits.benefit_date', '<=', $endDate))
+            ->whereNull('welfare_benefits.deleted_at')
+            ->selectRaw('welfare_benefits.purpose, SUM(welfare_benefit_expenses.amount) as other_total')
+            ->groupBy('welfare_benefits.purpose')
+            ->pluck('other_total', 'welfare_benefits.purpose');
+
+        // Build by_month array
         $byMonth   = [];
-        $byPurpose = [];
         $totalMain = 0.0;
         $totalExp  = 0.0;
 
-        foreach ($benefits as $b) {
-            $key    = $b->benefit_date->format('Y-m');
-            $label  = $b->benefit_date->format('M Y');
-            $main   = (float) $b->amount;
-            $other  = (float) $b->total_other_expenses;
-            $total  = $main + $other;
-
-            $byMonth[$key] = $byMonth[$key] ?? ['label' => $label, 'main' => 0, 'other' => 0, 'total' => 0, 'count' => 0];
-            $byMonth[$key]['main']  += $main;
-            $byMonth[$key]['other'] += $other;
-            $byMonth[$key]['total'] += $total;
-            $byMonth[$key]['count']++;
-
-            $p = $b->purpose;
-            $byPurpose[$p] = $byPurpose[$p] ?? ['label' => WelfareBenefit::PURPOSES[$p] ?? $p, 'main' => 0, 'other' => 0, 'total' => 0, 'count' => 0];
-            $byPurpose[$p]['main']  += $main;
-            $byPurpose[$p]['other'] += $other;
-            $byPurpose[$p]['total'] += $total;
-            $byPurpose[$p]['count']++;
-
+        foreach ($byMonthBenefits as $key => $row) {
+            $main  = (float) $row->main_total;
+            $other = (float) ($byMonthExpenses[$key] ?? 0);
+            $byMonth[] = [
+                'label' => $row->label,
+                'main'  => $main,
+                'other' => $other,
+                'total' => $main + $other,
+                'count' => (int) $row->cnt,
+            ];
             $totalMain += $main;
             $totalExp  += $other;
         }
 
-        ksort($byMonth);
+        // Build by_purpose array
+        $byPurpose = [];
+        foreach ($byPurposeBenefits as $purposeKey => $row) {
+            $main  = (float) $row->main_total;
+            $other = (float) ($byPurposeExpenses[$purposeKey] ?? 0);
+            $byPurpose[] = [
+                'label' => WelfareBenefit::PURPOSES[$purposeKey] ?? $purposeKey,
+                'main'  => $main,
+                'other' => $other,
+                'total' => $main + $other,
+                'count' => (int) $row->cnt,
+            ];
+        }
 
         return [
-            'by_month'       => array_values($byMonth),
-            'by_purpose'     => array_values($byPurpose),
+            'by_month'       => $byMonth,
+            'by_purpose'     => $byPurpose,
             'total_main'     => round($totalMain, 2),
             'total_expenses' => round($totalExp, 2),
             'grand_total'    => round($totalMain + $totalExp, 2),

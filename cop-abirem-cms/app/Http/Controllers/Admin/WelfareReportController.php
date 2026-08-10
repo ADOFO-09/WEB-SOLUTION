@@ -28,10 +28,7 @@ class WelfareReportController extends Controller implements HasMiddleware
             ->orderBy('first_name')
             ->get();
 
-        $balances = $members->map(function ($member) {
-            $data = $this->service->calculateMemberBalance($member);
-            return array_merge(['member' => $member], $data);
-        });
+        $balances = $this->service->calculateAllBalances($members);
 
         // Filter by status
         $status = $request->get('status', 'all');

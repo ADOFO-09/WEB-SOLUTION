@@ -116,7 +116,7 @@ class MemberController extends Controller implements HasMiddleware
             'gender' => 'required|in:male,female',
             'marital_status' => 'required|in:single,married,divorced,widowed',
             'email' => 'nullable|email|max:255|unique:members',
-            'phone_primary' => 'required|string|max:20',
+            'phone_primary' => 'required|string|max:20|unique:members',
             'phone_secondary' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
             'city' => 'nullable|string|max:100',
@@ -132,11 +132,24 @@ class MemberController extends Controller implements HasMiddleware
             'membership_status' => 'required|in:active,inactive,transferred_out,transferred_in,deceased',
             'previous_church' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
-            'ministries' => 'nullable|array',
+            'ministries' => 'required|array|min:1',
             'ministries.*' => 'exists:ministries,id',
             'fingerprint_template_1' => 'nullable|string',
             'fingerprint_template_2' => 'nullable|string',
         ]);
+
+        // Duplicate-person check: same full name + date of birth
+        $nameDobExists = Member::whereRaw('LOWER(first_name) = ?', [strtolower($validated['first_name'])])
+            ->whereRaw('LOWER(last_name) = ?', [strtolower($validated['last_name'])])
+            ->whereDate('date_of_birth', $validated['date_of_birth'])
+            ->exists();
+
+        if ($nameDobExists) {
+            return back()->withErrors([
+                'first_name' => 'A member named ' . $validated['first_name'] . ' ' . $validated['last_name']
+                    . ' with the same date of birth is already registered.',
+            ])->withInput();
+        }
 
         DB::beginTransaction();
 
@@ -200,9 +213,6 @@ class MemberController extends Controller implements HasMiddleware
                     ]);
                 }
             }
-
-            // Auto-enroll in gender-matched base ministry (Men's/Women's) by type column
-            $this->autoAssignGenderMinistry($member);
 
             // Generate QR Code
             $this->generateQrCode($member);
@@ -280,7 +290,7 @@ class MemberController extends Controller implements HasMiddleware
             'gender' => 'required|in:male,female',
             'marital_status' => 'required|in:single,married,divorced,widowed',
             'email' => ['nullable', 'email', 'max:255', Rule::unique('members')->ignore($member->id)],
-            'phone_primary' => 'required|string|max:20',
+            'phone_primary' => ['required', 'string', 'max:20', Rule::unique('members')->ignore($member->id)],
             'phone_secondary' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
             'city' => 'nullable|string|max:100',
@@ -296,9 +306,23 @@ class MemberController extends Controller implements HasMiddleware
             'membership_status' => 'required|in:active,inactive,transferred_out,transferred_in,deceased',
             'previous_church' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
-            'ministries' => 'nullable|array',
+            'ministries' => 'required|array|min:1',
             'ministries.*' => 'exists:ministries,id',
         ]);
+
+        // Duplicate-person check: same full name + DOB but a different member record
+        $nameDobExists = Member::whereRaw('LOWER(first_name) = ?', [strtolower($validated['first_name'])])
+            ->whereRaw('LOWER(last_name) = ?', [strtolower($validated['last_name'])])
+            ->whereDate('date_of_birth', $validated['date_of_birth'])
+            ->where('id', '!=', $member->id)
+            ->exists();
+
+        if ($nameDobExists) {
+            return back()->withErrors([
+                'first_name' => 'Another member named ' . $validated['first_name'] . ' ' . $validated['last_name']
+                    . ' with the same date of birth already exists.',
+            ])->withInput();
+        }
 
         DB::beginTransaction();
 
@@ -314,31 +338,15 @@ class MemberController extends Controller implements HasMiddleware
 
             $validated['updated_by'] = auth()->id();
 
-            $oldGender = $member->gender;
             $member->update($validated);
-
-            // If gender changed, swap gender-based ministry enrollment
-            if (isset($validated['gender']) && $validated['gender'] !== $oldGender) {
-                $this->syncGenderMinistry($member, $oldGender);
-            }
 
             // Update ministry assignments
             if (isset($validated['ministries'])) {
-                // Gender ministries are managed automatically — exclude from manual add/remove
-                $genderMinistryIds = Ministry::whereIn('type', ['men', 'women'])
-                    ->where('is_active', true)
-                    ->pluck('id')
-                    ->toArray();
-
-                // Get current active ministries
                 $currentMinistries = $member->activeMinistries->pluck('id')->toArray();
                 $newMinistries = $validated['ministries'];
 
-                // Remove from ministries no longer selected (never touch gender ministries)
-                $toRemove = array_diff(
-                    array_diff($currentMinistries, $genderMinistryIds),
-                    $newMinistries
-                );
+                // Remove from ministries no longer selected
+                $toRemove = array_diff($currentMinistries, $newMinistries);
                 foreach ($toRemove as $ministryId) {
                     $member->ministries()->updateExistingPivot($ministryId, [
                         'is_active' => false,
@@ -487,19 +495,18 @@ class MemberController extends Controller implements HasMiddleware
             $query->inMinistry($request->ministry);
         }
 
-        $members = $query->orderBy('first_name')->get();
-
-        // Generate CSV
         $filename = 'members_export_' . date('Y-m-d_His') . '.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function () use ($members) {
+        // Chunk in batches of 500 — never loads the entire table into memory
+        $baseQuery = $query->with('activeMinistries')->orderBy('first_name');
+
+        $callback = function () use ($baseQuery) {
             $file = fopen('php://output', 'w');
-            
-            // Header row
+
             fputcsv($file, [
                 'Member ID', 'Title', 'First Name', 'Middle Name', 'Last Name',
                 'Date of Birth', 'Age', 'Gender', 'Marital Status',
@@ -507,34 +514,36 @@ class MemberController extends Controller implements HasMiddleware
                 'Address', 'City', 'Region',
                 'Occupation', 'Employer',
                 'Date Joined', 'Baptism Type', 'Status',
-                'Ministries'
+                'Ministries',
             ]);
 
-            foreach ($members as $member) {
-                fputcsv($file, [
-                    $member->member_id,
-                    $member->title,
-                    $member->first_name,
-                    $member->middle_name,
-                    $member->last_name,
-                    $member->date_of_birth?->format('Y-m-d'),
-                    $member->age,
-                    ucfirst($member->gender),
-                    ucfirst($member->marital_status),
-                    $member->phone_primary,
-                    $member->phone_secondary,
-                    $member->email,
-                    $member->address,
-                    $member->city,
-                    $member->region,
-                    $member->occupation,
-                    $member->employer,
-                    $member->date_joined?->format('Y-m-d'),
-                    ucfirst(str_replace('_', ' ', $member->baptism_type)),
-                    ucfirst(str_replace('_', ' ', $member->membership_status)),
-                    $member->activeMinistries->pluck('name')->implode(', '),
-                ]);
-            }
+            $baseQuery->chunk(500, function ($chunk) use ($file) {
+                foreach ($chunk as $member) {
+                    fputcsv($file, [
+                        $member->member_id,
+                        $member->title,
+                        $member->first_name,
+                        $member->middle_name,
+                        $member->last_name,
+                        $member->date_of_birth?->format('Y-m-d'),
+                        $member->age,
+                        ucfirst($member->gender),
+                        ucfirst($member->marital_status),
+                        $member->phone_primary,
+                        $member->phone_secondary,
+                        $member->email,
+                        $member->address,
+                        $member->city,
+                        $member->region,
+                        $member->occupation,
+                        $member->employer,
+                        $member->date_joined?->format('Y-m-d'),
+                        ucfirst(str_replace('_', ' ', $member->baptism_type ?? '')),
+                        ucfirst(str_replace('_', ' ', $member->membership_status ?? '')),
+                        $member->activeMinistries->pluck('name')->implode(', '),
+                    ]);
+                }
+            });
 
             fclose($file);
         };
@@ -579,93 +588,6 @@ class MemberController extends Controller implements HasMiddleware
             ->get();
 
         return view('admin.members.family', compact('member', 'availableMembers'));
-    }
-
-    /**
-     * Find the active ministry whose type matches a gender value.
-     * 'male' → type='men', 'female' → type='women'. Returns null if none found.
-     */
-    private function genderMinistry(string $gender): ?Ministry
-    {
-        $type = match ($gender) {
-            'male'   => 'men',
-            'female' => 'women',
-            default  => null,
-        };
-
-        if (!$type) {
-            return null;
-        }
-
-        return Ministry::where('type', $type)->where('is_active', true)->first();
-    }
-
-    /**
-     * Enroll a new member in their gender-matched ministry.
-     * Skips silently if the ministry doesn't exist or the member is already enrolled
-     * (e.g. the admin also checked it in the creation form).
-     */
-    private function autoAssignGenderMinistry(Member $member): void
-    {
-        $ministry = $this->genderMinistry($member->gender);
-
-        if (!$ministry) {
-            return;
-        }
-
-        $alreadyActive = DB::table('member_ministry')
-            ->where('member_id', $member->id)
-            ->where('ministry_id', $ministry->id)
-            ->where('is_active', true)
-            ->exists();
-
-        if ($alreadyActive) {
-            return;
-        }
-
-        $member->ministries()->attach($ministry->id, [
-            'role'        => 'member',
-            'joined_date' => now()->toDateString(),
-            'is_active'   => true,
-        ]);
-    }
-
-    /**
-     * When a member's gender is corrected, deactivate the old gender ministry
-     * and enroll them in the new one (reactivating a prior row if it exists).
-     */
-    private function syncGenderMinistry(Member $member, string $oldGender): void
-    {
-        $oldMinistry = $this->genderMinistry($oldGender);
-        if ($oldMinistry) {
-            $member->ministries()->updateExistingPivot($oldMinistry->id, [
-                'is_active' => false,
-                'left_date' => now()->toDateString(),
-            ]);
-        }
-
-        $newMinistry = $this->genderMinistry($member->gender);
-        if (!$newMinistry) {
-            return;
-        }
-
-        $existing = DB::table('member_ministry')
-            ->where('member_id', $member->id)
-            ->where('ministry_id', $newMinistry->id)
-            ->first();
-
-        if ($existing) {
-            DB::table('member_ministry')
-                ->where('member_id', $member->id)
-                ->where('ministry_id', $newMinistry->id)
-                ->update(['is_active' => true, 'left_date' => null, 'joined_date' => now()->toDateString()]);
-        } else {
-            $member->ministries()->attach($newMinistry->id, [
-                'role'        => 'member',
-                'joined_date' => now()->toDateString(),
-                'is_active'   => true,
-            ]);
-        }
     }
 
     /**

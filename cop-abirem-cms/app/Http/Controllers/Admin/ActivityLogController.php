@@ -96,38 +96,33 @@ class ActivityLogController extends Controller implements HasMiddleware
             });
         }
 
-        $logs = $query->orderBy('created_at', 'desc')->get();
-
         $filename = 'activity-logs-' . now()->format('Y-m-d-His') . '.csv';
 
-        return response()->streamDownload(function () use ($logs) {
+        // Use chunked streaming — never loads all rows into memory at once
+        $baseQuery = $query->orderBy('created_at', 'desc');
+
+        return response()->streamDownload(function () use ($baseQuery) {
             $handle = fopen('php://output', 'w');
-            
-            // Header row
+
             fputcsv($handle, [
-                'Date/Time',
-                'User',
-                'Action',
-                'Description',
-                'Model Type',
-                'Model ID',
-                'IP Address',
-                'User Agent',
+                'Date/Time', 'User', 'Action', 'Description',
+                'Model Type', 'Model ID', 'IP Address', 'User Agent',
             ]);
 
-            // Data rows
-            foreach ($logs as $log) {
-                fputcsv($handle, [
-                    $log->created_at->format('Y-m-d H:i:s'),
-                    $log->user->name ?? 'System',
-                    $log->action,
-                    $log->description,
-                    $log->model_type,
-                    $log->model_id,
-                    $log->ip_address,
-                    $log->user_agent,
-                ]);
-            }
+            $baseQuery->with('user')->chunk(500, function ($chunk) use ($handle) {
+                foreach ($chunk as $log) {
+                    fputcsv($handle, [
+                        $log->created_at->format('Y-m-d H:i:s'),
+                        $log->user->name ?? 'System',
+                        $log->action,
+                        $log->description,
+                        $log->model_type,
+                        $log->model_id,
+                        $log->ip_address,
+                        $log->user_agent,
+                    ]);
+                }
+            });
 
             fclose($handle);
         }, $filename, [

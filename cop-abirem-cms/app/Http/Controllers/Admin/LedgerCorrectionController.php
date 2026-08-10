@@ -24,15 +24,15 @@ class LedgerCorrectionController extends Controller
         }
         $auditLogs = $logsQuery->paginate(SettingHelper::perPage());
 
-        $voidedTithes    = Tithe::voided()->with('voidedByUser')->latest('voided_at')->get();
-        $voidedOfferings = Offering::voided()->with('voidedByUser')->latest('voided_at')->get();
-        $voidedDonations = Donation::voided()->with('voidedByUser')->latest('voided_at')->get();
-        $voidedExpenses  = Expense::voided()->with('voidedByUser')->latest('voided_at')->get();
+        $voidedTithes    = Tithe::voided()->with('voidedByUser')->latest('voided_at')->limit(50)->get();
+        $voidedOfferings = Offering::voided()->with('voidedByUser')->latest('voided_at')->limit(50)->get();
+        $voidedDonations = Donation::voided()->with('voidedByUser')->latest('voided_at')->limit(50)->get();
+        $voidedExpenses  = Expense::voided()->with('voidedByUser')->latest('voided_at')->limit(50)->get();
 
-        $adjustedTithes    = Tithe::adjusted()->with('adjustmentEntry')->latest()->get();
-        $adjustedOfferings = Offering::adjusted()->with('adjustmentEntry')->latest()->get();
-        $adjustedDonations = Donation::adjusted()->with('adjustmentEntry')->latest()->get();
-        $adjustedExpenses  = Expense::adjusted()->with('adjustmentEntry')->latest()->get();
+        $adjustedTithes    = Tithe::adjusted()->with('adjustmentEntry')->latest()->limit(50)->get();
+        $adjustedOfferings = Offering::adjusted()->with('adjustmentEntry')->latest()->limit(50)->get();
+        $adjustedDonations = Donation::adjusted()->with('adjustmentEntry')->latest()->limit(50)->get();
+        $adjustedExpenses  = Expense::adjusted()->with('adjustmentEntry')->latest()->limit(50)->get();
 
         return view('admin.finance.corrections.index', compact(
             'auditLogs', 'typeFilter',

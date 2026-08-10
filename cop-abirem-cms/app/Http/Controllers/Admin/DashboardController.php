@@ -22,9 +22,6 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller implements HasMiddleware
 {
-    /**
-     * Get the middleware that should be assigned to the controller.
-     */
     public static function middleware(): array
     {
         return [
@@ -33,12 +30,8 @@ class DashboardController extends Controller implements HasMiddleware
         ];
     }
 
-    /**
-     * Display the main dashboard.
-     */
     public function index(Request $request)
     {
-        // Route non-admin roles to their dedicated dashboards
         $user = auth()->user();
         if (!RoleHelper::isSystemAdmin($user)) {
             $route = RoleHelper::getDashboardRoute($user);
@@ -59,7 +52,6 @@ class DashboardController extends Controller implements HasMiddleware
         $year   = (int) $request->get('year', $defaultYear);
         $month  = (int) $request->get('month', date('m'));
 
-        // When period = 'year', prefer the matching financial year's exact date range
         $selectedFY = $financialYears->first(
             fn($fy) => $fy->start_date->year === $year
         );
@@ -83,75 +75,68 @@ class DashboardController extends Controller implements HasMiddleware
             default   => Carbon::create($year, $month, 1)->endOfMonth(),
         };
 
-        // Member Statistics
         $memberStats = [
-            'total' => Member::count(),
-            'active' => Member::where('membership_status', 'active')->count(),
-            'new_this_period' => Member::whereBetween('created_at', [$startDate, $endDate])->count(),
-            'by_gender' => Member::selectRaw('gender, COUNT(*) as count')
-                ->groupBy('gender')
-                ->pluck('count', 'gender')
-                ->toArray(),
+            'total'            => Member::count(),
+            'active'           => Member::where('membership_status', 'active')->count(),
+            'new_this_period'  => Member::whereBetween('created_at', [$startDate, $endDate])->count(),
+            'by_gender'        => Member::selectRaw('gender, COUNT(*) as count')
+                                    ->groupBy('gender')
+                                    ->pluck('count', 'gender')
+                                    ->toArray(),
         ];
 
-        // Visitor Statistics
         $visitorStats = [
-            'total' => Visitor::count(),
-            'new_this_period' => Visitor::whereBetween('first_visit_date', [$startDate, $endDate])->count(),
-            'converted' => Visitor::where('follow_up_status', 'converted')->count(),
+            'total'            => Visitor::count(),
+            'new_this_period'  => Visitor::whereBetween('first_visit_date', [$startDate, $endDate])->count(),
+            'converted'        => Visitor::where('follow_up_status', 'converted')->count(),
             'pending_followup' => Visitor::where('follow_up_status', 'pending')->count(),
         ];
 
-        // Attendance Statistics
         $attendanceStats = [
             'sessions_this_period' => AttendanceSession::whereBetween('service_date', [$startDate, $endDate])->count(),
-            'total_attendance' => AttendanceRecord::whereHas('session', fn($q) => 
+            'total_attendance'     => AttendanceRecord::whereHas('session', fn($q) =>
                 $q->whereBetween('service_date', [$startDate, $endDate])
             )->count(),
-            'average_attendance' => $this->getAverageAttendance($startDate, $endDate),
-            'last_sunday' => $this->getLastSundayAttendance(),
+            'average_attendance'   => $this->getAverageAttendance($startDate, $endDate),
+            'last_sunday'          => $this->getLastSundayAttendance(),
         ];
 
-        // Financial Statistics
         $financeStats = [
-            'tithes' => Tithe::whereBetween('payment_date', [$startDate, $endDate])->sum('amount'),
-            'offerings' => Offering::whereBetween('payment_date', [$startDate, $endDate])->sum('amount'),
-            'donations' => Donation::where('donation_type', 'cash')
-                ->whereBetween('payment_date', [$startDate, $endDate])
-                ->sum('amount'),
-            'total_income' => 0, // Will calculate
+            'tithes'        => Tithe::whereBetween('payment_date', [$startDate, $endDate])->sum('amount'),
+            'offerings'     => Offering::whereBetween('payment_date', [$startDate, $endDate])->sum('amount'),
+            'donations'     => Donation::where('donation_type', 'cash')
+                                ->whereBetween('payment_date', [$startDate, $endDate])
+                                ->sum('amount'),
+            'total_income'  => 0,
             'expenses_paid' => Expense::where('status', 'paid')
-                ->whereBetween('expense_date', [$startDate, $endDate])
-                ->sum('amount'),
+                                ->whereBetween('expense_date', [$startDate, $endDate])
+                                ->sum('amount'),
             'pledges_active' => Pledge::where('status', 'active')
-                ->selectRaw('SUM(total_amount - amount_paid) as remaining')
-                ->value('remaining') ?? 0,
+                                ->selectRaw('SUM(total_amount - amount_paid) as remaining')
+                                ->value('remaining') ?? 0,
         ];
         $financeStats['total_income'] = $financeStats['tithes'] + $financeStats['offerings'] + $financeStats['donations'];
-        $financeStats['net_income'] = $financeStats['total_income'] - $financeStats['expenses_paid'];
+        $financeStats['net_income']   = $financeStats['total_income'] - $financeStats['expenses_paid'];
 
-        // Recent Activity
-        $recentMembers = Member::latest()->take(5)->get();
-        $recentVisitors = Visitor::latest()->take(5)->get();
+        $recentMembers   = Member::latest()->take(5)->get();
+        $recentVisitors  = Visitor::latest()->take(5)->get();
         $pendingExpenses = Expense::where('status', 'pending')->latest()->take(5)->get();
 
-        // Charts Data
         $charts = [
             'attendance_trend' => $this->getAttendanceTrend($year),
             'income_breakdown' => [
-                'Tithes' => $financeStats['tithes'],
+                'Tithes'    => $financeStats['tithes'],
                 'Offerings' => $financeStats['offerings'],
                 'Donations' => $financeStats['donations'],
             ],
-            'monthly_income' => $this->getMonthlyIncome($year),
+            'monthly_income'   => $this->getMonthlyIncome($year),
         ];
 
-        // Quick Stats for Cards
         $quickStats = [
-            ['label' => 'Total Members', 'value' => number_format($memberStats['total']), 'icon' => 'users', 'color' => 'blue'],
-            ['label' => 'This Period Attendance', 'value' => number_format($attendanceStats['total_attendance']), 'icon' => 'calendar', 'color' => 'green'],
-            ['label' => 'Total Income', 'value' => SettingHelper::currencySymbol() . ' ' . number_format($financeStats['total_income'], 2), 'icon' => 'currency', 'color' => 'emerald'],
-            ['label' => 'Pending Expenses', 'value' => Expense::pending()->count(), 'icon' => 'receipt', 'color' => 'yellow'],
+            ['label' => 'Total Members',          'value' => number_format($memberStats['total']),                                                    'icon' => 'users',    'color' => 'blue'],
+            ['label' => 'This Period Attendance',  'value' => number_format($attendanceStats['total_attendance']),                                     'icon' => 'calendar', 'color' => 'green'],
+            ['label' => 'Total Income',            'value' => SettingHelper::currencySymbol() . ' ' . number_format($financeStats['total_income'], 2), 'icon' => 'currency', 'color' => 'emerald'],
+            ['label' => 'Pending Expenses',        'value' => Expense::pending()->count(),                                                             'icon' => 'receipt',  'color' => 'yellow'],
         ];
 
         return view('admin.dashboard.index', compact(
@@ -162,29 +147,40 @@ class DashboardController extends Controller implements HasMiddleware
         ));
     }
 
-    /**
-     * Get finance dashboard with detailed breakdowns.
-     */
     public function finance(Request $request)
     {
-        $year = $request->get('year', date('Y'));
-        
-        // Monthly breakdown
+        $year = (int) $request->get('year', date('Y'));
+
+        // Replace 12 × 4 = 48 queries with 4 GROUP BY queries
+        $rawTithes    = Tithe::whereYear('payment_date', $year)
+            ->selectRaw('MONTH(payment_date) as m, SUM(amount) as total')
+            ->groupBy('m')->pluck('total', 'm')->toArray();
+
+        $rawOfferings = Offering::whereYear('payment_date', $year)
+            ->selectRaw('MONTH(payment_date) as m, SUM(amount) as total')
+            ->groupBy('m')->pluck('total', 'm')->toArray();
+
+        $rawDonations = Donation::where('donation_type', 'cash')
+            ->whereYear('payment_date', $year)
+            ->selectRaw('MONTH(payment_date) as m, SUM(amount) as total')
+            ->groupBy('m')->pluck('total', 'm')->toArray();
+
+        $rawExpenses  = Expense::where('status', 'paid')
+            ->whereYear('expense_date', $year)
+            ->selectRaw('MONTH(expense_date) as m, SUM(amount) as total')
+            ->groupBy('m')->pluck('total', 'm')->toArray();
+
         $monthlyData = [];
         for ($m = 1; $m <= 12; $m++) {
-            $startDate = Carbon::create($year, $m, 1)->startOfMonth();
-            $endDate = Carbon::create($year, $m, 1)->endOfMonth();
-            
             $monthlyData[] = [
-                'month' => $startDate->format('M'),
-                'tithes' => Tithe::whereBetween('payment_date', [$startDate, $endDate])->sum('amount'),
-                'offerings' => Offering::whereBetween('payment_date', [$startDate, $endDate])->sum('amount'),
-                'donations' => Donation::where('donation_type', 'cash')->whereBetween('payment_date', [$startDate, $endDate])->sum('amount'),
-                'expenses' => Expense::where('status', 'paid')->whereBetween('expense_date', [$startDate, $endDate])->sum('amount'),
+                'month'     => Carbon::create($year, $m, 1)->format('M'),
+                'tithes'    => (float) ($rawTithes[$m]    ?? 0),
+                'offerings' => (float) ($rawOfferings[$m] ?? 0),
+                'donations' => (float) ($rawDonations[$m] ?? 0),
+                'expenses'  => (float) ($rawExpenses[$m]  ?? 0),
             ];
         }
 
-        // Top tithe contributors
         $topTithers = Tithe::selectRaw('member_id, SUM(amount) as total')
             ->whereYear('payment_date', $year)
             ->groupBy('member_id')
@@ -193,7 +189,6 @@ class DashboardController extends Controller implements HasMiddleware
             ->take(10)
             ->get();
 
-        // Expense by category
         $expensesByCategory = Expense::selectRaw('expense_category_id, SUM(amount) as total')
             ->where('status', 'paid')
             ->whereYear('expense_date', $year)
@@ -202,51 +197,47 @@ class DashboardController extends Controller implements HasMiddleware
             ->orderByDesc('total')
             ->get();
 
-        // Year totals
         $yearTotals = [
-            'tithes' => Tithe::whereYear('payment_date', $year)->sum('amount'),
-            'offerings' => Offering::whereYear('payment_date', $year)->sum('amount'),
-            'donations' => Donation::where('donation_type', 'cash')->whereYear('payment_date', $year)->sum('amount'),
-            'expenses' => Expense::where('status', 'paid')->whereYear('expense_date', $year)->sum('amount'),
+            'tithes'    => array_sum($rawTithes),
+            'offerings' => array_sum($rawOfferings),
+            'donations' => array_sum($rawDonations),
+            'expenses'  => array_sum($rawExpenses),
         ];
         $yearTotals['total_income'] = $yearTotals['tithes'] + $yearTotals['offerings'] + $yearTotals['donations'];
-        $yearTotals['net'] = $yearTotals['total_income'] - $yearTotals['expenses'];
+        $yearTotals['net']          = $yearTotals['total_income'] - $yearTotals['expenses'];
 
         return view('admin.dashboard.finance', compact(
             'monthlyData', 'topTithers', 'expensesByCategory', 'yearTotals', 'year'
         ));
     }
 
-    /**
-     * Get attendance dashboard.
-     */
     public function attendance(Request $request)
     {
-        $year = $request->get('year', date('Y'));
+        $year = (int) $request->get('year', date('Y'));
 
-        // Sessions by service type
         $sessionsByType = AttendanceSession::selectRaw('service_type_id, COUNT(*) as sessions, SUM(total_members + total_visitors) as total_attendance')
             ->whereYear('service_date', $year)
             ->groupBy('service_type_id')
             ->with('serviceType')
             ->get();
 
-        // Monthly attendance trend
+        // Replace 12 × 3 = 36 queries with 1 GROUP BY query
+        $rawAttendance = AttendanceSession::whereYear('service_date', $year)
+            ->selectRaw('MONTH(service_date) as m, COUNT(*) as sessions, SUM(total_members) as members, SUM(total_visitors) as visitors')
+            ->groupBy('m')
+            ->get()->keyBy('m');
+
         $monthlyAttendance = [];
         for ($m = 1; $m <= 12; $m++) {
-            $startDate = Carbon::create($year, $m, 1)->startOfMonth();
-            $endDate = Carbon::create($year, $m, 1)->endOfMonth();
-            
-            $sessions = AttendanceSession::whereBetween('service_date', [$startDate, $endDate]);
+            $row = $rawAttendance[$m] ?? null;
             $monthlyAttendance[] = [
-                'month' => $startDate->format('M'),
-                'sessions' => $sessions->count(),
-                'members' => (clone $sessions)->sum('total_members'),
-                'visitors' => (clone $sessions)->sum('total_visitors'),
+                'month'    => Carbon::create($year, $m, 1)->format('M'),
+                'sessions' => $row ? (int) $row->sessions  : 0,
+                'members'  => $row ? (int) $row->members   : 0,
+                'visitors' => $row ? (int) $row->visitors  : 0,
             ];
         }
 
-        // Recent sessions
         $recentSessions = AttendanceSession::with('serviceType')
             ->orderByDesc('service_date')
             ->take(10)
@@ -263,52 +254,70 @@ class DashboardController extends Controller implements HasMiddleware
 
     private function getAverageAttendance($startDate, $endDate): int
     {
-        $sessions = AttendanceSession::whereBetween('service_date', [$startDate, $endDate])->get();
-        if ($sessions->isEmpty()) return 0;
-        return (int) round($sessions->avg(fn($s) => $s->total_members + $s->total_visitors));
+        // Single SQL AVG instead of loading all session rows into PHP
+        $avg = AttendanceSession::whereBetween('service_date', [$startDate, $endDate])
+            ->selectRaw('AVG(total_members + total_visitors) as avg_attendance')
+            ->value('avg_attendance');
+
+        return (int) round($avg ?? 0);
     }
 
     private function getLastSundayAttendance(): ?array
     {
         $lastSunday = Carbon::now()->previous(Carbon::SUNDAY);
-        $session = AttendanceSession::whereDate('service_date', $lastSunday)->first();
-        
+        $session    = AttendanceSession::whereDate('service_date', $lastSunday)->first();
+
         if (!$session) return null;
-        
+
         return [
-            'date' => $lastSunday->format('M d, Y'),
-            'members' => $session->total_members,
+            'date'     => $lastSunday->format('M d, Y'),
+            'members'  => $session->total_members,
             'visitors' => $session->total_visitors,
-            'total' => $session->total_members + $session->total_visitors,
+            'total'    => $session->total_members + $session->total_visitors,
         ];
     }
 
-    private function getAttendanceTrend($year): array
+    private function getAttendanceTrend(int $year): array
     {
+        // Replace 12 queries with 1 GROUP BY query
+        $raw = AttendanceSession::whereYear('service_date', $year)
+            ->selectRaw('MONTH(service_date) as m, SUM(total_members + total_visitors) as total')
+            ->groupBy('m')
+            ->pluck('total', 'm')->toArray();
+
         $data = [];
         for ($m = 1; $m <= 12; $m++) {
-            $total = AttendanceSession::whereYear('service_date', $year)
-                ->whereMonth('service_date', $m)
-                ->sum(\DB::raw('total_members + total_visitors'));
-            $data[] = ['month' => Carbon::create($year, $m, 1)->format('M'), 'attendance' => $total];
+            $data[] = [
+                'month'      => Carbon::create($year, $m, 1)->format('M'),
+                'attendance' => (int) ($raw[$m] ?? 0),
+            ];
         }
         return $data;
     }
 
-    private function getMonthlyIncome($year): array
+    private function getMonthlyIncome(int $year): array
     {
+        // Replace 12 × 3 = 36 queries with 3 GROUP BY queries
+        $rawTithes    = Tithe::whereYear('payment_date', $year)
+            ->selectRaw('MONTH(payment_date) as m, SUM(amount) as total')
+            ->groupBy('m')->pluck('total', 'm')->toArray();
+
+        $rawOfferings = Offering::whereYear('payment_date', $year)
+            ->selectRaw('MONTH(payment_date) as m, SUM(amount) as total')
+            ->groupBy('m')->pluck('total', 'm')->toArray();
+
+        $rawDonations = Donation::where('donation_type', 'cash')
+            ->whereYear('payment_date', $year)
+            ->selectRaw('MONTH(payment_date) as m, SUM(amount) as total')
+            ->groupBy('m')->pluck('total', 'm')->toArray();
+
         $data = [];
         for ($m = 1; $m <= 12; $m++) {
-            $startDate = Carbon::create($year, $m, 1)->startOfMonth();
-            $endDate = Carbon::create($year, $m, 1)->endOfMonth();
-            
-            $tithes = Tithe::whereBetween('payment_date', [$startDate, $endDate])->sum('amount');
-            $offerings = Offering::whereBetween('payment_date', [$startDate, $endDate])->sum('amount');
-            $donations = Donation::where('donation_type', 'cash')->whereBetween('payment_date', [$startDate, $endDate])->sum('amount');
-            
             $data[] = [
-                'month' => $startDate->format('M'),
-                'total' => $tithes + $offerings + $donations,
+                'month' => Carbon::create($year, $m, 1)->format('M'),
+                'total' => (float) ($rawTithes[$m] ?? 0)
+                         + (float) ($rawOfferings[$m] ?? 0)
+                         + (float) ($rawDonations[$m] ?? 0),
             ];
         }
         return $data;
