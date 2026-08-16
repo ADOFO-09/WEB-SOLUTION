@@ -18,6 +18,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->gr
     Route::prefix('welfare')->name('welfare.')->group(function () {
         Route::get('/rates', [WelfareRateController::class, 'index'])->name('rates.index');
         Route::post('/rates', [WelfareRateController::class, 'store'])->name('rates.store');
+        Route::post('/rates/{rate}/set-current', [WelfareRateController::class, 'setCurrent'])->name('rates.set-current');
 
         Route::get('/contributions', [WelfareContributionController::class, 'index'])->name('contributions.index');
         Route::get('/contributions/create', [WelfareContributionController::class, 'create'])->name('contributions.create');

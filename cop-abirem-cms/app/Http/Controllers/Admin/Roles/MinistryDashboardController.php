@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Roles;
 
 use App\Http\Controllers\Controller;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use App\Models\Member;
 use App\Models\Ministry;
@@ -207,6 +208,24 @@ class MinistryDashboardController extends Controller
           ->paginate(SettingHelper::perPage());
 
         return view('admin.roles.ministry.members', compact('ministry', 'members'));
+    }
+
+    public function membersPdf()
+    {
+        $ministry = $this->getUserMinistry(auth()->user());
+
+        if (!$ministry) {
+            return redirect()->route('admin.ministry.dashboard')->with('error', 'No ministry assigned.');
+        }
+
+        $members = Member::whereHas('ministries', function ($q) use ($ministry) {
+            $q->where('ministries.id', $ministry->id);
+        })->orderBy('last_name')->get();
+
+        $pdf = Pdf::loadView('admin.pdf.ministry.members', compact('ministry', 'members'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download(str_replace(' ', '_', $ministry->name) . '_Members.pdf');
     }
 
     public function attendance()

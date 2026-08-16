@@ -17,12 +17,14 @@ class WelfareRate extends Model
         'amount',
         'effective_from',
         'notes',
+        'is_current',
         'created_by',
     ];
 
     protected $casts = [
         'effective_from' => 'date',
         'amount'         => 'decimal:2',
+        'is_current'     => 'boolean',
     ];
 
     // ==========================================

@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MinistryWelfareRate extends Model
 {
-    protected $fillable = ['ministry_id', 'amount', 'effective_from', 'notes', 'created_by'];
+    protected $fillable = ['ministry_id', 'amount', 'effective_from', 'notes', 'is_current', 'created_by'];
 
     protected $casts = [
         'effective_from' => 'date',
         'amount'         => 'decimal:2',
+        'is_current'     => 'boolean',
     ];
 
     public function ministry(): BelongsTo  { return $this->belongsTo(Ministry::class); }

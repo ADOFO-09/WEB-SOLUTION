@@ -34,24 +34,36 @@
                         <th style="text-align:right;padding:0.6rem 1rem;color:#64748b;font-weight:600;font-size:0.72rem;text-transform:uppercase;">Amount / Month</th>
                         <th style="text-align:left;padding:0.6rem 1rem;color:#64748b;font-weight:600;font-size:0.72rem;text-transform:uppercase;">Notes</th>
                         <th style="text-align:left;padding:0.6rem 1rem;color:#64748b;font-weight:600;font-size:0.72rem;text-transform:uppercase;">Added By</th>
+                        <th style="text-align:left;padding:0.6rem 1rem;color:#64748b;font-weight:600;font-size:0.72rem;text-transform:uppercase;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($rates as $rate)
-                    <tr style="border-bottom:1px solid #f8fafc;">
+                    <tr style="border-bottom:1px solid #f8fafc;{{ $rate->is_current ? 'background:#f0fdf4;' : '' }}">
                         <td style="padding:0.65rem 1rem;color:#1e293b;font-weight:500;">
                             {{ $rate->effective_from->format('M d, Y') }}
-                            @if($loop->first)
-                            <span style="margin-left:0.4rem;background:#dcfce7;color:#166534;font-size:0.68rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:4px;">Current</span>
-                            @endif
                         </td>
                         <td style="padding:0.65rem 1rem;color:#166534;font-weight:700;text-align:right;">{{ $currencySymbol }} {{ number_format($rate->amount,2) }}</td>
                         <td style="padding:0.65rem 1rem;color:#64748b;">{{ $rate->notes ?? '—' }}</td>
                         <td style="padding:0.65rem 1rem;color:#64748b;">{{ $rate->createdBy?->name ?? '—' }}</td>
+                        <td style="padding:0.65rem 1rem;">
+                            @if($rate->is_current)
+                            <span style="background:#dcfce7;color:#166534;font-size:0.68rem;font-weight:700;padding:0.2rem 0.55rem;border-radius:4px;">&#10003; Current</span>
+                            @else
+                            <form action="{{ route('admin.ministry.finance.welfare.due-rates.set-current', $rate->id) }}" method="POST" style="display:inline;">
+                                @csrf
+                                <button type="submit"
+                                        onclick="return confirm('Set this rate as the current active rate?')"
+                                        style="background:none;border:none;color:#4f46e5;font-size:0.75rem;cursor:pointer;padding:0;text-decoration:underline;">
+                                    Set as Current
+                                </button>
+                            </form>
+                            @endif
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" style="padding:2.5rem;text-align:center;color:#9ca3af;font-size:0.875rem;">No rates configured yet.</td>
+                        <td colspan="5" style="padding:2.5rem;text-align:center;color:#9ca3af;font-size:0.875rem;">No rates configured yet.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -86,6 +98,16 @@
                     <textarea name="notes" rows="3"
                               style="width:100%;padding:0.5rem 0.75rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.875rem;margin-top:0.25rem;resize:vertical;box-sizing:border-box;"
                               placeholder="e.g. Rate revised by ministry meeting">{{ old('notes') }}</textarea>
+                </div>
+
+                <div style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.25rem 0;">
+                    <input type="checkbox" name="is_current" id="ministry_is_current" value="1"
+                           {{ old('is_current', '1') ? 'checked' : '' }}
+                           style="margin-top:0.2rem;width:1rem;height:1rem;cursor:pointer;accent-color:#1e3a5f;">
+                    <div>
+                        <label for="ministry_is_current" style="font-size:0.82rem;font-weight:500;color:#374151;cursor:pointer;">Mark as current rate</label>
+                        <p style="font-size:0.72rem;color:#94a3b8;margin-top:0.15rem;">Uncheck only when adding a historical or correction entry without changing the active rate.</p>
+                    </div>
                 </div>
 
                 <button type="submit" style="background:#1e3a5f;color:#fff;padding:0.6rem 1.25rem;border-radius:6px;border:none;font-size:0.875rem;font-weight:600;cursor:pointer;width:100%;">

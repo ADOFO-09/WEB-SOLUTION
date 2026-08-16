@@ -55,6 +55,7 @@ Route::middleware(['auth', 'two_fa', 'admin.access'])->prefix('admin')->name('ad
     Route::prefix('ministry')->name('ministry.')->group(function () {
         Route::get('/dashboard', [MinistryDashboardController::class, 'index'])->name('dashboard');
         Route::get('/members', [MinistryDashboardController::class, 'members'])->name('members');
+        Route::get('/members/pdf', [MinistryDashboardController::class, 'membersPdf'])->name('members.pdf');
         Route::get('/attendance', [MinistryDashboardController::class, 'attendance'])->name('attendance');
         Route::post('/attendance', [MinistryDashboardController::class, 'saveAttendance'])->name('save-attendance');
         Route::get('/sms', [MinistryDashboardController::class, 'composeSms'])->name('compose-sms');
@@ -69,6 +70,9 @@ Route::middleware(['auth', 'two_fa', 'admin.access'])->prefix('admin')->name('ad
         Route::post('/finance/expenses',             [MinistryFinanceController::class, 'storeExpense'])->name('finance.expenses.store');
         Route::delete('/finance/expenses/{id}',      [MinistryFinanceController::class, 'deleteExpense'])->name('finance.expenses.delete');
         Route::get('/finance/report',                [MinistryFinanceController::class, 'report'])->name('finance.report');
+        Route::get('/finance/report/pdf',            [MinistryFinanceController::class, 'reportPdf'])->name('finance.report.pdf');
+        Route::get('/finance/offerings/pdf',         [MinistryFinanceController::class, 'offeringsPdf'])->name('finance.offerings.pdf');
+        Route::get('/finance/expenses/pdf',          [MinistryFinanceController::class, 'expensesPdf'])->name('finance.expenses.pdf');
 
         // Welfare Contributions
         Route::get('/finance/welfare/contributions',        [MinistryFinanceController::class, 'welfareContributions'])->name('finance.welfare.contributions');
@@ -83,8 +87,9 @@ Route::middleware(['auth', 'two_fa', 'admin.access'])->prefix('admin')->name('ad
         Route::delete('/finance/welfare/benefits/{id}',     [MinistryFinanceController::class, 'deleteWelfareBenefit'])->name('finance.welfare.benefits.delete');
 
         // Welfare Due Rates
-        Route::get('/finance/welfare/due-rates',            [MinistryFinanceController::class, 'welfareDueRates'])->name('finance.welfare.due-rates');
-        Route::post('/finance/welfare/due-rates',           [MinistryFinanceController::class, 'storeWelfareDueRate'])->name('finance.welfare.due-rates.store');
+        Route::get('/finance/welfare/due-rates',                          [MinistryFinanceController::class, 'welfareDueRates'])->name('finance.welfare.due-rates');
+        Route::post('/finance/welfare/due-rates',                         [MinistryFinanceController::class, 'storeWelfareDueRate'])->name('finance.welfare.due-rates.store');
+        Route::post('/finance/welfare/due-rates/{rateId}/set-current',    [MinistryFinanceController::class, 'setCurrentWelfareDueRate'])->name('finance.welfare.due-rates.set-current');
 
         // Welfare Balances
         Route::get('/finance/welfare/balances',             [MinistryFinanceController::class, 'welfareBalances'])->name('finance.welfare.balances');
@@ -92,8 +97,15 @@ Route::middleware(['auth', 'two_fa', 'admin.access'])->prefix('admin')->name('ad
         // Welfare Fund Summary
         Route::get('/finance/welfare/fund-summary',         [MinistryFinanceController::class, 'welfareFundSummary'])->name('finance.welfare.fund-summary');
 
+        // Welfare PDF Exports
+        Route::get('/finance/welfare/contributions/pdf',    [MinistryFinanceController::class, 'welfareContributionsPdf'])->name('finance.welfare.contributions.pdf');
+        Route::get('/finance/welfare/benefits/pdf',         [MinistryFinanceController::class, 'welfareBenefitsPdf'])->name('finance.welfare.benefits.pdf');
+        Route::get('/finance/welfare/balances/pdf',         [MinistryFinanceController::class, 'welfareBalancesPdf'])->name('finance.welfare.balances.pdf');
+        Route::get('/finance/welfare/fund-summary/pdf',     [MinistryFinanceController::class, 'welfareFundSummaryPdf'])->name('finance.welfare.fund-summary.pdf');
+
         // Welfare Member Records
         Route::get('/finance/welfare/member-records',       [MinistryFinanceController::class, 'welfareMembers'])->name('finance.welfare.members');
         Route::get('/finance/welfare/member-records/{memberId}', [MinistryFinanceController::class, 'welfareMemberShow'])->name('finance.welfare.members.show');
+        Route::get('/finance/welfare/member-records/{memberId}/pdf', [MinistryFinanceController::class, 'welfareMemberPdf'])->name('finance.welfare.members.show.pdf');
     });
 });

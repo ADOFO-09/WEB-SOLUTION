@@ -30,16 +30,14 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount / Month</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Notes</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Added By</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse($rates as $rate)
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50 {{ $rate->is_current ? 'bg-green-50' : '' }}">
                             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {{ $rate->effective_from->format('M d, Y') }}
-                                @if($loop->first)
-                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Current</span>
-                                @endif
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm font-bold text-green-600">
                                 {{ $currencySymbol }} {{ number_format($rate->amount, 2) }}
@@ -50,10 +48,21 @@
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                                 {{ $rate->createdBy?->name ?? '—' }}
                             </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                @if($rate->is_current)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">&#10003; Current</span>
+                                @else
+                                    <form action="{{ route('admin.welfare.rates.set-current', $rate->id) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="text-xs text-indigo-600 hover:underline"
+                                                onclick="return confirm('Set this rate as the current active rate?')">Set as Current</button>
+                                    </form>
+                                @endif
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-8 text-center text-gray-500">No rates configured yet.</td>
+                            <td colspan="5" class="px-4 py-8 text-center text-gray-500">No rates configured yet.</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -92,6 +101,16 @@
                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                               placeholder="e.g. Rate revised by congregation vote">{{ old('notes') }}</textarea>
                     @error('notes') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="flex items-start gap-2 pt-1">
+                    <input type="checkbox" name="is_current" id="is_current" value="1"
+                           {{ old('is_current', '1') ? 'checked' : '' }}
+                           class="mt-0.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                    <div>
+                        <label for="is_current" class="text-sm font-medium text-gray-700 cursor-pointer">Mark as current rate</label>
+                        <p class="text-xs text-gray-400 mt-0.5">Uncheck only when adding a historical or correction entry without changing the active rate.</p>
+                    </div>
                 </div>
 
                 <div class="pt-2">

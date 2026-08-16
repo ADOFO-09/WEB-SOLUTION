@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Roles;
 
 use App\Http\Controllers\Controller;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Member;
 use App\Models\Ministry;
 use App\Models\MinistryExpense;
@@ -394,10 +395,26 @@ class MinistryFinanceController extends Controller
 
         $validated['ministry_id'] = $ministry->id;
         $validated['created_by']  = Auth::id();
+        $validated['is_current']  = $request->boolean('is_current');
+
+        if ($validated['is_current']) {
+            MinistryWelfareRate::where('ministry_id', $ministry->id)->update(['is_current' => false]);
+        }
 
         MinistryWelfareRate::create($validated);
 
         return back()->with('success', 'Due rate added successfully.');
+    }
+
+    public function setCurrentWelfareDueRate(int $rateId)
+    {
+        $ministry = $this->getMinistry();
+        if (!$ministry) return back()->with('error', 'No ministry assigned.');
+
+        MinistryWelfareRate::where('ministry_id', $ministry->id)->update(['is_current' => false]);
+        MinistryWelfareRate::where('id', $rateId)->where('ministry_id', $ministry->id)->update(['is_current' => true]);
+
+        return back()->with('success', 'Rate marked as current.');
     }
 
     // ── Welfare Balances ──────────────────────────────────────────────────
@@ -682,6 +699,290 @@ class MinistryFinanceController extends Controller
 
         return view('admin.roles.ministry.finance.welfare.member-show',
             compact('ministry', 'member', 'yearlyData', 'benefits', 'totalContributions', 'totalBenefits', 'purposes'));
+    }
+
+    // ── PDF Exports ───────────────────────────────────────────────────────
+
+    public function offeringsPdf(Request $request)
+    {
+        $ministry = $this->getMinistry();
+        if (!$ministry) abort(403);
+
+        $year         = $request->input('year', now()->year);
+        $filterType   = $request->input('type');
+        $filterMonth  = $request->input('month');
+
+        $query = MinistryOffering::where('ministry_id', $ministry->id)->with('recordedBy')
+            ->whereYear('offering_date', $year);
+        if ($filterType)  $query->where('offering_type', $filterType);
+        if ($filterMonth) $query->whereMonth('offering_date', $filterMonth);
+
+        $offerings = $query->orderByDesc('offering_date')->get();
+        $types     = MinistryOffering::TYPES;
+
+        $pdf = Pdf::loadView('admin.pdf.ministry.offerings', compact(
+            'ministry', 'offerings', 'types', 'year', 'filterType', 'filterMonth'
+        ))->setPaper('a4', 'landscape');
+
+        return $pdf->download(str_replace(' ', '_', $ministry->name) . '_Offerings_' . $year . '.pdf');
+    }
+
+    public function expensesPdf(Request $request)
+    {
+        $ministry = $this->getMinistry();
+        if (!$ministry) abort(403);
+
+        $year           = $request->input('year', now()->year);
+        $filterCategory = $request->input('category');
+        $filterMonth    = $request->input('month');
+
+        $query = MinistryExpense::where('ministry_id', $ministry->id)->with('recordedBy')
+            ->whereYear('expense_date', $year);
+        if ($filterCategory) $query->where('category', $filterCategory);
+        if ($filterMonth)    $query->whereMonth('expense_date', $filterMonth);
+
+        $expenses   = $query->orderByDesc('expense_date')->get();
+        $categories = MinistryExpense::CATEGORIES;
+
+        $pdf = Pdf::loadView('admin.pdf.ministry.expenses', compact(
+            'ministry', 'expenses', 'categories', 'year', 'filterCategory', 'filterMonth'
+        ))->setPaper('a4', 'landscape');
+
+        return $pdf->download(str_replace(' ', '_', $ministry->name) . '_Expenses_' . $year . '.pdf');
+    }
+
+    public function welfareContributionsPdf(Request $request)
+    {
+        $ministry = $this->getMinistry();
+        if (!$ministry) abort(403);
+
+        $year         = $request->input('period_year', now()->year);
+        $filterMember = $request->input('member_id');
+        $filterMonth  = $request->input('period_month');
+
+        $query = MinistryWelfareContribution::where('ministry_id', $ministry->id)
+            ->with(['member', 'receivedBy'])
+            ->where('period_year', $year);
+        if ($filterMember) $query->where('member_id', $filterMember);
+        if ($filterMonth)  $query->where('period_month', $filterMonth);
+
+        $contributions = $query->orderByDesc('payment_date')->get();
+
+        $memberNames = Member::whereHas('ministries', fn($q) => $q->where('ministries.id', $ministry->id))
+            ->pluck('first_name', 'id')
+            ->map(fn($n, $id) => $n);
+
+        $pdf = Pdf::loadView('admin.pdf.ministry.welfare-contributions', compact(
+            'ministry', 'contributions', 'year', 'filterMember', 'filterMonth', 'memberNames'
+        ))->setPaper('a4', 'landscape');
+
+        return $pdf->download(str_replace(' ', '_', $ministry->name) . '_Welfare_Contributions_' . $year . '.pdf');
+    }
+
+    public function welfareBenefitsPdf(Request $request)
+    {
+        $ministry = $this->getMinistry();
+        if (!$ministry) abort(403);
+
+        $year          = $request->input('year', now()->year);
+        $filterPurpose = $request->input('purpose');
+
+        $query = MinistryWelfareBenefit::where('ministry_id', $ministry->id)
+            ->with(['member', 'recordedBy'])
+            ->where('benefit_year', $year);
+        if ($filterPurpose) $query->where('purpose', $filterPurpose);
+
+        $benefits = $query->orderByDesc('benefit_date')->get();
+        $purposes = MinistryWelfareBenefit::PURPOSES;
+
+        $pdf = Pdf::loadView('admin.pdf.ministry.welfare-benefits', compact(
+            'ministry', 'benefits', 'purposes', 'year', 'filterPurpose'
+        ))->setPaper('a4', 'portrait');
+
+        return $pdf->download(str_replace(' ', '_', $ministry->name) . '_Welfare_Benefits_' . $year . '.pdf');
+    }
+
+    public function welfareBalancesPdf(Request $request)
+    {
+        $ministry = $this->getMinistry();
+        if (!$ministry) abort(403);
+
+        $year   = (int) $request->input('year', now()->year);
+        $status = $request->input('status', 'all');
+
+        $members  = Member::whereHas('ministries', fn($q) => $q->where('ministries.id', $ministry->id))
+            ->orderBy('first_name')->get();
+        $allRates = MinistryWelfareRate::where('ministry_id', $ministry->id)
+            ->orderBy('effective_from')->get();
+
+        $expected = 0.0;
+        for ($m = 1; $m <= 12; $m++) {
+            $periodStart = \Carbon\Carbon::create($year, $m, 1)->startOfDay();
+            $rate = $allRates->filter(fn($r) => $r->effective_from->lte($periodStart))->last();
+            if ($rate) $expected += (float) $rate->amount;
+        }
+
+        $paidByMember = MinistryWelfareContribution::where('ministry_id', $ministry->id)
+            ->where('period_year', $year)
+            ->select('member_id', DB::raw('SUM(amount) as total'))
+            ->groupBy('member_id')->pluck('total', 'member_id');
+
+        $balances = $members->map(fn(Member $member) => [
+            'member'   => $member,
+            'expected' => $expected,
+            'paid'     => (float) ($paidByMember[$member->id] ?? 0),
+            'balance'  => round($expected - (float) ($paidByMember[$member->id] ?? 0), 2),
+        ]);
+
+        if ($status === 'arrears') $balances = $balances->filter(fn($b) => $b['balance'] > 0);
+        elseif ($status === 'paid')   $balances = $balances->filter(fn($b) => $b['balance'] == 0);
+        elseif ($status === 'credit') $balances = $balances->filter(fn($b) => $b['balance'] < 0);
+
+        $pdf = Pdf::loadView('admin.pdf.ministry.welfare-balances', compact(
+            'ministry', 'balances', 'year', 'status'
+        ))->setPaper('a4', 'portrait');
+
+        return $pdf->download(str_replace(' ', '_', $ministry->name) . '_Welfare_Balances_' . $year . '.pdf');
+    }
+
+    public function welfareFundSummaryPdf(Request $request)
+    {
+        $ministry = $this->getMinistry();
+        if (!$ministry) abort(403);
+
+        $year = $request->input('year', now()->year);
+
+        $contributionsByMonth = MinistryWelfareContribution::where('ministry_id', $ministry->id)
+            ->where('period_year', $year)
+            ->select('period_month', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+            ->groupBy('period_month')->get()->keyBy('period_month');
+
+        $benefitsByPurpose = MinistryWelfareBenefit::where('ministry_id', $ministry->id)
+            ->where('benefit_year', $year)
+            ->select('purpose', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+            ->groupBy('purpose')->get()->keyBy('purpose');
+
+        $totalContributions = (float) MinistryWelfareContribution::where('ministry_id', $ministry->id)->where('period_year', $year)->sum('amount');
+        $totalBenefits      = (float) MinistryWelfareBenefit::where('ministry_id', $ministry->id)->where('benefit_year', $year)->sum('amount');
+        $balance            = $totalContributions - $totalBenefits;
+
+        $recentBenefits = MinistryWelfareBenefit::where('ministry_id', $ministry->id)
+            ->with(['member', 'expenses'])->orderByDesc('benefit_date')->limit(10)->get();
+        $purposes = MinistryWelfareBenefit::PURPOSES;
+
+        $pdf = Pdf::loadView('admin.pdf.ministry.welfare-fund-summary', compact(
+            'ministry', 'year', 'contributionsByMonth', 'benefitsByPurpose',
+            'totalContributions', 'totalBenefits', 'balance', 'recentBenefits', 'purposes'
+        ))->setPaper('a4', 'portrait');
+
+        return $pdf->download(str_replace(' ', '_', $ministry->name) . '_Welfare_Fund_Summary_' . $year . '.pdf');
+    }
+
+    public function welfareMemberPdf(Request $request, int $memberId)
+    {
+        $ministry = $this->getMinistry();
+        if (!$ministry) abort(403);
+
+        $member   = Member::findOrFail($memberId);
+        $allRates = MinistryWelfareRate::where('ministry_id', $ministry->id)
+            ->orderByDesc('effective_from')->get();
+
+        $rateFor = function (int $month, int $year) use ($allRates): ?float {
+            $cut = \Carbon\Carbon::create($year, $month, 1)->startOfDay();
+            $r   = $allRates->first(fn($r) => $r->effective_from->lte($cut));
+            return $r ? (float) $r->amount : null;
+        };
+
+        $allContribs = MinistryWelfareContribution::where('ministry_id', $ministry->id)
+            ->where('member_id', $member->id)->get()->groupBy('period_year');
+
+        $years = $allContribs->keys()->merge([now()->year])->unique()->sortDesc()->values();
+
+        $yearlyData = [];
+        foreach ($years as $yr) {
+            $byMonth  = $allContribs->get($yr, collect())->keyBy('period_month');
+            $expected = 0;
+            $months   = [];
+            for ($m = 1; $m <= 12; $m++) {
+                $rate    = $rateFor($m, $yr);
+                $contrib = $byMonth->get($m);
+                $expected += $rate ?? 0;
+                $months[$m] = ['rate' => $rate, 'paid' => $contrib ? (float) $contrib->amount : null, 'contrib' => $contrib];
+            }
+            $paid    = (float) $byMonth->sum('amount');
+            $balance = $expected - $paid;
+            $yearlyData[] = compact('yr', 'months', 'expected', 'paid', 'balance');
+        }
+
+        $benefits           = MinistryWelfareBenefit::with('expenses')->where('ministry_id', $ministry->id)->where('member_id', $member->id)->orderByDesc('benefit_date')->get();
+        $totalContributions = (float) MinistryWelfareContribution::where('ministry_id', $ministry->id)->where('member_id', $member->id)->sum('amount');
+        $totalBenefits      = $benefits->sum(fn($b) => (float) $b->total_cost);
+        $purposes           = MinistryWelfareBenefit::PURPOSES;
+
+        $pdf = Pdf::loadView('admin.pdf.ministry.welfare-member', compact(
+            'ministry', 'member', 'yearlyData', 'benefits',
+            'totalContributions', 'totalBenefits', 'purposes'
+        ))->setPaper('a4', 'portrait');
+
+        return $pdf->download(str_replace(' ', '_', $member->full_name) . '_Welfare_Statement.pdf');
+    }
+
+    public function reportPdf(Request $request)
+    {
+        $ministry = $this->getMinistry();
+        if (!$ministry) abort(403);
+
+        $year = (int) $request->input('year', now()->year);
+
+        $incomeByType = MinistryOffering::where('ministry_id', $ministry->id)->whereYear('offering_date', $year)
+            ->select('offering_type', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+            ->groupBy('offering_type')->get()->keyBy('offering_type');
+
+        $expenseByCategory = MinistryExpense::where('ministry_id', $ministry->id)->whereYear('expense_date', $year)
+            ->select('category', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+            ->groupBy('category')->get()->keyBy('category');
+
+        $welfareBenefitsByPurpose = MinistryWelfareBenefit::where('ministry_id', $ministry->id)->whereYear('benefit_date', $year)
+            ->select('purpose', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+            ->groupBy('purpose')->get()->keyBy('purpose');
+
+        $rawOfferings = MinistryOffering::where('ministry_id', $ministry->id)->whereYear('offering_date', $year)
+            ->selectRaw('MONTH(offering_date) as m, SUM(amount) as total')->groupBy('m')->pluck('total', 'm')->toArray();
+        $rawExpenses  = MinistryExpense::where('ministry_id', $ministry->id)->whereYear('expense_date', $year)
+            ->selectRaw('MONTH(expense_date) as m, SUM(amount) as total')->groupBy('m')->pluck('total', 'm')->toArray();
+        $rawContribs  = MinistryWelfareContribution::where('ministry_id', $ministry->id)->where('period_year', $year)
+            ->selectRaw('period_month as m, SUM(amount) as total')->groupBy('m')->pluck('total', 'm')->toArray();
+        $rawBenefits  = MinistryWelfareBenefit::where('ministry_id', $ministry->id)->whereYear('benefit_date', $year)
+            ->selectRaw('MONTH(benefit_date) as m, SUM(amount) as total')->groupBy('m')->pluck('total', 'm')->toArray();
+
+        $monthlyIncome = $monthlyExpenses = $monthlyWelfareContribs = $monthlyWelfareBenefits = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $monthlyIncome[$m]          = (float) ($rawOfferings[$m] ?? 0);
+            $monthlyExpenses[$m]        = (float) ($rawExpenses[$m]  ?? 0);
+            $monthlyWelfareContribs[$m] = (float) ($rawContribs[$m]  ?? 0);
+            $monthlyWelfareBenefits[$m] = (float) ($rawBenefits[$m]  ?? 0);
+        }
+
+        $totalIncome          = array_sum($monthlyIncome);
+        $totalExpense         = array_sum($monthlyExpenses);
+        $financialBalance     = $totalIncome - $totalExpense;
+        $totalWelfareContribs = array_sum($monthlyWelfareContribs);
+        $totalWelfareBenefits = array_sum($monthlyWelfareBenefits);
+        $welfareFundBalance   = $totalWelfareContribs - $totalWelfareBenefits;
+        $memberCount          = $ministry->activeMembers()->count();
+        $purposes             = MinistryWelfareBenefit::PURPOSES;
+        $currencySymbol       = SettingHelper::currencySymbol();
+
+        $pdf = Pdf::loadView('admin.pdf.ministry.report', compact(
+            'ministry', 'year', 'memberCount',
+            'incomeByType', 'expenseByCategory', 'welfareBenefitsByPurpose', 'purposes',
+            'monthlyIncome', 'monthlyExpenses', 'monthlyWelfareContribs', 'monthlyWelfareBenefits',
+            'totalIncome', 'totalExpense', 'financialBalance',
+            'totalWelfareContribs', 'totalWelfareBenefits', 'welfareFundBalance',
+            'currencySymbol'
+        ))->setPaper('a4', 'landscape');
+
+        return $pdf->download(str_replace(' ', '_', $ministry->name) . '_Activity_Report_' . $year . '.pdf');
     }
 
     // ── SMS Helpers ───────────────────────────────────────────────────────

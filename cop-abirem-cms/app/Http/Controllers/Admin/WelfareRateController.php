@@ -35,10 +35,24 @@ class WelfareRateController extends Controller implements HasMiddleware
         ]);
 
         $validated['created_by'] = auth()->user()?->id;
+        $validated['is_current'] = $request->boolean('is_current');
+
+        if ($validated['is_current']) {
+            WelfareRate::query()->update(['is_current' => false]);
+        }
 
         WelfareRate::create($validated);
 
         return redirect()->route('admin.welfare.rates.index')
             ->with('success', 'Welfare due rate added successfully.');
+    }
+
+    public function setCurrent(WelfareRate $rate)
+    {
+        WelfareRate::query()->update(['is_current' => false]);
+        $rate->update(['is_current' => true]);
+
+        return redirect()->route('admin.welfare.rates.index')
+            ->with('success', 'Rate marked as current.');
     }
 }
