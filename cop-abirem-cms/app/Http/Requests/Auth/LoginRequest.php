@@ -29,8 +29,9 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'email'    => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'website'  => ['nullable', 'max:0'], // honeypot: must be empty
         ];
     }
 

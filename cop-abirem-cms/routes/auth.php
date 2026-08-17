@@ -34,10 +34,12 @@ Route::middleware('guest')->group(function () {
     Route::get('forgot-password/sms', [SmsPasswordResetController::class, 'create'])
         ->name('password.sms.request');
     Route::post('forgot-password/sms', [SmsPasswordResetController::class, 'store'])
+        ->middleware('throttle:3,1')
         ->name('password.sms.send');
     Route::get('forgot-password/sms/verify', [SmsPasswordResetController::class, 'showVerify'])
         ->name('password.sms.verify');
     Route::post('forgot-password/sms/verify', [SmsPasswordResetController::class, 'verify'])
+        ->middleware('throttle:5,1')
         ->name('password.sms.verify.store');
 });
 
@@ -46,8 +48,10 @@ Route::middleware('auth')->group(function () {
     Route::get('two-factor/challenge', [TwoFactorController::class, 'show'])
         ->name('two-factor.challenge');
     Route::post('two-factor/challenge', [TwoFactorController::class, 'verify'])
+        ->middleware('throttle:5,1')
         ->name('two-factor.verify');
     Route::post('two-factor/resend', [TwoFactorController::class, 'resend'])
+        ->middleware('throttle:3,1')
         ->name('two-factor.resend');
 });
 

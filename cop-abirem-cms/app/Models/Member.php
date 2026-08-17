@@ -60,18 +60,23 @@ class Member extends Model
     ];
 
     protected $casts = [
-        'date_of_birth'          => 'date',
-        'date_joined'            => 'date',
-        'date_left'              => 'date',
-        'baptism_date'           => 'date',
-        'biometric_enrolled'     => 'boolean',
-        'biometric_enrolled_at'  => 'datetime',
-        'fingerprint_template_1' => 'encrypted',
-        'fingerprint_template_2' => 'encrypted',
-        'welfare_enrolled'       => 'boolean',
-        'welfare_start_date'     => 'date',
-        'funeral_enrolled'       => 'boolean',
-        'funeral_start_date'     => 'date',
+        'date_of_birth'             => 'date',
+        'date_joined'               => 'date',
+        'date_left'                 => 'date',
+        'baptism_date'              => 'date',
+        'biometric_enrolled'        => 'boolean',
+        'biometric_enrolled_at'     => 'datetime',
+        'fingerprint_template_1'    => 'encrypted',
+        'fingerprint_template_2'    => 'encrypted',
+        'welfare_enrolled'          => 'boolean',
+        'welfare_start_date'        => 'date',
+        'funeral_enrolled'          => 'boolean',
+        'funeral_start_date'        => 'date',
+        // Sensitive PII — not used in SQL WHERE/ORDER clauses
+        'address'                   => 'encrypted',
+        'emergency_contact_name'    => 'encrypted',
+        'emergency_contact_phone'   => 'encrypted',
+        'phone_secondary'           => 'encrypted',
     ];
 
     protected $appends = ['full_name', 'age'];

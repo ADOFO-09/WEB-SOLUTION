@@ -429,6 +429,10 @@ class SettingsController extends Controller
      */
     public function downloadBackup($filename)
     {
+        if (!$this->isValidBackupFilename($filename)) {
+            abort(400, 'Invalid backup filename.');
+        }
+
         $path = storage_path('app/backups/' . $filename);
 
         if (!File::exists($path)) {
@@ -443,6 +447,10 @@ class SettingsController extends Controller
      */
     public function deleteBackup($filename)
     {
+        if (!$this->isValidBackupFilename($filename)) {
+            abort(400, 'Invalid backup filename.');
+        }
+
         $path = storage_path('app/backups/' . $filename);
 
         if (!File::exists($path)) {
@@ -459,6 +467,10 @@ class SettingsController extends Controller
      */
     public function restoreBackup($filename)
     {
+        if (!$this->isValidBackupFilename($filename)) {
+            abort(400, 'Invalid backup filename.');
+        }
+
         $path = storage_path('app/backups/' . $filename);
 
         if (!File::exists($path)) {
@@ -516,7 +528,7 @@ class SettingsController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Database restore failed: ' . $e->getMessage());
-            return back()->with('error', 'Restore failed: ' . $e->getMessage());
+            return back()->with('error', 'Restore failed. Check the application logs for details.');
         }
     }
 
@@ -524,6 +536,13 @@ class SettingsController extends Controller
      * PHP-based restore — executes SQL statements directly via Laravel DB.
      * Used as a fallback when the mysql CLI is unavailable.
      */
+    private function isValidBackupFilename(string $filename): bool
+    {
+        // Allow only alphanumeric, underscores, hyphens, and a single .sql extension.
+        // Rejects path separators (/ \ ..) that would enable directory traversal.
+        return (bool) preg_match('/^[a-zA-Z0-9_\-]+\.sql$/', $filename);
+    }
+
     private function restoreViaPHP(string $path): void
     {
         $sql = File::get($path);

@@ -119,6 +119,8 @@
 
             <form method="POST" action="{{ route('password.sms.send') }}">
                 @csrf
+                {{-- Honeypot: invisible to humans, bots fill it in --}}
+                <input type="text" name="website" value="" style="opacity:0;position:absolute;top:0;left:0;height:0;width:0;z-index:-1;" tabindex="-1" autocomplete="off" aria-hidden="true">
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <div class="input-wrapper">

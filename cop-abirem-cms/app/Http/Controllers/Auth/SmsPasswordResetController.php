@@ -34,6 +34,11 @@ class SmsPasswordResetController extends Controller
             'email' => ['required', 'email'],
         ]);
 
+        // Honeypot: bots fill in the hidden website field, humans don't
+        if ($request->filled('website')) {
+            return $this->otpSentResponse(null);
+        }
+
         $user = User::where('email', $request->input('email'))->first();
 
         // Account not found — redirect the same way as success to prevent email enumeration
