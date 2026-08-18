@@ -85,15 +85,21 @@
             <div class="shape shape-3"></div>
         </div>
         <div class="brand-content">
+            @php
+                $_authName      = \App\Helpers\SettingHelper::churchName();
+                $_authShortName = \App\Helpers\SettingHelper::churchShortName() ?: \App\Helpers\SettingHelper::churchName();
+                $_authSlogan    = \App\Helpers\SettingHelper::churchSlogan();
+                $_authLogo      = \App\Helpers\SettingHelper::churchLogo();
+            @endphp
             <div class="brand-logo">
-                <img src="{{ asset('images/cop-logo.png') }}" alt="COP Logo" onerror="this.style.display='none'">
+                <img src="{{ $_authLogo ?? asset('images/cop-logo.png') }}" alt="{{ $_authName }}" onerror="this.style.display='none'">
             </div>
-            <h1>Church of Pentecost</h1>
-            <div class="subtitle">Abirem Assembly</div>
+            <h1>{{ $_authName }}</h1>
+            @if($_authSlogan)<div class="subtitle">{{ $_authSlogan }}</div>@endif
             <p>Check your phone for the 6-digit code we just sent you.</p>
             <div class="steps">
                 <div class="step"><div class="step-num">1</div><span>Open your SMS messages</span></div>
-                <div class="step"><div class="step-num">2</div><span>Find the code from COP Abirem</span></div>
+                <div class="step"><div class="step-num">2</div><span>Find the code from {{ $_authShortName }}</span></div>
                 <div class="step"><div class="step-num">3</div><span>Enter it here and set your new password</span></div>
             </div>
         </div>

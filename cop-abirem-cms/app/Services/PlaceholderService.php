@@ -116,7 +116,7 @@ class PlaceholderService
      * Resolve all Type C (system) placeholder values.
      * Called once per send batch — not per recipient.
      *
-     * Returns: [ 'church_name' => 'COP Abirem', 'current_date' => '25 Jun, 2026', ... ]
+     * Returns: [ 'church_name' => 'Kerith', 'current_date' => '25 Jun, 2026', ... ]
      */
     public function resolveSystemValues(): array
     {

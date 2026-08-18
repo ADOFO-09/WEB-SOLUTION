@@ -143,7 +143,7 @@ class ExpenseSeeder extends Seeder
                 'amount' => 1000.00,
                 'expense_date' => '2025-01-20',
                 'payment_method' => 'bank_transfer',
-                'payee_name' => 'COP Abirem District',
+                'payee_name' => 'Church District Office',
                 'payee_phone' => null,
                 'voucher_number' => 'VCH-2025-0008',
                 'status' => 'paid',

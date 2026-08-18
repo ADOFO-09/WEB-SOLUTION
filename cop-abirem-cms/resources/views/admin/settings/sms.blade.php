@@ -310,7 +310,7 @@
                             @endforeach
                         </div>
                         <p class="mt-1 text-xs text-gray-400">
-                            Example: <em>Happy Birthday, {first_name}! Wishing you God's abundant blessings. — COP Abirem</em>
+                            Example: <em>Happy Birthday, {first_name}! Wishing you God's abundant blessings. — {church_short_name}</em>
                         </p>
                     </div>
                 </div>
@@ -430,7 +430,7 @@
                 <div>
                     <p class="text-sm font-semibold text-gray-700 mb-1">Linux / cPanel / shared hosting</p>
                     <p class="text-xs text-gray-500 mb-2">Add this single cron entry via cPanel → Cron Jobs (replace the path with your actual project path):</p>
-                    <pre class="bg-gray-900 text-green-400 rounded-lg p-3 text-xs overflow-x-auto">* * * * * cd /home/yourusername/public_html/cop-abirem-cms &amp;&amp; php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</pre>
+                    <pre class="bg-gray-900 text-green-400 rounded-lg p-3 text-xs overflow-x-auto">* * * * * cd /home/yourusername/public_html/kerith &amp;&amp; php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</pre>
                 </div>
 
                 {{-- Windows XAMPP --}}
@@ -438,7 +438,7 @@
                     <p class="text-sm font-semibold text-gray-700 mb-1">Windows (XAMPP — development)</p>
                     <p class="text-xs text-gray-500 mb-2">Open <strong>Task Scheduler</strong> → Create Basic Task → repeat every 1 minute → Action: start a program:</p>
                     <pre class="bg-gray-900 text-green-400 rounded-lg p-3 text-xs overflow-x-auto">Program : C:\xampp\php\php.exe
-Arguments: C:\xampp\htdocs\WEB-SOLUTION\cop-abirem-cms\artisan schedule:run</pre>
+Arguments: C:\xampp\htdocs\kerith\artisan schedule:run</pre>
                 </div>
 
                 <p class="text-xs text-gray-400">

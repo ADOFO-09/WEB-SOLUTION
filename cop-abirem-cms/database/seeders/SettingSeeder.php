@@ -11,8 +11,8 @@ class SettingSeeder extends Seeder
     {
         $settings = [
             // General Settings
-            ['key' => 'church_name', 'value' => 'The Church of Pentecost - Abirem Central Assembly', 'group' => 'general', 'type' => 'text'],
-            ['key' => 'church_address', 'value' => 'Abirem, Eastern Region, Ghana', 'group' => 'general', 'type' => 'textarea'],
+            ['key' => 'church_name', 'value' => 'My Church', 'group' => 'general', 'type' => 'text'],
+            ['key' => 'church_address', 'value' => '', 'group' => 'general', 'type' => 'textarea'],
             ['key' => 'church_phone', 'value' => '', 'group' => 'general', 'type' => 'text'],
             ['key' => 'church_email', 'value' => '', 'group' => 'general', 'type' => 'text'],
             ['key' => 'church_website', 'value' => '', 'group' => 'general', 'type' => 'text'],

@@ -160,11 +160,16 @@
             <div class="shape shape-3"></div>
         </div>
         <div class="brand-content">
+            @php
+                $_authName   = \App\Helpers\SettingHelper::churchName();
+                $_authSlogan = \App\Helpers\SettingHelper::churchSlogan();
+                $_authLogo   = \App\Helpers\SettingHelper::churchLogo();
+            @endphp
             <div class="brand-logo">
-                <img src="{{ asset('images/cop-logo.png') }}" alt="COP Logo" onerror="this.style.display='none'">
+                <img src="{{ $_authLogo ?? asset('images/cop-logo.png') }}" alt="{{ $_authName }}" onerror="this.style.display='none'">
             </div>
-            <h1>Church of Pentecost</h1>
-            <div class="subtitle">Abirem Assembly</div>
+            <h1>{{ $_authName }}</h1>
+            @if($_authSlogan)<div class="subtitle">{{ $_authSlogan }}</div>@endif
             <p>Choose a strong, memorable password that you haven't used before.</p>
 
             <div class="steps">

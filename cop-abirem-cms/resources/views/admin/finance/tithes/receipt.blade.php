@@ -113,8 +113,9 @@
 <body>
     <div class="receipt">
         <div class="header">
-            <div class="church-name">Church of Pentecost</div>
-            <div class="church-subtitle">Abirem District</div>
+            <div class="church-name">{{ \App\Helpers\SettingHelper::churchName() }}</div>
+            @php $churchAddr = \App\Models\Setting::get('church_address', ''); @endphp
+            @if($churchAddr)<div class="church-subtitle">{{ $churchAddr }}</div>@endif
             <div class="receipt-title">TITHE RECEIPT</div>
             <div class="receipt-number">{{ $tithe->receipt_number }}</div>
         </div>

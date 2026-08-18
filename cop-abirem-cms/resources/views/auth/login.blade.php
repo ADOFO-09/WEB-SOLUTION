@@ -150,6 +150,37 @@
             margin-bottom: 3rem;
         }
         
+        /* Kerith brand verse */
+        .kerith-verse {
+            margin: 1.5rem 0 2rem;
+            padding: 1rem 1.25rem;
+            border-left: 2px solid rgba(212, 175, 55, 0.35);
+            text-align: left;
+        }
+        .kerith-quote {
+            font-style: italic;
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.65;
+            margin-bottom: 0.3rem;
+        }
+        .kerith-ref {
+            font-size: 0.72rem;
+            color: rgba(212, 175, 55, 0.7);
+            letter-spacing: 0.03em;
+            margin-bottom: 0.55rem;
+        }
+        .kerith-tagline {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: rgba(212, 175, 55, 0.85);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        @media (max-width: 1024px) {
+            .kerith-verse { display: none; }
+        }
+
         .brand-features {
             display: flex;
             flex-direction: column;
@@ -519,8 +550,14 @@
             @if($_loginSlogan)
             <div class="subtitle">{{ $_loginSlogan }}</div>
             @endif
-            <p>Empowering our church community with modern tools for efficient administration, member care, and spiritual growth.</p>
-            
+            <p>Empowering your church with modern tools for member care, financial accountability, and community growth.</p>
+
+            <div class="kerith-verse">
+                <p class="kerith-quote">&ldquo;Thou shalt drink of the brook&hellip; and I have commanded the ravens to feed thee there.&rdquo;</p>
+                <p class="kerith-ref">— 1 Kings 17:4</p>
+                <p class="kerith-tagline">Kerith &mdash; a place of provision.</p>
+            </div>
+
             <div class="brand-features">
                 <div class="brand-feature">
                     <div class="brand-feature-icon">
@@ -655,7 +692,7 @@
             
             <div class="help-section">
                 <p>Need help accessing your account?</p>
-                <p>Contact church admin or <a href="mailto:support@copabirem.org">support@copabirem.org</a></p>
+                <p>Contact your church administrator for access.</p>
             </div>
         </div>
     </div>

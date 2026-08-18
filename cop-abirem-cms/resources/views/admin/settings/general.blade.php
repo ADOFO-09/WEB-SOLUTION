@@ -39,7 +39,7 @@
                             <label for="church_short_name" class="block text-sm font-medium text-gray-700">Short Name</label>
                             <input type="text" name="church_short_name" id="church_short_name"
                                    value="{{ old('church_short_name', $settings['church_short_name'] ?? '') }}"
-                                   placeholder="e.g. COP Abirem"
+                                   placeholder="e.g. ABC Church"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             <p class="mt-1 text-xs text-gray-400">Used in SMS sign-offs. Falls back to the full name if blank.</p>
                         </div>
@@ -70,7 +70,7 @@
                         <label for="church_slogan" class="block text-sm font-medium text-gray-700">Slogan / Tagline</label>
                         <input type="text" name="church_slogan" id="church_slogan"
                                value="{{ old('church_slogan', $settings['church_slogan'] ?? '') }}"
-                               placeholder="e.g. Abirem Assembly"
+                               placeholder="e.g. Main Assembly"
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <p class="mt-1 text-xs text-gray-400">Shown below the church name on the login page.</p>
                     </div>
@@ -159,7 +159,7 @@
                 </div>
                 <div class="p-6">
                     <textarea name="report_header" id="report_header" rows="3" maxlength="1000"
-                              placeholder="e.g. Church of Pentecost — Abirem Assembly"
+                              placeholder="e.g. ABC Church — Main Assembly"
                               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">{{ old('report_header', $settings['report_header'] ?? '') }}</textarea>
                     <p class="mt-1 text-xs text-gray-400">Allowed tags: &lt;b&gt; &lt;i&gt; &lt;em&gt; &lt;strong&gt; &lt;br&gt;. All other HTML is stripped on save.</p>
                     @error('report_header')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror

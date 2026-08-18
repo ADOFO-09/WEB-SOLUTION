@@ -36,8 +36,9 @@
 <body>
     <div class="receipt">
         <div class="header">
-            <div class="church-name">Church of Pentecost</div>
-            <div class="church-address">Abirem Assembly<br>Abirem, Eastern Region, Ghana</div>
+            <div class="church-name">{{ \App\Helpers\SettingHelper::churchName() }}</div>
+            @php $churchAddr = \App\Models\Setting::get('church_address', ''); @endphp
+            @if($churchAddr)<div class="church-address">{!! nl2br(e($churchAddr)) !!}</div>@endif
             <div class="receipt-title">DONATION RECEIPT</div>
             <div class="receipt-number">{{ $donation->receipt_number ?? $donation->reference_number }}</div>
         </div>

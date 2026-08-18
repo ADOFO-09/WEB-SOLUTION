@@ -29,8 +29,9 @@
 <body>
     <div class="voucher">
         <div class="header">
-            <div class="church-name">Church of Pentecost</div>
-            <div class="church-subtitle">Abirem District</div>
+            <div class="church-name">{{ \App\Helpers\SettingHelper::churchName() }}</div>
+            @php $churchAddr = \App\Models\Setting::get('church_address', ''); @endphp
+            @if($churchAddr)<div class="church-subtitle">{{ $churchAddr }}</div>@endif
             <div class="voucher-title">PAYMENT VOUCHER</div>
             <div class="voucher-number">{{ $expense->voucher_number ?? $expense->reference_number }}</div>
         </div>
