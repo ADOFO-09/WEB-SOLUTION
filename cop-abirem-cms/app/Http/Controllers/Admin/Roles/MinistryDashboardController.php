@@ -10,6 +10,7 @@ use App\Models\Ministry;
 use App\Models\AttendanceSession;
 use App\Models\AttendanceRecord;
 use App\Models\SmsMessage;
+use App\Models\SmsTemplate;
 use App\Models\Setting;
 use App\Services\GiantSmsService;
 use Carbon\Carbon;
@@ -290,10 +291,12 @@ class MinistryDashboardController extends Controller
                 ->with('error', 'No ministry assigned.');
         }
 
-        $members = $this->getMinistryMembers($ministry->id)
-            ->whereNotNull('phone_primary');
+        $templates   = SmsTemplate::where('is_active', true)->orderBy('name')->get();
+        $memberCount = $this->getMinistryMembers($ministry->id)
+            ->whereNotNull('phone_primary')
+            ->count();
 
-        return view('admin.roles.ministry.sms', compact('ministry', 'members'));
+        return view('admin.roles.ministry.sms', compact('ministry', 'templates', 'memberCount'));
     }
 
     public function sendSms(Request $request)
@@ -305,38 +308,58 @@ class MinistryDashboardController extends Controller
         }
 
         $validated = $request->validate([
-            'message'           => 'required|string|max:160',
-            'recipient_ids'     => 'nullable|array',
-            'recipient_ids.*'   => 'exists:members,id',
+            'subject'          => 'nullable|string|max:255',
+            'message_content'  => 'required|string|max:320',
+            'recipient_type'   => 'required|in:ministry,custom',
+            'custom_numbers'   => 'required_if:recipient_type,custom|nullable|string',
         ]);
 
-        $recipients = !empty($validated['recipient_ids'])
-            ? Member::whereIn('id', $validated['recipient_ids'])
-                ->whereNotNull('phone_primary')
-                ->get()
-            : $this->getMinistryMembers($ministry->id)
+        // Resolve recipients based on type
+        if ($validated['recipient_type'] === 'ministry') {
+            $members = $this->getMinistryMembers($ministry->id)
                 ->filter(fn($m) => !empty($m->phone_primary))
                 ->values();
 
-        if ($recipients->isEmpty()) {
-            return back()->with('error', 'No members with phone numbers found.');
+            $recipients = $members->map(fn($m) => [
+                'member_id' => $m->id,
+                'phone'     => $m->phone_primary,
+                'name'      => $m->full_name,
+            ])->all();
+        } else {
+            $numbers = preg_split('/[\n,;]+/', $validated['custom_numbers'] ?? '');
+            $numbers = array_values(array_filter(array_map('trim', $numbers)));
+
+            $recipients = [];
+            foreach ($numbers as $number) {
+                $member = Member::where('phone_primary', $number)->first();
+                $recipients[] = [
+                    'member_id' => $member?->id,
+                    'phone'     => $number,
+                    'name'      => $member?->full_name ?? 'Unknown',
+                ];
+            }
         }
 
-        // Create the message record and all recipient rows atomically
-        $smsMessage = DB::transaction(function () use ($validated, $recipients, $ministry) {
+        if (empty($recipients)) {
+            return back()->with('error', 'No valid recipients found.')->withInput();
+        }
+
+        $rawMessage = $validated['message_content'];
+
+        $smsMessage = DB::transaction(function () use ($validated, $recipients, $ministry, $rawMessage) {
             $msg = SmsMessage::create([
                 'message_type'    => 'bulk',
                 'category'        => 'general',
-                'subject'         => $ministry->name . ' Ministry Message',
-                'message_content' => $validated['message'],
+                'subject'         => $validated['subject'] ?: ($ministry->name . ' Ministry Message'),
+                'message_content' => $rawMessage,
                 'status'          => 'draft',
                 'sent_by'         => auth()->id(),
             ]);
-            foreach ($recipients as $member) {
+            foreach ($recipients as $r) {
                 $msg->recipients()->create([
-                    'member_id'      => $member->id,
-                    'phone_number'   => $member->phone_primary,
-                    'recipient_name' => $member->full_name,
+                    'member_id'      => $r['member_id'],
+                    'phone_number'   => $r['phone'],
+                    'recipient_name' => $r['name'],
                     'status'         => 'pending',
                 ]);
             }
@@ -344,7 +367,6 @@ class MinistryDashboardController extends Controller
             return $msg;
         });
 
-        // Send via GiantSMS if configured, otherwise mark as logically sent
         $smsMessage->update(['status' => 'sending', 'sent_at' => now()]);
 
         $successCount = 0;
@@ -352,20 +374,35 @@ class MinistryDashboardController extends Controller
         $provider     = Setting::get('sms_provider', '');
         $smsService   = $provider === 'giantsms' ? new GiantSmsService() : null;
 
+        // System-level placeholder values resolved once per batch
+        $systemVars = [
+            '{church_name}'       => SettingHelper::churchName(),
+            '{church_short_name}' => SettingHelper::churchShortName(),
+            '{current_date}'      => now()->format('d M, Y'),
+            '{ministry_name}'     => $ministry->name,
+        ];
+
         foreach ($smsMessage->recipients()->where('status', 'pending')->get() as $recipient) {
             try {
+                $resolved = str_replace(
+                    array_keys($systemVars),
+                    array_values($systemVars),
+                    $rawMessage
+                );
+                $resolved = str_replace('{name}', $recipient->recipient_name ?? '', $resolved);
+
                 if ($smsService) {
-                    $result = $smsService->send($recipient->phone_number, $validated['message']);
+                    $result = $smsService->send($recipient->phone_number, $resolved);
                     $recipient->update([
                         'status'             => 'sent',
-                        'resolved_message'   => $validated['message'],
+                        'resolved_message'   => $resolved,
                         'sent_at'            => now(),
                         'gateway_message_id' => $result['message_id'] ?? null,
                     ]);
                 } else {
                     $recipient->update([
                         'status'           => 'sent',
-                        'resolved_message' => $validated['message'],
+                        'resolved_message' => $resolved,
                         'sent_at'          => now(),
                     ]);
                 }
@@ -380,9 +417,9 @@ class MinistryDashboardController extends Controller
         }
 
         $finalStatus = match(true) {
-            $failCount === 0                    => 'sent',
-            $successCount === 0                 => 'failed',
-            default                             => 'partially_sent',
+            $failCount === 0    => 'sent',
+            $successCount === 0 => 'failed',
+            default             => 'partially_sent',
         };
 
         $smsMessage->update([
@@ -395,7 +432,7 @@ class MinistryDashboardController extends Controller
             return back()->with('error', 'SMS sending failed for all recipients. Please check SMS configuration.');
         }
 
-        $msg = "SMS sent to {$successCount} of {$smsMessage->recipient_count} members.";
+        $msg = "SMS sent to {$successCount} of {$smsMessage->recipient_count} recipients.";
         if ($failCount > 0) {
             $msg .= " {$failCount} failed.";
         }

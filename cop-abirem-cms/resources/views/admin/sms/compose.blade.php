@@ -245,6 +245,7 @@
             </div>
             <div class="p-6 space-y-4">
                 <div class="space-y-3">
+                    @unless($leaderMinistry)
                     <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
                         <input type="radio" name="recipient_type" value="all" checked onchange="toggleRecipientFields()"
                                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
@@ -253,13 +254,22 @@
                             <span class="block text-xs text-gray-500">{{ $memberCount }} members with phone numbers</span>
                         </span>
                     </label>
+                    @endunless
 
                     <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <input type="radio" name="recipient_type" value="ministry" onchange="toggleRecipientFields()"
+                        <input type="radio" name="recipient_type" value="ministry"
+                               {{ $leaderMinistry ? 'checked' : '' }}
+                               onchange="toggleRecipientFields()"
                                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
                         <span class="ml-3">
                             <span class="block text-sm font-medium text-gray-900">By Ministry</span>
-                            <span class="block text-xs text-gray-500">Send to members of a specific ministry</span>
+                            <span class="block text-xs text-gray-500">
+                                @if($leaderMinistry)
+                                    Send to members of {{ $leaderMinistry->name }}
+                                @else
+                                    Send to members of a specific ministry
+                                @endif
+                            </span>
                         </span>
                     </label>
 
@@ -273,15 +283,24 @@
                     </label>
                 </div>
 
-                <div id="ministry_field" style="display:none;">
-                    <label for="ministry_id" class="block text-sm font-medium text-gray-700">Select Ministry *</label>
-                    <select name="ministry_id" id="ministry_id"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">Choose a ministry</option>
-                        @foreach($ministries as $ministry)
-                            <option value="{{ $ministry->id }}">{{ $ministry->name }}</option>
-                        @endforeach
-                    </select>
+                <div id="ministry_field" style="{{ $leaderMinistry ? '' : 'display:none;' }}">
+                    <label class="block text-sm font-medium text-gray-700">Select Ministry *</label>
+                    @if($leaderMinistry)
+                        {{-- Leader's ministry is locked — show as read-only display --}}
+                        <div class="mt-1 block w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 cursor-not-allowed">
+                            {{ $leaderMinistry->name }}
+                        </div>
+                        <input type="hidden" name="ministry_id" value="{{ $leaderMinistry->id }}">
+                        <p class="mt-1 text-xs text-gray-500">Your ministry is pre-selected and cannot be changed.</p>
+                    @else
+                        <select name="ministry_id" id="ministry_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="">Choose a ministry</option>
+                            @foreach($ministries as $ministry)
+                                <option value="{{ $ministry->id }}">{{ $ministry->name }}</option>
+                            @endforeach
+                        </select>
+                    @endif
                 </div>
 
                 <div id="custom_field" style="display:none;">

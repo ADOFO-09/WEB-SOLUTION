@@ -13,6 +13,7 @@ use App\Services\PlaceholderService;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Helpers\SettingHelper;
 
 class SmsController extends Controller implements HasMiddleware
@@ -82,9 +83,12 @@ class SmsController extends Controller implements HasMiddleware
 
     public function compose(Request $request)
     {
-        $templates   = SmsTemplate::where('is_active', true)->orderBy('name')->get();
-        $ministries  = Ministry::where('is_active', true)->orderBy('name')->get();
-        $memberCount = Member::where('membership_status', 'active')->whereNotNull('phone_primary')->count();
+        $leaderMinistry = $this->getLeaderMinistry(auth()->user());
+        $templates      = SmsTemplate::where('is_active', true)->orderBy('name')->get();
+        $ministries     = $leaderMinistry
+            ? collect([$leaderMinistry])
+            : Ministry::where('is_active', true)->orderBy('name')->get();
+        $memberCount    = Member::where('membership_status', 'active')->whereNotNull('phone_primary')->count();
 
         $selectedTemplate = $request->has('template_id')
             ? SmsTemplate::find($request->template_id)
@@ -93,14 +97,14 @@ class SmsController extends Controller implements HasMiddleware
         $balanceAlert = $this->buildBalanceAlert();
 
         // Build registry + live system preview values for the compose UI
-        $svc          = new PlaceholderService();
-        $uiRegistry   = $svc->uiRegistry();
+        $svc           = new PlaceholderService();
+        $uiRegistry    = $svc->uiRegistry();
         $systemPreview = $svc->resolveSystemValues();
 
         return view('admin.sms.compose', compact(
             'templates', 'ministries', 'memberCount',
             'selectedTemplate', 'balanceAlert',
-            'uiRegistry', 'systemPreview'
+            'uiRegistry', 'systemPreview', 'leaderMinistry'
         ));
     }
 
@@ -114,6 +118,17 @@ class SmsController extends Controller implements HasMiddleware
             'ministry_id'      => 'required_if:recipient_type,ministry|nullable|exists:ministries,id',
             'custom_numbers'   => 'required_if:recipient_type,custom|nullable|string',
         ]);
+
+        // Ministry leaders may only send to their own ministry or custom numbers
+        $leaderMinistry = $this->getLeaderMinistry(auth()->user());
+        if ($leaderMinistry) {
+            if ($validated['recipient_type'] === 'all') {
+                return back()->withErrors(['recipient_type' => 'Ministry leaders cannot send to all members.'])->withInput();
+            }
+            if ($validated['recipient_type'] === 'ministry' && (int) ($validated['ministry_id'] ?? 0) !== $leaderMinistry->id) {
+                return back()->withErrors(['ministry_id' => 'You can only send to your own ministry.'])->withInput();
+            }
+        }
 
         $manualValues = $request->input('placeholders', []);
         $isSending    = $request->input('action') === 'send';
@@ -263,6 +278,19 @@ class SmsController extends Controller implements HasMiddleware
     // ==========================================
     // PRIVATE HELPERS
     // ==========================================
+
+    private function getLeaderMinistry($user): ?Ministry
+    {
+        if (!$user?->member_id) {
+            return null;
+        }
+        $ministryId = DB::table('member_ministry')
+            ->where('member_id', $user->member_id)
+            ->whereIn('role', ['leader', 'assistant_leader'])
+            ->where('is_active', 1)
+            ->value('ministry_id');
+        return $ministryId ? Ministry::find($ministryId) : null;
+    }
 
     private function buildBalanceAlert(): ?array
     {
