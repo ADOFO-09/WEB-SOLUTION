@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Helpers\RoleHelper;
+use App\Models\Setting;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,6 +50,18 @@ class AdminAccess
         if ($user->must_change_password && !$request->routeIs('admin.password.change*')) {
             return redirect()->route('admin.password.change')
                 ->with('warning', 'Please change your password to continue.');
+        }
+
+        // Enforce first-run setup wizard until an admin completes it
+        if (Setting::get('app_installed') !== '1') {
+            if (RoleHelper::isSystemAdmin($user)) {
+                return redirect()->route('setup.account')
+                    ->with('info', 'Please complete the initial setup to continue.');
+            }
+            // Other roles cannot use the system until setup is done
+            auth()->logout();
+            return redirect()->route('login')
+                ->with('warning', 'The system is not yet configured. Please ask your administrator to complete setup first.');
         }
 
         return $next($request);

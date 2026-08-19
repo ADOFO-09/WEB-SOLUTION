@@ -32,8 +32,7 @@ class DatabaseSeeder extends Seeder
             // ==========================================
             // PHASE 2: Users (depends on roles; seed basic users first)
             // ==========================================
-            UserSeeder::class,           // ADDED: Ensures users exist (e.g., id=1) before dependents
-            AdminUserSeeder::class,      // Depends on roles; creates admin user
+            UserSeeder::class,           // Creates all users including the system admin
             ProjectSeeder::class,        // MOVED: Depends on users (created_by foreign key)
             
             // ==========================================

@@ -11,6 +11,10 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->routes(function () {
 
+            // First-run setup wizard (auth only — no admin.access to avoid redirect loop)
+            Route::middleware('web')
+                ->group(base_path('routes/setup.php'));
+
             // Core web routes (includes role_routes.php, member.php, auth.php via require)
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));

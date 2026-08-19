@@ -25,12 +25,12 @@ class UserSeeder extends Seeder
             // 1. System Administrator
             [
                 'name' => 'System Administrator',
-                'email' => 'admin@copabirem.org',
+                'email' => 'admin@kerith.local',
                 'password' => Hash::make('Admin@123!'),
                 'role_id' => $roles['admin'],
                 'member_id' => null,
                 'is_active' => true,
-                'must_change_password' => false,
+                'must_change_password' => true,
                 'email_verified_at' => $now,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -122,7 +122,7 @@ class UserSeeder extends Seeder
         $this->command->table(
             ['Role', 'Email', 'Password'],
             [
-                ['System Administrator', 'admin@copabirem.org', 'Admin@123!'],
+                ['System Administrator', 'admin@kerith.local', 'Admin@123! (change on first login)'],
                 ['Presiding Elder', 'elder@copabirem.org', 'Elder@123!'],
                 ['Local Secretary', 'secretary@copabirem.org', 'Secretary@123!'],
                 ['Financial Secretary', 'finance@copabirem.org', 'Finance@123!'],

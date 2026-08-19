@@ -10,6 +10,9 @@ class SettingSeeder extends Seeder
     public function run(): void
     {
         $settings = [
+            // System flag — set to '1' after first-run setup wizard completes
+            ['key' => 'app_installed', 'value' => '0', 'group' => 'system', 'type' => 'boolean'],
+
             // General Settings
             ['key' => 'church_name', 'value' => 'My Church', 'group' => 'general', 'type' => 'text'],
             ['key' => 'church_address', 'value' => '', 'group' => 'general', 'type' => 'textarea'],

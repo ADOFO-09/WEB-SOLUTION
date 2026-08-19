@@ -9,25 +9,28 @@ class FinancialYearSeeder extends Seeder
 {
     public function run(): void
     {
+        $current  = (int) date('Y');
+        $previous = $current - 1;
+
         $years = [
             [
-                'name' => 'FY 2024',
-                'start_date' => '2024-01-01',
-                'end_date' => '2024-12-31',
-                'is_active' => false,
-                'is_closed' => true,
+                'name'       => 'FY ' . $previous,
+                'start_date' => $previous . '-01-01',
+                'end_date'   => $previous . '-12-31',
+                'is_active'  => false,
+                'is_closed'  => true,
             ],
             [
-                'name' => 'FY 2025',
-                'start_date' => '2025-01-01',
-                'end_date' => '2025-12-31',
-                'is_active' => true,
-                'is_closed' => false,
+                'name'       => 'FY ' . $current,
+                'start_date' => $current . '-01-01',
+                'end_date'   => $current . '-12-31',
+                'is_active'  => true,
+                'is_closed'  => false,
             ],
         ];
 
         foreach ($years as $year) {
-            DB::table('financial_years')->insert(array_merge($year, [
+            DB::table('financial_years')->insertOrIgnore(array_merge($year, [
                 'created_at' => now(),
                 'updated_at' => now(),
             ]));
