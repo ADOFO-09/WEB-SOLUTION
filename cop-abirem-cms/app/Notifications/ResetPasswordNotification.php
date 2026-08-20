@@ -30,6 +30,7 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
         $churchName = \App\Helpers\SettingHelper::churchName();
 
         return (new MailMessage)
+            ->replyTo('support@kerithapp.com', 'Kerith Support')
             ->subject('Password Reset Request — ' . $churchName . ' CMS')
             ->greeting('Hello ' . $notifiable->name . ',')
             ->line('We received a request to reset the password for your ' . $churchName . ' CMS account.')
