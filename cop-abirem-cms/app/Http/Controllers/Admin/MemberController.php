@@ -29,7 +29,7 @@ class MemberController extends Controller implements HasMiddleware
         return [
             new Middleware(middleware: 'permission:members.view', only: ['index', 'show', 'showQrCode', 'printCard']),
             new Middleware(middleware: 'permission:members.create', only: ['create', 'store']),
-            new Middleware(middleware: 'permission:members.edit', only: ['edit', 'update', 'familyRelationships']),
+            new Middleware(middleware: 'permission:members.edit', only: ['edit', 'update', 'familyRelationships', 'family', 'storeFamily', 'destroyFamily']),
             new Middleware(middleware: 'permission:members.delete', only: ['destroy']),
             new Middleware(middleware: 'permission:members.export', only: ['export']),
         ];
@@ -588,6 +588,56 @@ class MemberController extends Controller implements HasMiddleware
             ->get();
 
         return view('admin.members.family', compact('member', 'availableMembers'));
+    }
+
+    /**
+     * Show the family relationships page for a member.
+     */
+    public function family(Member $member)
+    {
+        $member->load('familyRelationships.relatedMember');
+        $availableMembers = Member::where('id', '!=', $member->id)
+            ->active()
+            ->orderBy('first_name')
+            ->get();
+
+        $relationshipTypes = [
+            'spouse'  => 'Spouse',
+            'child'   => 'Child',
+            'parent'  => 'Parent',
+            'sibling' => 'Sibling',
+        ];
+
+        return view('admin.members.family', compact('member', 'availableMembers', 'relationshipTypes'));
+    }
+
+    /**
+     * Store a new family relationship.
+     */
+    public function storeFamily(Request $request, Member $member)
+    {
+        $validated = $request->validate([
+            'related_member_id' => 'required|exists:members,id|different:member_id',
+            'relationship_type' => 'required|in:spouse,child,parent,sibling',
+        ]);
+
+        FamilyRelationship::createBidirectional(
+            $member->id,
+            (int) $validated['related_member_id'],
+            $validated['relationship_type']
+        );
+
+        return back()->with('success', 'Family relationship added successfully.');
+    }
+
+    /**
+     * Remove a family relationship.
+     */
+    public function destroyFamily(Member $member, FamilyRelationship $relationship)
+    {
+        FamilyRelationship::removeBidirectional($member->id, $relationship->related_member_id);
+
+        return back()->with('success', 'Family relationship removed.');
     }
 
     /**
